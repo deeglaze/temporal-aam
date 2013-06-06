@@ -1,0 +1,34 @@
+  ****************************************
+  *** Set of terms (a sort in META-LEVEL)
+  ****************************************
+
+  fmod TERMSET is
+    inc META-LEVEL .
+
+    sort TermSet .
+    subsort Term < TermSet .
+
+    op mt : -> TermSet .
+    op _u_ : TermSet TermSet -> TermSet [assoc comm id: mt] .
+    
+    op _in_ : Term TermSet -> Bool .
+    op disjoint? : TermSet TermSet -> Bool .
+
+    vars T T1 T2 : Term .
+    vars E F : TermSet .
+
+    *********************************
+    *** eliminate duplicate elements
+    *********************************
+    eq T T E = T E .
+
+    *******************
+    *** Set membership
+    *******************
+    eq T1 in mt = false .
+    eq T1 in (T2 u E) = T1 == T2 or T1 in E .
+    
+    eq disjoint?(mt , E) = true .
+    eq disjoint?((T1 u E) , F) = (not T1 in F) and disjoint?(E , F) .
+
+  endfm
