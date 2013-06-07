@@ -1,0 +1,126 @@
+load lambda-kripke.maude .
+
+mod Seen is pr SET{StateStamp} * (sort Set{StateStamp} to Seen) . endm
+mod Frontier is pr LIST{Point} * (sort List{Point} to Frontier) . endm
+mod WIDE-CESK is
+  protecting CESK .
+  protecting META-LEVEL .
+  inc TERMSET .
+
+  sorts System .
+  pr Seen .
+  pr Frontier .
+
+  ***( The system builds up a meta-reduction relation refers to a module-level
+       store that will be the current store. This way edges can just be thrown in
+       and when we want to reflect on the system, we can build the scaffolding meta-module
+       around the ruleset and store. )
+  op sys : Frontier Heap Int Seen RuleSet -> System [ctor] .
+  op wt : Point Int -> StateStamp [ctor] .
+
+  var S S' S0 S1 SC SP : Seen .
+  var ς̂ : Point .
+  var F F' F0 F1 ς̂s ς̂s' ς̂s'' : Frontier .
+
+  *** Metavariables for matching ***
+  vars name x y : VAR .
+  vars e e0 e1 e2 : LCTerm .
+  var ς ς' : State .
+  var a a0 a1 : Addr .
+  var i : Int .
+  var b : Bool .
+  var v : Value .
+  vars ρ ρ0 ρ1 : Env .
+  vars σ σ' σ0 σ1 σc σc' σp : Heap .
+  var δ : HeapDelta .
+  vars κ κ0 κ1 : Kont .
+  vars es es0 es1 : LCTerms .
+  var as : ListAddr .
+  var vss vss' : List{AVal} .
+  var xs xs' : ListVar .
+  var bs : Bindings .
+  var vs vs' vs'' : AVal .
+  var δ? δ?' : Bool .
+
+  sort StepTuple Heap/Δ? .
+  ***( A StepTuple is like a system, only it has whether the store changed
+       rather than the resulting store timestamp)
+  op stpl : Frontier Heap Bool Seen RuleSet -> StepTuple .
+  op hδ : Heap Bool -> Heap/Δ? [ctor] .
+
+  op $join/δ? : Heap Addr AVal Bool -> Heap/Δ? .
+
+  ceq $join/δ?((σ, a |-> vs'), a, vs, δ?) = hδ((σ,a |-> vs''), δ?')
+      if vs'' := (vs' , vs)
+      /\ δ?' := δ? or-else (vs'' =/= vs') .
+  *** INVARIANT: We always join with a non-empty AVal.
+  eq $join/δ?(σ, a, vs, δ?) = hδ((σ,a |-> vs), true) [owise] .
+
+  op $join-many/δ? : Heap ListAddr List{AVal} Bool -> Heap/Δ? .
+  eq $join-many/δ?(σ, nil, nil, δ?) = hδ(σ, δ?) .
+  ceq $join-many/δ?(σ, a as, vs vss, δ?) = $join-many/δ?(σ', as, vss, δ?')
+      if hδ(σ', δ?') := $join/δ?(σ,a,vs,δ?) .
+
+  op applyΔ/δ? : HeapDelta Heap -> Heap/Δ? .
+  op $applyΔ/δ? : HeapDelta Heap Bool -> Heap/Δ? .
+
+  eq applyΔ/δ?(δ, σ) = $applyΔ/δ?(δ, σ, false) .
+
+  eq $applyΔ/δ?(same, σ, δ?) = hδ(σ, δ?) .
+  eq $applyΔ/δ?(bind(as, vss), σ, δ?) = $join-many/δ?(σ, as, vss, δ?) .
+
+  *** Todo, previous heap, current heap, chain length, heap change?, seen, next frontier
+  op $step-all : Frontier Heap Heap Int Bool Seen RuleSet Frontier -> System .
+
+  *** Reflective magic to get all steps from a state:
+  vars T T0 P : Term .
+  vars Rs Rs' : RuleSet .
+  vars N σt σt' : Int .
+
+  op CESKMod : -> Module .
+  eq CESKMod = upModule('CESK, false) .
+
+  op metaTermToStateSet : Term Term Heap Int Bool Seen Frontier RuleSet -> StepTuple .
+  op allOneStepAux : Term Term Int Term Heap Int Bool Seen Frontier Seen RuleSet -> StepTuple .
+
+  eq metaTermToStateSet(T, T0, σ, σt, δ?, S, F, Rs) =
+     allOneStepAux(T, T0, 0, 'ς1:State, σ, σt, δ?, empty, F, S, Rs) .
+
+  op retag : Seen Int -> Seen .
+  eq retag(empty, σt) = empty .
+  eq retag((wt(ς̂, σt), S), σt') = wt(ς̂, σt'), retag(S, σt') .
+
+  *** metaSearch gives one result at a time. Loop collecting solutions until failure.
+  ceq allOneStepAux(T, T0, N, P, σ, σt, δ?, SC, F, SP, Rs) =
+      stpl(F, σ, δ?, (SP, SC), Rs)
+      if metaSearch(CESKMod, T, P, nil, '+, 1, N) == failure .
+  ceq allOneStepAux(T, T0, N, P, σ, σt, δ?, SC, F, SP, Rs) =
+      allOneStepAux(T, T0, N + 1, P, σ1, σt, δ?', S', F', SP, (rl T0 => upTerm(ς̂) [none].) Rs)
+      if wd(ς̂, σ0, δ) := downTerm(getTerm(metaSearch(CESKMod, T, P, nil, '+, 1, N)), Fail)
+      /\ hδ(σ1, δ?') := $applyΔ/δ?(δ, σ, δ?)
+      /\ S' := if δ? then wt(ς̂, σt + 1), SC
+               else if δ?' then retag(SC, σt + 1)
+                    else wt(ς̂, σt), SC fi
+               fi
+      /\ F' := if δ?' or-else not wt(ς̂, σt) in SP then ς̂ F else F fi [owise] .
+
+  eq $step-all(nil, σp, σc, σt, δ?, S, Rs, F) = sys(F, σc, (if δ? then (σt + 1) else σt fi), S, Rs) .
+  ceq $step-all(ς̂ ς̂s, σp, σc, σt, δ?, S, Rs, F) = $step-all(ς̂s, σp, σc', σt, δ?', (S, S'), Rs', F')
+      if stpl(F', σc', δ?', S', Rs') := metaTermToStateSet(upTerm(wn(ς̂, σp)), upTerm(ς̂), σc, σt, δ?, S, F, Rs).
+
+  op CFA : System -> System [iter] .
+  eq CFA(sys(F, σ, σt, S, Rs)) = $step-all(F, σ, σ, σt, false, S, Rs, nil) .
+
+  op ReflectSystem : System -> SModule .
+  eq ReflectSystem(sys(F, σ, σt, S, Rs)) =
+    (mod 'CFA is
+       including 'CESK .
+       sorts none .
+       none *** subsorts
+       op 'σ : nil -> 'Heap [none]. *** operator declarations
+       none *** membership axioms
+       eq 'σ = upTerm(σ) [none]. *** equations
+       Rs *** Rule set
+     endm) .  
+
+endm

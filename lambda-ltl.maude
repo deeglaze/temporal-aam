@@ -1,0 +1,171 @@
+load wide-kripke .
+load model-checker .
+
+mod HOTDef is
+  sort VPat .
+endm
+
+view VPat from TRIV to HOTDef is sort Elt to VPat . endv
+
+mod HOT is
+  pr ToDefine .
+  pr HOTDef .
+  pr CESK .
+  pr LIST{VAR} .
+  pr LIST{AVal} .
+  pr LIST{VPat} * (sort List{VPat} to VPats) .
+  including MODEL-CHECKER .
+  sorts HOTCon SCon TCon EvPat .
+  subsort EvPat < TCon .
+
+  op _where_ : SCon TCon -> HOTCon [ctor] .
+
+  op flat : LCTerm -> SCon [ctor] .
+  op arrow : VAR SCon SCon -> SCon [ctor] .
+
+  op !_ : EvPat -> TCon [ctor] .
+  op _·_ : TCon TCon -> TCon [ctor assoc] .
+  op _* : TCon -> TCon [ctor] .
+  op not_ : TCon -> TCon [ctor] .
+  op _∪_ : TCon TCon -> TCon [ctor] .
+  op ooo : -> TCon [ctor] .
+  op call : VAR VAR TCon -> TCon [ctor] .
+  op ret : VAR VAR TCon -> TCon [ctor] .
+
+  op call : VAR VPats -> EvPat [ctor] .
+  op ret : VAR VPat -> EvPat [ctor] .
+
+  op wc : -> VPat [ctor] . *** wildcard
+  op vvp : VAR -> VPat [ctor] .
+  op vlp : Value -> VPat [ctor] .
+
+  vars R R0 R1 : TCon .
+  var ep : EvPat .
+  var afterwards : Formula .
+
+  op _pat-in_ : VPat List{AVal} -> Bool .
+  op _pats-in_ : VPats List{AVal} -> Bool .
+
+  vars vp vp' : VPat .
+  vars vps vps' : VPats .
+  vars vss vss' : List{AVal} .
+  vars vs vs' : AVal .
+  var v : Value .
+
+  eq vlp(v) pat-in vs = v vin vs .
+  eq wc pat-in vs = true .
+  eq vp pat-in vs = false [owise] . *** UNIMPLEMENTED: Dependent sequences
+
+  eq nil pats-in nil = true .
+  eq (vp vps) pats-in (vs vss) = vp pat-in vs and-then vps pats-in vss .
+  eq vps pats-in vss = false [owise] .
+
+  subsort EvPat < Prop .
+
+  *** This should be proved correct wrt temporal contract semantics.
+  op HOTFormula : TCon -> Formula .
+  eq HOTFormula(R) = $HOTFormula(R, True) .
+
+  op $HOTFormula : TCon Formula -> Formula .
+  eq $HOTFormula(ep, afterwards) = ep /\ O afterwards .
+  eq $HOTFormula(! ep, afterwards) = ~ ep /\ O afterwards .
+  eq $HOTFormula(ooo · R, afterwards) = <> $HOTFormula(R, afterwards) .
+  ceq $HOTFormula(R0 · R1, afterwards) = $HOTFormula(R0, $HOTFormula(R1, afterwards)) if R0 =/= ooo .
+  eq $HOTFormula(R *, afterwards) = $HOTFormula(R, True) W afterwards .
+  eq $HOTFormula(not R, afterwards) = ~ $HOTFormula(R, ~ afterwards) .
+  eq $HOTFormula(R0 ∪ R1, afterwards) = $HOTFormula(R0, afterwards) \/ $HOTFormula(R1, afterwards) .
+  eq $HOTFormula(ooo, afterwards) = <> afterwards .
+  *** Dependent sequencing bleh.
+***  $HOTFormula(call(x, y, R)) = ??? .
+***  $HOTFormula(ret(x, y, R)) = ??? .
+
+endm
+
+mod CESK-PREDS is
+  pr ToDefine .
+  pr CESK .
+  pr HOT .
+  pr LIST{VAR} .
+  pr LIST{AVal} .
+  including SATISFACTION * (sort State to LTLState) .
+  including MODEL-CHECKER .
+  subsort State < LTLState .
+  
+
+  vars vp vp' : VPat .
+  vars vps vps' : VPats .
+  vars vss vss' : List{AVal} .
+  vars vs vs' : AVal .
+  vars x x' y z fn : VAR .
+  vars xs : List{VAR} .
+  var e : LCTerm .
+  var ρ : Env .
+  var κ : Kont .
+  var ς : State .
+  var σ : Heap .
+  var δ : HeapDelta .
+
+  eq wn(Apply(CloV(fn, xs, e, ρ), vss, κ), σ) |= call(fn, vps) = vps pats-in vss .
+  eq wd(Apply(CloV(fn, xs, e, ρ), vss, κ), σ, δ) |= call(fn, vps) = vps pats-in vss .
+  eq ς |= p:EvPat = false [owise] .  
+endm
+
+
+mod CESK-CHECK is
+  protecting CESK-PREDS .
+  pr CESK .
+  pr HOT .
+  including MODEL-CHECKER .
+  including LTL-SIMPLIFIER .
+
+  op prog : -> LCTerm .
+  eq prog = App(Lam(vv "id0", vv "x", Var(vv "x")), Lam(vv "id1", vv "y", Var(vv "y"))) .
+
+  op initial : -> State .
+  eq initial = wn(Eval(prog, empty, nil), empty) .
+
+  op to-check : -> Formula .
+  eq to-check = HOTFormula(ooo · call(vv "id0", wc)) .
+endm
+
+rew [5] in CESK-CHECK : initial .
+red in CESK-CHECK : modelCheck(initial, to-check) .
+
+
+mod WIDE-CESK-PREDS is
+  pr CESK .
+  pr WIDE-CESK .
+  pr HOT .
+  including SATISFACTION * (sort State to LTLState) .
+  including MODEL-CHECKER .
+
+  subsort Point < LTLState .
+  ***subsort CFAprop < Prop .
+
+  var e : LCTerm .
+  var φ : Formula .
+  var S : System .
+  var ς̂ : Point .
+  vars T0 Tφ Res : Term .
+  var τ : Type .
+  vars TL0 TL1 : TransitionList .
+
+  op inject : LCTerm -> System .
+  eq inject(e) = sys(Eval(e,empty,nil), empty, 0, wt(Eval(e,empty,nil),0), none) .
+
+  ***( How many steps of CFA should we run before reflecting to give to the LTL model checker?)
+  op WideModelCheck : LCTerm Formula -> ModelCheckResult .
+  op $CEGAR : Term Term System -> ModelCheckResult .
+  ceq WideModelCheck(e, φ) = $CEGAR(upTerm(ς̂), upTerm(φ), sys(ς̂, empty, 0, wt(ς̂,0), none))
+      if ς̂ := Eval(e,empty,nil) .
+
+  op interpretCheck : Term Term System -> ModelCheckResult .
+  ceq interpretCheck(T0, Tφ, S) = downTerm(Res, false)
+      if {Res, τ} := metaReduce(ReflectSystem(S), 'modelCheck[T0, Tφ]) .
+
+  ceq $CEGAR(T0, Tφ, S) = interpretCheck(T0, Tφ, CFA(S)) if S == CFA(S) .
+  ceq $CEGAR(T0, Tφ, S) = counterexample(TL0, TL1) if counterexample(TL0, TL1) := interpretCheck(T0, Tφ, CFA(S)) .
+  eq $CEGAR(T0, Tφ, S) = false ***($CEGAR(T0, Tφ, CFA(S))) [owise] .
+
+endm
+
