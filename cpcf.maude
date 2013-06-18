@@ -1,0 +1,279 @@
+load full-maude26.maude . select FULL-MAUDE . loop init . load model-checker.maude .
+
+***( Stupid boilerplate)
+fmod ToDefine is
+  pr STRING .
+  pr INT .
+  sorts VAR Addr Label .
+  subsorts Addr < VAR < String . *** Get around preregularity with arbitrary ordering .
+  subsorts Label < Int .
+  op vv_ : String -> VAR [ctor] .
+  op aa_ : String -> Addr [ctor] .
+  sorts LCTerm Value Prim Binding Point State StateStamp Frame Reducts HeapDelta Contract .
+endfm
+
+view String from TRIV to STRING is sort Elt to String . endv
+view VAR from TRIV to ToDefine is sort Elt to VAR . endv
+view Addr from TRIV to ToDefine is sort Elt to Addr . endv
+view Binding from TRIV to ToDefine is sort Elt to Binding . endv
+view LCTerm from TRIV to ToDefine is sort Elt to LCTerm . endv
+view Contract from TRIV to ToDefine is sort Elt to Contract . endv
+view Value from TRIV to ToDefine is sort Elt to Value . endv
+view Frame from TRIV to ToDefine is sort Elt to Frame . endv
+view State from TRIV to ToDefine is sort Elt to State . endv
+view Point from TRIV to ToDefine is sort Elt to Point . endv
+view StateStamp from TRIV to ToDefine is sort Elt to StateStamp . endv
+
+fmod AVal is pr SET{Value} * (sort Set{Value} to AVal) . endfm
+view AVal from TRIV to AVal is sort Elt to AVal . endv
+
+fmod Env is
+ pr ToDefine .
+ pr MAP{VAR, Addr} * (sort Map{VAR, Addr} to Env) .
+endfm
+
+view List`{LCTerm`} from TRIV to LIST{LCTerm} is
+  sort Elt to List{LCTerm} .
+endv
+
+fmod OPTION{X :: TRIV} is
+ sort Option{X} .
+ op Some : X$Elt -> Option{X} [ctor] .
+ op None : -> Option{X} [ctor] .
+endfm
+
+fmod LCTerms is
+  pr ToDefine .
+  pr LIST{LCTerm} * (sort List{LCTerm} to LCTerms) .
+endfm
+
+fmod Bindings is
+  pr ToDefine .
+  pr LIST{Binding} * (sort List{Binding} to Bindings) .
+endfm
+
+mod Syntax is
+  pr BOOL .
+  pr INT .
+  pr Env .
+  pr LCTerms .
+  pr LIST{VAR} * (sort List{VAR} to ListVar) .
+  pr LIST{Addr} * (sort List{Addr} to ListAddr) .
+  pr LIST{Contract} .
+  pr Bindings .
+  pr OPTION{VAR} * (sort Option{VAR} to VARop) .
+
+  *** Terms ***
+  op Var : VAR -> LCTerm [ctor] .
+  op Lit : Int -> LCTerm [ctor] .
+  op Lit : Bool -> LCTerm [ctor] .
+  op Lit : Prim -> LCTerm [ctor] .
+  op Lam : VAR ListVar LCTerm -> LCTerm [ctor] . *** name, binders, body
+  op Let : Bindings LCTerm -> LCTerm [ctor] . 
+  op If : LCTerm LCTerm LCTerm -> LCTerm [ctor] .
+  op App : LCTerm LCTerms -> LCTerm [ctor] .
+  *** MOAR ***
+  op Mon : Label Label VARop Contract LCTerm -> LCTerm [ctor] .
+
+  *** Contracts ***
+  op ArrCon : VARop List{Contract} Contract -> Contract [ctor] . *** Optionally name the function.
+  op FlatCon : LCTerm -> Contract [ctor] .
+
+  op add1 : -> Prim [ctor] .
+  op sub1 : -> Prim [ctor] .
+  op zero? : -> Prim [ctor] .
+
+  *** Values ***
+  op LitV_ : Int -> Value [ctor] .
+  op LitV_ : Bool -> Value [ctor] .
+  op LitV_ : Prim -> Value [ctor] .
+  op IntTop : -> Value [ctor] .
+  op CloV : VAR ListVar LCTerm Env -> Value [ctor] .
+  op arr : Label Label Contract Contract Value -> Value [ctor] . *** AAAAGH
+endm
+
+***( This would be a functional module to parameterize over allocation 
+     and addreses, but alas, we can't write rewrite rules
+     in a functional module)***
+mod CESK is
+  pr Syntax .
+  pr AVal . 
+
+  *** pr MAP{VAR, Addr} * (sort Map{VAR, Addr} to Env) .
+  pr MAP{Addr, AVal} * (sort Map{Addr, AVal} to Heap ) .
+  pr LIST{Frame} * (sort List{Frame} to Kont) .
+  pr LIST{Binding} * (sort List{Binding} to Bindings) .
+  pr LIST{LCTerm} * (sort List{LCTerm} to LCTerms) .
+  pr LIST{AVal} .
+  pr BOOL-OPS .
+  protecting META-LEVEL .
+
+  op _vin_ : Value AVal -> Bool .
+  op _abs-in_ : AVal AVal -> Bool .
+  op _abs-has_ : AVal AVal -> Bool . *** like abs-in, only or instead of and.
+
+  *** Primitive functions ***
+  op zero? : -> Prim [ctor] .
+  op add1 : -> Prim [ctor] .
+  op sub1 : -> Prim [ctor] .
+
+  *** Non-term syntax ***
+  op _gets_ : VAR LCTerm -> Binding [ctor] .
+
+  *** Continuations ***
+  op ifk : LCTerm LCTerm Env -> Frame .
+  op ev : LCTerms List{AVal} Env -> Frame .
+  op ltk : VAR Bindings ListVar List{AVal} LCTerm Env -> Frame .
+  op mnk : Label Label VARop Contract -> Frame .
+
+
+  op bind : ListAddr List{AVal} -> HeapDelta [ctor] .
+  op same : -> HeapDelta [ctor] .
+
+  *** Machine states ***
+  op wn : Point Heap -> State [ctor] .
+    *** Only keep the heap so we can apply the delta as a standalone step.
+  *** VAR is the inner-most named function we're in the context of.
+  op wd : Point Heap HeapDelta -> State [ctor] .
+  op Eval : LCTerm Env Kont VAR -> Point [ctor] .
+  op Continue : Kont AVal VAR -> Point [ctor] .
+  op Apply : Value List{AVal} Kont VAR -> Point [ctor] .
+  op Fail : -> State [ctor] .
+
+  *** Meta-functions ***
+  op alloc : ListVar State -> ListVar .
+  op join : Heap Addr AVal -> Heap .
+  op join-many : Heap ListAddr List{AVal} -> Heap .
+  op bind-many : Env ListVar ListAddr -> Env .
+
+  *** Metavariables for matching ***
+  vars name x y : VAR .
+  vars e e0 e1 e2 : LCTerm .
+  vars ς ς' : State .
+  vars a a' : Addr .
+  var i : Int .
+  var b : Bool .
+  vars v v' : Value .
+  vars ρ ρ0 ρ1 : Env .
+  vars σ σ0 σ1 : Heap .
+  vars κ κ0 κ1 : Kont .
+  vars es es0 es1 : LCTerms .
+  vars as as' : ListVar . *** Addr
+  vars vss vss' : List{AVal} .
+  vars xs xs' : ListVar .
+  var bs : Bindings .
+  vars vs vs' : AVal .
+  var str : String .
+  var δ : HeapDelta .
+  var ςh : Point .
+
+  *** DEFINITIONS OF META-FUNCTIONS ***
+  eq alloc(nil, ς) = nil .
+  eq alloc((vv str) xs, ς) = (aa str) alloc(xs, ς) .
+  *** We can't overwrite bindings. Instead, we have to match to get the rest without the binding .
+  eq join((σ, a |-> vs'), a, vs) = (σ,a |-> (vs' , vs)) .
+  eq join(σ, a, vs) = (σ,a |-> vs) [owise] .
+
+  op applyΔ : HeapDelta Heap -> Heap .
+  eq applyΔ(same, σ) = σ .
+  eq applyΔ(bind(as, vss), σ) = join-many(σ, as, vss) .
+
+  op bind-overwrite : Env VAR Addr -> Env .
+  eq bind-overwrite((ρ, x |-> a), x, a') = ρ, x |-> a' .
+  eq bind-overwrite(ρ, x, a) = ρ, x |-> a [owise] .
+
+  *** abstractions ***
+  eq LitV i vin (IntTop, vs) = true .
+  eq v vin (v, vs) = true .
+  eq v vin vs = false [owise] .
+
+  eq empty abs-in vs = true .
+  eq (v, vs) abs-in vs' = (v vin vs') and-then (vs abs-in vs') .
+
+  eq empty abs-has vs = false .
+  eq (v, vs) abs-has vs' = (v vin vs') or-else (vs abs-has vs') .
+
+  op do-add1 : AVal -> AVal .
+  op do-sub1 : AVal -> AVal .
+  op do-zero? : AVal -> AVal .
+
+  ceq do-add1(vs) = IntTop if vs abs-has IntTop .
+  eq do-add1(vs) = empty [owise] .
+
+  ceq do-sub1(vs) = IntTop if vs abs-has IntTop .
+  eq do-sub1(vs) = empty [owise] .
+***(
+  eq do-zero?(empty) = empty .
+  ceq do-zero?(v, vs) = (if (v == LitV 0) then
+                            (LitV true)
+                         else
+                          if ((LitV 0) vin v) then
+                             ((LitV true), (LitV false))
+                          else
+                             (LitV false)
+                          fi
+                        fi), do-zero?(vs) .
+)
+  *** Derived meta-functions ***
+  eq bind-many(ρ, nil, nil) = ρ .
+  eq bind-many(ρ, x xs, a as) = bind-many(bind-overwrite(ρ, x, a), xs, as) .
+
+  eq join-many(σ, nil, nil) = σ .
+  eq join-many(σ, a as, vs vss) = join-many(join(σ,a,vs), as, vss) .
+
+  *** The core semantics ***
+
+  *** Eval rules ***
+  crl [var-eval] : wn(Eval(Var(x), ρ, κ), σ) => wd(Continue(κ, σ[ρ[x]]), σ, same)
+                   if $hasMapping(ρ,x) .
+  rl [litI-eval] : wn(Eval(Lit(i), ρ, κ), σ) => wd(Continue(κ, LitV i), σ, same) .
+  rl [litB-eval] : wn(Eval(Lit(b), ρ, κ), σ) => wd(Continue(κ, LitV b), σ, same) .
+  rl [Lam-eval] : wn(Eval(Lam(name, xs, e), ρ, κ), σ) => wd(Continue(κ, CloV(name, xs, e, ρ)), σ, same) .
+  rl [app-eval] : wn(Eval(App(e0, es), ρ, κ), σ) => wd(Eval(e0, ρ, ev(es, nil, ρ) κ), σ, same) .
+  rl [if-eval] : wn(Eval(If(e0,e1,e2), ρ, κ), σ) => wd(Eval(e0, ρ, ifk(e1,e2,ρ) κ), σ, same) .
+  rl [let0-eval] : wn(Eval(Let(nil, e), ρ, κ), σ) => wd(Eval(e, ρ, κ), σ, same) .
+  rl [let-eval] : wn(Eval(Let((x gets e0) bs, e1), ρ, κ), σ) => wd(Eval(e0, ρ, ltk(x, bs, nil, nil, e1, ρ) κ), σ, same) .
+  crl [let-bind] : ς => wd(Eval(e, ρ1, κ), σ, bind(as, vs vss))
+                   if wn(Continue(ltk(x, nil, xs, vss, e, ρ0) κ, vs), σ) := ς
+                    /\ xs' := (x xs)
+                    /\ as := alloc(xs', ς)
+                    /\ ρ1 := bind-many(ρ0, xs', as) .
+
+  *** Continue rules ***
+  rl [let-continue] : wn(Continue(ltk(x, (y gets e0) bs, xs, vss, e1, ρ) κ, vs), σ) =>
+                      wd(Eval(e0, ρ, ltk(y, bs, x xs, vs vss, e1, ρ) κ), σ, same) .
+  crl [ev0-continue] : wn(Continue(ev(nil, nil, ρ) κ, vs), σ) =>
+                       wd(Apply(v, nil, κ), σ, same)
+                       if v:Value , vs' := vs .
+  rl [ev-continue] : wn(Continue(ev(e es, vss, ρ) κ, vs), σ) =>
+                     wd(Eval(e, ρ, ev(es, vs vss, ρ) κ), σ, same) .
+  crl [ev-done] : wn(Continue(ev(nil, vss, ρ) κ, vs), σ) =>
+                  wd(Apply(v, vss', κ), σ, same)
+                  if ((v, vs') vss') := reverse(vs vss) .
+  crl [if-then] : wn(Continue(ifk(e0, e1, ρ) κ, vs), σ) =>
+                  wd(Eval(e0, ρ, κ), σ, same)
+                  if LitV true in vs .
+  crl [if-else] : wn(Continue(ifk(e0, e1, ρ) κ, vs), σ) =>
+                  wd(Eval(e1, ρ, κ), σ, same)
+                  if LitV false in vs .
+
+  *** Apply rules ***
+  crl [Call] : ς => wd(Eval(e, ρ1, κ), σ, bind(as, vss))
+      if wn(Apply(CloV(name, xs, e, ρ0), vss, κ), σ) := ς
+      /\ as := alloc(xs, ς)
+      /\ ρ1 := bind-many(ρ0, xs, as) .
+  crl [Add1] : wn(Apply(LitV add1, vs, κ), σ) => wd(Continue(κ, vs'), σ, same)
+               if vs' := do-add1(vs)
+               /\ vs' =/= empty .
+  crl [Sub1] : wn(Apply(LitV sub1, vs, κ), σ) => wd(Continue(κ, do-sub1(vs)), σ, same)
+               if vs' := do-add1(vs)
+               /\ vs' =/= empty .
+  *** INVARIANT: do-zero? can never introduce empty.
+***  rl [Zero?] : wn(Apply(LitV zero?, vs, κ), σ) => wd(Continue(κ, do-zero?(vs)), σ, same) .
+
+  *** Heap delta application (only for narrow evaluation) ***
+  rl [Heap-change] : wd(ςh, σ, δ) => wn(ςh, applyΔ(δ, σ)) .
+
+  *** Answers self-reduce in order to keep the Kripke structure infinite .
+  rl [Answer] : wn(Continue(nil, vs), σ) => wn(Continue(nil, vs), σ) .
+endm

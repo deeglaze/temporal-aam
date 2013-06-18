@@ -1,0 +1,307 @@
+\documentclass[preprint,onecolumn,9pt]{sigplanconf} %{onecol}
+\usepackage{alltt,mathpartir}
+\usepackage{amsmath,amsthm}
+\usepackage{amssymb}
+\usepackage{stmaryrd}
+\usepackage{url}
+\usepackage{graphicx}
+\usepackage{balance}
+\usepackage{calc}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+
+\newcommand{\naive}{naive}
+\newcommand{\naively}{naively}
+\newcommand{\Naive}{Naive}
+\newcommand{\Naively}{Naively}
+% \usepackage{xltxtra}
+% \setmonofont[Scale=MatchLowercase]{DejaVu Sans Mono}
+%
+\input{preamble}
+
+\begin{document}
+
+\conferenceinfo{WXYZ '05}{date, City.}
+\copyrightyear{2005}
+\copyrightdata{[to be supplied]}
+\title{Static Verification of Temporal Higher-Order Contracts}
+
+\authorinfo{J. Ian Johnson}
+           {Northeastern University}
+           {ianj@ccs.neu.edu}
+\authorinfo{Nicholas Alexander Marquez}
+           {Northeastern University}
+           {nam@ccs.neu.edu}
+\authorinfo{David Van Horn}
+           {Northeastern University}
+           {dvanhorn@ccs.neu.edu}
+\maketitle
+\begin{abstract}
+  Shwazam.
+\end{abstract}
+
+\section{Everything Technical}
+Syntax:
+\begin{align*}
+\mexp \in \Expr &::=
+      \svar[^\mlab]{\mvar}
+ \alt \sapp[^\mlab]{\mexp}{\mexp}
+ \alt \slam[^\mlab]{\mvar}{\mexp} \\
+&\alt \sif[^\mlab]{\mexp}{\mexp}{\mexp} 
+ \alt \sMon{\mmlab}{\mmlab}{\mlab}{\mcontract, \mexp}
+ \alt \slit{\mconstant} \\
+\mconstant \in \Constant &= -1 \alt 0 \alt 1 \alt \ldots \alt \strue \alt \sfalse \alt \scons \alt \scar \alt \ldots \\
+\mvar \in \Var &\text{ an infinite set} \\
+\mlab \in \Label &\text{ an infinite set} \\
+\mmlab,\mname \in \ModuleLabel &\text{ an infinite set} \\
+\mcontract \in \Contract &= \SContract \times \TContract \\
+\mscon \in \SContract &::= \sflat{\mexp} \alt \sarr{\mname}{\mscon}{\mscon} \alt \sconsc{\mscon}{\mscon} \\
+\mtcon \in \TContract &::=
+      \mevent
+ \alt \snonevent{\mevent}
+ \alt \stnot{\mtcon}
+ \alt \stOr{\mtcon}{\mtcon}
+ \alt \stseq{\mtcon}{\mtcon}
+ \alt \stmany{\mtcon}
+ \alt \sddd \\
+\mevent \in \Event &::= \scallev{\mname}{\mvpat} \alt \sretev{\mname}{\mvpat} \\
+\mvpat \in \VPat &::= \mname \alt \swc \alt \mconstant
+\end{align*}
+
+Wrapping monitors around values associates entirely fresh NFA
+states. The names given to bindings are really associated with the
+bindings. We have to give up some precision for decidability --- we
+use a monovariant allocation scheme for monitor allocation. This
+scheme allows us to lift all textual temporal contracts to the top
+level and check individually. A polyvariant scheme would require
+either knowing how many abstract bindings are allocated during
+execution, or an exhaustive enumeration of possible bindings as
+propositions to check. Since we run CFA before appealing to the model
+checker, the former is feasible, but it distracts from the overall
+exposition.
+
+Value space:
+\begin{align*}
+  \mval \in \Value &=
+    \clos{\mvar, \mexp, \menv}
+   \alt \blclos{\mname}{\mmlab}{\mmlab}{\mlab}{\mscon}{\mscon}{\menv}{\maddr}
+   \alt \mconstant
+   \alt \blackhole \\
+&  \alt \vconsf{\maddr}
+   \alt \vcons{\maddr}{\maddr}
+   \alt \sunit \\
+  \menv \in \Env &= \Var \parto \Addr \\
+  \maddr \in \Addr &\text{ an infinite set} \\
+  \mnames &\in \wp(\Var) \\
+\end{align*}
+
+State space:
+\begin{align*}
+  \mstate \in \State &::=
+      \ev[^\mlab]{\mexp, \menv, \msto, \mmsto, \mkont}{\mmlab} 
+ \alt \co{\mkont, \mval, \msto, \mmsto}{\mmlab} \\
+&\alt \ap{\mval, \mval, \msto, \mmsto, \mkont}{\mmlab}
+ \alt \sblame{\mmlab} \\
+\msto \in \Store &= \Addr \parto \wp(\Storeable) \\
+\Storeable &= \Value + \Kont \\
+\mframe \in \Frame &::=
+      \kar[^\mlab]{\mexp,\menv}
+ \alt \kfn[^\mlab]{\mval}
+ \alt \kif{\mexp, \mexp, \menv} \\
+&\alt \krt{\mmlab}
+ \alt \kmon{\mmlab}{\mmlab}{\mlab}{\mscon, \menv}
+ \alt \kflat[^\mlab]{\mmlab, \mval} \\
+&\alt \kchkA[^\mlab]{\mmlab, \mmlab, \mscon, \maddr, \maddr}
+ \alt \kchkD[^\mlab]{\mmlab, \mmlab, \maddr, \maddr}
+ \alt \kcheck[^\mlab]{\mmlab, \mval} \\
+&\alt \kpost[^\mlab]{\mscon, \menv}
+ \alt \kmcall[^\mlab]{\mmlab, \mmlab, \mscon, \menv, \mname, \maddr} \\
+\mkont \in \Kont &::= \kmt \alt \spush{\mframe}{\mkaddr}
+\end{align*}
+
+% \begin{align*}
+%     \accept &: \ModuleLabel \times \ModuleLabel \times \Label \times \SContract \times \Value \\
+%             &\to (\Value \times \Store) + \Expr + \bot
+% \end{align*}
+% \begin{align*}
+%   \accept(\mmlab_u, \mmlab_c, \mlab, \sarr{\mname}{\mscon_D}{\mscon_R}, \mval) &=
+%           \blclos{\mname}{\mmlab_u}{\mmlab_c}{\mlab}{\mscon_D}{\mscon_R}{\menv}{\maddr}, \\
+% \phantom{\accept(\mmlab_u, \mmlab_c, \mlab, \sarr{\mname}{\mscon_D}{\mscon_R}, \mval)} &\phantom{= }
+%           \ext{\msto}{\maddr}{\setof{\mval}} \\
+%   \text{if } \mval \equiv \clos{\mvar, \mexp, \menv'} \text{ or }&
+%              \mval \equiv \blclos{\mname'}{\mmlab_u'}{\mmlab_c'}{\mlab'}{\mscon_D'}{\mscon_R'}{\menv'}{\maddr'}
+%   \\
+%   \accept(\mmlab_u, \mmlab_c, \mlab, \sflat(\mexp), \mval) &= \mexp \\
+%   \accept(\mmlab_u, \mmlab_c, \mlab, \sarr{\mname}{\mscon_D}{\mscon_R}, \mval) &= \bot \text{ otherwise}
+% \end{align*}
+
+\begin{figure*}
+  \begin{gather*}
+    \begin{array}{@{}r@{\ }c@{\ }l@{}}
+      \mstate & \machstep &\mstate' \text{ defined to be the following} \\
+      %% EVAL
+      \ev{\svar\mvar, \menv, \msto, \mkont}{\mmlab} &\machstep&
+      \co{\mkont, \mval, \msto}{\mmlab}
+      \text{ if } \mval \in \msto(\menv(\mvar))
+      \\
+    %%
+      \ev{\sapp[^\mlab]{\mexpi0}{\mexpi1}, \menv, \msto, \mkont}{\mmlab} &\machstep&
+      \ev{\mexpi0, \menv, \msto', \spush{\kar[^\mlab]{\mexpi1, \menv}}{\mkaddr}}{\mmlab}
+      \\
+      &&\text{where } \mkaddr = \alloc(\mstate) \\
+      &&\phantom{\text{where }} \msto' = \ext{\msto}{\mkaddr}{\setof{\mkont}} \\
+      %%
+      \ev{\sif{\mexpi0}{\mexpi1}{\mexpi2}, \menv, \msto, \mkont}{\mmlab} &\machstep&
+      \ev{\mexpi0, \menv, \msto', \spush{\kif{\mexpi1, \mexpi2, \menv}}{\mkaddr}}{\mmlab} \\
+      &&\text{where } \mkaddr = \alloc(\mstate) \\
+      &&\phantom{\text{where }} \msto' = \ext{\msto}{\mkaddr}{\setof{\mkont}} \\
+     %%
+      \ev{\slam{\mvar}{\mexp}, \menv, \msto, \mkont}{\mmlab} &\machstep&
+      \co{\mkont, \clos{\mvar, \mexp, \menv}, \msto}{\mmlab}
+      \\
+      %%
+      \ev{\slit{\mconstant}, \menv, \msto, \mkont}{\mmlab} &\machstep&
+      \co{\mkont, \mconstant, \msto}{\mmlab}
+      \\
+      %%
+      %% CONTINUE
+      \co{\spush{\kif{\mexpi0, \mexpi1, \menv}}{\mkaddr}, \strue, \menv, \msto}{\mmlab} &\machstep&
+      \ev{\mexpi0, \menv, \msto, \mkont}{\mmlab} \text{ if } \mkont \in \msto(\mkaddr)
+      \\
+      %%
+      \co{\spush{\kif{\mexpi0, \mexpi1, \menv}}{\mkaddr}, \sfalse, \menv, \msto}{\mmlab} &\machstep&
+      \ev{\mexpi1, \menv, \msto, \mkont}{\mmlab} \text{ if } \mkont \in \msto(\mkaddr)
+      \\
+      %%
+      \co{\spush{\kar[^\mlab]{\mexp, \menv}}{\mkaddr}, \mval, \msto}{\mmlab} &\machstep&
+      \ev[^\mlab]{\mexpi, \menv, \msto', \spush{\kfn[^\mlab]{\mval}}{\mkaddr}}{\mmlab}
+      \\
+      && \text{where } \maddr' = \alloc(\mstate) \\
+      &&\phantom{\text{where }} \msto' = \ext{\msto}{\maddr'}{\setof{\mval}} \\
+      %%
+      \co{\spush{\kfn[^\mlab]{\mval_f}}{\mkaddr}, \mval, \msto}{\mmlab} &\machstep&
+      \ap{\mval_f, \mval, \msto, \mkont}{\mmlab} \text{ if } \mkont \in \msto(\mkaddr)
+      \\
+      %%
+      %% APPLY
+      \ap{\clos{\mvar, \mexp, \menv}, \mval, \msto, \mkont}{\mmlab} &\machstep&
+      \ev{\mexp, \menv', \msto', \mkont}{\mmlab} \\
+      &&\text{where } \maddr = \alloc(\mstate) \\
+      &&\phantom{\text{where }} \menv' = \menv[\mvar \mapsto \maddr] \\
+      &&\phantom{\text{where }} \msto' = \ext{\msto}{\maddr}{\setof{\mval}}
+    \end{array}    
+  \end{gather*}
+  \caption{Standard reduction rules}
+  \label{fig:standard}
+\end{figure*}
+
+\begin{figure*}
+  \begin{gather*}
+    \begin{array}{@{}r@{\ }c@{\ }l@{}}
+      \mstate & \machstep &\mstate' \text{ defined to be the following} \\
+      %% EVAL
+      \ev{\sMon{\mmlab_u}{\mmlab_c}{\mlab}{(\mscon,\mtcon),\mexp}, \menv, \msto, \mkont}{\mmlab} &\machstep&
+      \ev[^\mlab]{\mexp, \menv, \msto', \spush{\kmon{\mmlab_u}{\mmlab_c}{\mlab}{\mscon, \menv}}{\mkaddr}}{\mmlab} \\
+      &&\text{where } \mkaddr = \alloc(\mstate) \\
+      &&\phantom{\text{where }} \msto' = \ext{\msto}{\mkaddr}{\setof{\mkont}}
+      \\
+      %%
+      %% CONTINUE
+      \co{\spush{\krt{\mmlab'}}{\mkaddr}, \mval, \msto}{\mmlab} &\machstep&
+      \co{\mkont, \mval, \msto}{\mmlab'} \text{ if } \mkont \in \msto(\mkaddr)
+      \\
+      %%
+      \co{\spush{\kmon{\mmlab_u}{\mmlab_c}{\mlab}{\mscon, \menv}}{\mkaddr}, \mval, \msto}{\mmlab} &\machstep&
+      \ck{\mmlab_u}{\mmlab_c}{\mlab}{+}{\mscon, \menv, \mval, \msto, \mkont}{\mmlab} \text{ if } \mkont \in \msto(\mkaddr)
+      \\
+      %%
+      %% Administrative contract checking
+      %% Flat
+      \ck{\mmlab_u}{\mmlab_c}{\mlab}{\mvariance}{\sflat{\mexp}, \menv, \mval, \msto, \mkont}{\mmlab} &\machstep&
+      \ev{\mexp, \menv, \msto', \spush{\kflat[^\mlab]{\mmlab_p, \mval}}{\mkaddr}}{\mmlab} \\
+      &&\text{where } \mkaddr = \alloc(\mstate) \\
+      &&\phantom{\text{where }} \msto' = \ext{\msto}{\mkaddr}{\setof{\mkont}} \\
+      &&\phantom{\text{where }} \mmlab_p = \varianceite{\mvariance}{\mmlab_u}{\mmlab_c}
+      \\
+      % %% Higher-order
+      \ck{\mmlab_u}{\mmlab_c}{\mlab}{\mvariance}{\sarr{\mname}{\mscon_D}{\mscon_R}, \menv, \mval, \msto, \mkont}{\mmlab} &\machstep&
+      \co{\mkont, \blclos{\mname}{\mmlab_u}{\mmlab_c}{\mlab}{\mscon_D}{\mscon_R}{\menv}{\maddr}, \msto'}{\mmlab} \\
+      &\text{ if }& \mval \equiv \clos{\mvar, \mexp, \menv'}
+       \text{ or }  \mval \equiv \blclos{\mname'}{\mmlab_u'}{\mmlab_c'}{\mlab'}{\mscon_D'}{\mscon_R'}{\menv'}{\maddr'} \\
+      &&\text{where } \maddr = \alloc(\mstate) \\
+      &&\phantom{\text{where }} \msto' = \ext{\msto}{\maddr}{\setof{\mval}}
+      \\
+      %%
+      \ck{\mmlab_u}{\mmlab_c}{\mlab}{\mvariance}{\sarr{\mname}{\mscon_D}{\mscon_R}, \menv, \mval, \msto, \mkont}{\mmlab} &\machstep&
+      \sblame{\mmlab_p} \\
+      &\text{ if }& \mval \nequiv \clos{\mvar, \mexp, \menv'}
+       \text{ and }  \mval \nequiv \blclos{\mname'}{\mmlab_u'}{\mmlab_c'}{\mlab'}{\mscon_D'}{\mscon_R'}{\menv'}{\maddr'} \\
+      &&\text{where } \mmlab_p = \varianceite{\mvariance}{\mmlab_u}{\mmlab_c}
+      \\
+      %% CONS CONTRACT
+      % Start checking car
+      \co{\spush{\kmon{\mmlab_u}{\mmlab_c}{\mlab}{\sconsc{\mscon_A}{\mscon_D}, \menv}}{\mkaddr},
+          \vcons{\maddr_A}{\maddr_D},
+          \msto}{\mmlab} &\machstep&
+      \ck{\mmlab_u}{\mmlab_c}{\mlab}{+}{\mscon_A, \menv, \mval_A, \msto,
+        \spush{\kchkA[^{\mmlab_u, \mmlab_c}_\mlab]{\mscon_D, \menv, \maddr'_A, \maddr'_D, \maddr_D}}{\mkaddr}}{\mmlab} \\
+      &\text{ if }& \mval_A \in \msto(\maddr_A) \\
+      &&\text{where } (\maddr'_A, \maddr'_D) = \alloc(\mstate)
+      \\
+      % Start checking cdr
+      \co{\spush{\kchkA[^{\mmlab_u, \mmlab_c}_\mlab]{\mscon_D, \menv, \maddr'_A, \maddr'_D, \maddr_D}}{\mkaddr},
+          \mval, \msto}{\mmlab} &\machstep&
+      \ck{\mmlab_u}{\mmlab_c}{\mlab}{+}{\mscon_D, \menv, \mval_D, \msto',
+                                \spush{\kchkD{\maddr'_A, \maddr'_D}}{\mkaddr}}{\mmlab}
+      \text{ if } \mval_D \in \msto(\maddr_D) \\
+      &&\text{where } \msto' = \ext{\msto}{\maddr'_A}{\setof{\mval}}
+      \\
+      %%
+      % End checking cdr
+      \co{\spush{\kchkD{\maddr_A, \maddr_D}}{\mkaddr}, \mval, \msto}{\mmlab} &\machstep&
+      \co{\mkont, \vcons{\maddr_A}{\maddr_D}, \ext{\msto}{\maddr_D}{\setof{\mval}}}{\mmlab}
+      \\
+      %% END CONS CONTRACT
+      %%
+      \co{\spush{\kflat[^\mlab]{\mmlab_u, \mval'}}{\mkaddr}, \mval, \msto}{\mmlab} &\machstep&
+      \ap[^\mlab]{\mval, \mval', \msto, \spush{\kcheck{\mmlab_u, \mval, \mval'}}{\mkaddr}}{\mmlab}
+      \\
+      %%
+      \co{\spush{\kcheck{\mmlab_u, \mval_C, \mval}}{\mkaddr}, \strue, \msto}{\mmlab} &\machstep&
+      \co{\mkont, \mval, \msto}{\mmlab} \text{ if } \mkont \in \msto(\mkaddr)
+      %% \attach{\mval_C}{\mval}
+      \\
+      %%
+      \co{\spush{\kcheck{\mmlab_u, \mval_C, \mval}}{\mkaddr}, \sfalse, \msto}{\mmlab} &\machstep&
+      \sblame{\mmlab_u}
+      \\
+      %%
+      \co{\spush{\kmcall[^\mlab]{\mmlab_u, \mmlab_c, \mscon_R, \menv, \mname, \maddr}}{\mkaddr}, \mval, \msto}{\mmlab} &\machstep&
+      \ap{\mval_f, \mval, \msto, \spush{\kpost[^{\mmlab_u, \mmlab_c}_\mlab]{\mscon_R, \menv, \mname}}{\mkaddr}}{\mname}
+        \text{ if } \mval_f \in \msto(\maddr)
+      \\
+      %%
+      \co{\spush{\kpost[^{\mmlab_u, \mmlab_c}_\mlab]{\mscon_R, \menv, \mname}}{\mkaddr}, \mval, \msto}{\mmlab} &\machstep&
+      \ck{\mmlab_u}{\mmlab_c}{\mlab}{+}{\mscon_R, \menv, \mval, \msto, \spush{\krt{\mname}}{\mkaddr}}{\mmlab}
+      \\
+      %%
+      %% APPLY
+      \ap[^\mlab]{\blclos{\mname}{\mmlab_u}{\mmlab_c}{\mlab'}{\mscon_D}{\mscon_R}{\menv}{\maddr}, \mval, \msto, \mkont}{\mmlab} &\machstep&
+      \ck{\mmlab_u}{\mmlab_c}{\mlab'}{-}{\mscon_D, \menv, \mval, \msto',
+          \spush{\kmcall[^\mlab]{\mmlab_u, \mmlab_c, \mscon_R, \menv, \mname, \maddr}}{\mkaddr}}{\mmlab} \\
+      &&\text{where } \mkaddr = \alloc(\mstate) \\
+      &&\phantom{\text{where }} \msto' = \ext{\msto}{\mkaddr}{\setof{\mkont}}
+      %%
+    \end{array}
+  \end{gather*}
+  \caption{Non-standard rules}
+\label{fig:concrete}
+\end{figure*}
+%\balance
+%\bibliographystyle{plain}
+%\input{paper.bbl}
+%\bibliography{local,bibliography}
+
+% \include{appendix}
+\end{document}

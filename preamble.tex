@@ -1,0 +1,107 @@
+\input{common}
+\usepackage{textcomp}
+
+% Metavariables
+\newcommand{\mprog}{p}
+\newcommand{\mdef}{D}
+\newcommand{\mcontract}{C}
+\newcommand{\mscon}{S}
+\newcommand{\mtcon}{R}
+\newcommand{\mname}{n}
+\newcommand{\mevent}{A}
+\newcommand{\mconstant}{c}
+\newcommand{\mvpat}{p}
+\newcommand{\mcontracts}{{\mathcal C}}
+\newcommand{\mnames}{N}
+\newcommand{\premons}{P}
+
+\newcommand{\mmlab}{\beta}
+\newcommand{\mmaddr}{a_m}
+\newcommand{\mpval}{v_\mathit{pre}}
+\newcommand{\mframe}{\phi}
+\newcommand{\mmsto}{\sigma_{\mathcal C}}
+
+\newcommand{\mvariance}{\pm}
+\newcommand{\varianceite}[3]{\text{if } #1 > 0 ? #2 : #3}
+
+% Functions
+\newcommand{\accept}{\mathit{accept}}
+\newcommand{\convertcons}{\mathit{convert}}
+
+% States
+\newcommand{\ev}[3][\ ]{\tuple[#1]{ev}{#2}_{#3}}
+\newcommand{\co}[3][\ ]{\tuple[#1]{co}{#2}_{#3}}
+\newcommand{\ap}[3][\ ]{\tuple[#1]{ap}{#2}_{#3}}
+\newcommand{\ck}[6]{\tuple[^{#1,#2}_{#3,#4}]{ck}{#5}_{#6}}
+\newcommand{\ans}[1]{\tuple{ans}{#1}}
+\newcommand{\sblame}[1]{{\tt blame}_{#1}}
+
+\newcommand{\kev}[2][\ ]{\tuple[#1]{arg}{#2}}
+\newcommand{\krt}[2][\ ]{\tuple[#1]{ret}{#2}}
+\newcommand{\kmon}[4]{\tuple[^{#1,#2}_{#3}]{mn}{#4}}
+\newcommand{\kflat}[2][\ ]{\tuple[#1]{flt}{#2}} % evaluating flat contract expression
+\newcommand{\kcheck}[2][\ ]{\tuple[#1]{chk}{#2}} % checking flat contract
+\newcommand{\kchkA}[2][\ ]{\tuple[#1]{chkA}{#2}}
+\newcommand{\kchkD}[2][\ ]{\tuple[#1]{chkD}{#2}}
+\newcommand{\kmcall}[2][\ ]{\tuple[#1]{call}{#2}}
+\newcommand{\kpost}[2][\ ]{\tuple[#1]{post}{#2}}
+% Syntax
+\newcommand{\sMon}[4]{\tuple[^{#1,#2}_{#3}]{mon}{#4}}
+\newcommand{\sdefine}[3][\ ]{\tuple[#1]{define}{#2, #3}}
+\newcommand{\sdefinec}[4][\ ]{\tuple[#1]{define/contract}{#2,#3,#4}}
+\newcommand{\sunit}{{\tt '()}}
+\newcommand{\semptyp}{{\tt null?}}
+\newcommand{\sconsc}[2]{\langle #1, #2 \rangle}
+%\newcommand{\sconsc}[2]{\tuple{cons/c}{#1, #2}}
+\newcommand{\scons}{\tt cons}
+\newcommand{\scar}{{\tt car}}
+\newcommand{\scdr}{{\tt cdr}}
+\newcommand{\spairp}{{\tt pair?}}
+
+\newcommand{\stOr}[2]{#1 \cup #2}
+\newcommand{\stseq}[2]{#1 \cdot #2}
+\newcommand{\stmany}[1]{#1^*}
+\newcommand{\stnot}[1]{\text{\textasciitilde} #1}
+\newcommand{\sddd}{{\tt ...}}
+\newcommand{\snonevent}[1]{! #1}
+
+\newcommand{\sarr}[3]{#1 : #2 \mapsto #3}
+\newcommand{\sflat}[1]{{\tt flat}(#1)}
+
+\newcommand{\scallev}[2]{{\tt call}(#1, #2)}
+\newcommand{\sretev}[2]{{\tt ret}(#1, #2)} 
+\newcommand{\swc}{\_} 
+
+\newcommand{\spush}[2]{#1 : #2}
+
+\newcommand{\attach}[2]{\mathit{attach}(#1, #2)}
+
+% Values
+\newcommand{\varr}[3]{#2 \mapsto^{#1} #3}
+\newcommand{\sconval}[1]{\tuple{mfun}{#1}}
+\newcommand{\sflatconval}[1]{\tuple{mcon}{#1}}
+\newcommand{\blackhole}{\bullet}
+\newcommand{\vconsf}[1]{\tuple{consD}{#1}}
+\newcommand{\vcons}[2]{\tuple{cons}{#1, #2}}
+\newcommand{\vMon}[2][\ ]{\tuple[#1]{mon}{#2}}
+\newcommand{\blclos}[8]{#1 :_{#4} #5^{#3} \underset{#7}{\dashrightarrow} #6^{#2} \langle #8 \rangle}
+
+% Notation
+\newcommand{\many}[1]{\overline{#1}}
+
+% Spaces
+\newcommand{\Prog}{\mathit{Program}}
+\newcommand{\Defines}{\mathit{Definition}}
+\newcommand{\Contract}{\mathit{Contract}}
+\newcommand{\SContract}{\mathit{Structural}}
+\newcommand{\TContract}{\mathit{Temporal}}
+\newcommand{\Event}{\mathit{Event}}
+\newcommand{\VPat}{\mathit{VarPattern}}
+\newcommand{\Constant}{\mathit{Constant}}
+\newcommand{\PreValue}{\mathit{PreValue}}
+\newcommand{\PreMonitor}{\mathit{PreMonitor}}
+\newcommand{\ModuleLabel}{\mathit{ModLabel}}
+\newcommand{\MStore}{\mathit{MStore}}
+\newcommand{\Unit}{\mathit{Unit}}
+
+\newcommand{\Frame}{\mathit{Frame}}
