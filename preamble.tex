@@ -6,7 +6,7 @@
 \newcommand{\mdef}{D}
 \newcommand{\mcontract}{C}
 \newcommand{\mscon}{S}
-\newcommand{\mtcon}{R}
+\newcommand{\mtcon}{T}
 \newcommand{\mname}{n}
 \newcommand{\mevent}{A}
 \newcommand{\mconstant}{c}
@@ -15,6 +15,9 @@
 \newcommand{\mnames}{N}
 \newcommand{\premons}{P}
 
+\newcommand{\mtimeline}{a_t}
+\newcommand{\mstimeline}{a_t^{\toplevel}{}}
+\newcommand{\msmlab}{\beta}
 \newcommand{\mmlab}{\beta}
 \newcommand{\mmaddr}{a_m}
 \newcommand{\mpval}{v_\mathit{pre}}
@@ -24,15 +27,17 @@
 \newcommand{\mvariance}{\pm}
 \newcommand{\varianceite}[3]{\text{if } #1 > 0 ? #2 : #3}
 
+\newcommand{\toplevel}{\Lambda}
+
 % Functions
 \newcommand{\accept}{\mathit{accept}}
 \newcommand{\convertcons}{\mathit{convert}}
 
 % States
-\newcommand{\ev}[3][\ ]{\tuple[#1]{ev}{#2}_{#3}}
-\newcommand{\co}[3][\ ]{\tuple[#1]{co}{#2}_{#3}}
-\newcommand{\ap}[3][\ ]{\tuple[#1]{ap}{#2}_{#3}}
-\newcommand{\ck}[6]{\tuple[^{#1,#2}_{#3,#4}]{ck}{#5}_{#6}}
+\newcommand{\ev}[4][\ ]{\tuple[#1]{ev}{#2}_{#3,#4}}
+\newcommand{\co}[4][\ ]{\tuple[#1]{co}{#2}_{#3,#4}}
+\newcommand{\ap}[4][\ ]{\tuple[#1]{ap}{#2}_{#3,#4}}
+\newcommand{\ck}[7]{\tuple[^{#1,#2}_{#3,#4}]{ck}{#5}_{#6,#7}}
 \newcommand{\ans}[1]{\tuple{ans}{#1}}
 \newcommand{\sblame}[1]{{\tt blame}_{#1}}
 
@@ -43,7 +48,7 @@
 \newcommand{\kcheck}[2][\ ]{\tuple[#1]{chk}{#2}} % checking flat contract
 \newcommand{\kchkA}[2][\ ]{\tuple[#1]{chkA}{#2}}
 \newcommand{\kchkD}[2][\ ]{\tuple[#1]{chkD}{#2}}
-\newcommand{\kmcall}[2][\ ]{\tuple[#1]{call}{#2}}
+\newcommand{\kmcall}[4]{\tuple[^{#1,#2}_{#3}]{call}{#4}}
 \newcommand{\kpost}[2][\ ]{\tuple[#1]{post}{#2}}
 % Syntax
 \newcommand{\sMon}[4]{\tuple[^{#1,#2}_{#3}]{mon}{#4}}
@@ -81,10 +86,11 @@
 \newcommand{\sconval}[1]{\tuple{mfun}{#1}}
 \newcommand{\sflatconval}[1]{\tuple{mcon}{#1}}
 \newcommand{\blackhole}{\bullet}
-\newcommand{\vconsf}[1]{\tuple{consD}{#1}}
+\newcommand{\vconsf}[2]{\tuple{consD}{#1}_{#2}}
 \newcommand{\vcons}[2]{\tuple{cons}{#1, #2}}
+\newcommand{\vconst}[3]{\tuple{cons}{#1, #2}_{#3}}
 \newcommand{\vMon}[2][\ ]{\tuple[#1]{mon}{#2}}
-\newcommand{\blclos}[8]{#1 :_{#4} #5^{#3} \underset{#7}{\dashrightarrow} #6^{#2} \langle #8 \rangle}
+\newcommand{\blclos}[9]{#1 :_{#4} #5^{#3} \underset{#7,#8}{\dashrightarrow} #6^{#2} \langle #9 \rangle}
 
 % Notation
 \newcommand{\many}[1]{\overline{#1}}
@@ -104,4 +110,5 @@
 \newcommand{\MStore}{\mathit{MStore}}
 \newcommand{\Unit}{\mathit{Unit}}
 
+\newcommand{\Timeline}{\mathit{Timeline}}
 \newcommand{\Frame}{\mathit{Frame}}
