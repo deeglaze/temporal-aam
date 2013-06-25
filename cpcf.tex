@@ -44,17 +44,20 @@
 \section{Introduction}
 
 Software systems are typically large, consist of many modules, and
-have invariants that are typically inexpressible in the language's
-static type system, if it has one. When this is the case, one might
-hope to rely on software contracts~\cite{p} to give dynamic guarantees
-about the behavior of one's system, blaming the correct party
-responsible for any violation of these invariants. There is a proposed
-system of \emph{temporal contracts}~\citep{ianjohnson:dfm:icfp11} that
-can track certain path guarantees about a program such as, ``a file
-can only be closed if it has been opened'' and, ``if function A is
-given a function B, then B may not be called once A returns.'' Such
-invariants are important for interfaces that have set-up and tear-down
-protocols to follow.
+have invariants that are typically inexpressible or too costly to
+express (and prove) in the language's static type system, if it has
+one. When this is the case, one might hope to rely on software
+contracts~\cite{p} to give dynamic guarantees about the behavior of
+one's system, blaming the correct party responsible for any violation
+of these invariants. A proposed system of \emph{temporal
+  contracts}~\citep{ianjohnson:dfm:icfp11} provide a linguistic
+mechanism to describe temporal properties that usually are checked
+extra-linguistically via model-checking an abstraction of the
+program. Example temporal properties are, ``a file can only be closed
+if it has been opened'' and, ``if function A is given a function B,
+then B may not be called once A returns.'' Such invariants are
+important for interfaces that have set-up and tear-down protocols to
+follow.
 
 There are downsides to software contracts, however. If a contract is
 violated, a blame exception is thrown or the program simply terminates
@@ -75,22 +78,23 @@ interactions with a module, and not just localized pieces. We propose
 a framework that is composable with techniques to verify functional
 contracts, and transparently leverages model checking technology to
 verify adherence to temporal contracts. The technique uses the
-Abstracting Abstract Machines (AAM) approach to forming the Kripke
-structure that we eventually model-check. AAM was originally targeted
-towards describing flow analyses, but is robust enough to apply to
-model-checking higher-order programs. The online nature of
-higher-order flow analysis algorithms creates demand for an online LTL
-model checker. Since AAM describes its abstractions in terms of a
-reduction relation, Maude's LTL checker~\citep{?} is our tool of
-choice. There is a fly in the ointment, however. To converge on a
-Kripke structure more quickly we sometimes apply a \emph{store
+Abstracting Abstract Machines (AAM) approach~\citet{dvanhorn:AAM} to
+forming the Kripke structure that we eventually model-check. AAM was
+originally targeted towards describing flow analyses, but is robust
+enough to apply to model-checking higher-order programs. The online
+nature of higher-order flow analysis algorithms creates demand for an
+online LTL model checker. Since AAM describes its abstractions in
+terms of a reduction relation, Maude's LTL checker~\citep{?} is our
+tool of choice. There is a fly in the ointment, however. To converge
+on a Kripke structure more quickly we sometimes apply a \emph{store
   widening} technique, that is expressed in terms of a
 \emph{meta-}reduction-relation. We can use Maude's reflective
 capabilities to express this relation, but the Kripke structure we
 want must be reifed from the states of the
 meta-reduction-relation. Maude's checker does not have an interface
 for driving a meta-reduction-relation to reify a Kripke structure from
-its states, so we propose a design for such a mechanism.
+its states, so we propose a design for such a mechanism, but evaluate
+our current system on a fully-run store-widened semantics.
 
 Our contributions in this paper are as follows:
 \begin{itemize}
@@ -100,15 +104,19 @@ Our contributions in this paper are as follows:
 
 \section{Related Work}
 
-Attempts to do model checking of higher-order languages, have either
-been imprecise, inapplicable to languages with more than simple types,
-or both. The SLAM project~\citep{?} for model-checking C assumes that all
+Model-checking and contract verification (proving functional
+correctness) are huge fields and it is important to view our work in
+the greater context of these worlds of research.
+
+\paragraph{First-order model-checking:}{
+The SLAM project~\citep{?} for model-checking C assumes that all
 function pointers of the same type alias. For C programs that use
 callbacks heavily, this overapproximation leads to longer checking
 times due to more (spurious) paths to follow, and the imprecision
 inherent in any program approximation gets exacerbated by the
 additional pressure on abstract resources.
-
+}
+\paragraph{Higher-order model-checking}{
 A technique that specifically targets higher-order languages,
 higher-order recursion schemes (HORS)~\citep{?}, assumes a
 call-by-name semantics for the language it checks. The current
@@ -120,6 +128,33 @@ transformed into CPS, since then the intended evaluation order is
 encoded into call-by-name. This still does not address the need for
 simple types, and does not apply for languages that cannot be
 expressed in CPS.
+}
+\paragraph{Static contract verification}{
+In the world of statically verifying software contracts, there is much
+more work. There have been many successful efforts in the realm of
+first-order contract verification~\citep{?,?,?}, but the techniques
+employed are inherently first-order: the only values are
+booleans. \citet{flanagan:hybrid-type-checking}'s notion of hybrid
+type checking is one way to state the problem: dynamic types are
+essentially flat contracts, and are treated as subtypes of anything
+during static checking. If an external theorem prover can prove that
+the flat contracts always hold, the dynamic checks can be safely
+removed. \citet{dvanhorn:oopsla2012:symbolic-eval} use AAM on a module
+semantics with higher-order contracts and is the most related to this
+work; whereas they focus on a concrete semantics for handling unknown
+values and an external theorem prover to show contract containment,
+our work focuses on an orthogonal issue of temporal contract
+monitoring and uses model-checking techniques. Our techniques should
+smoothly integrate with theirs when considering partial programs, and
+is left to future work. \citet{dvanhorn:xu:ocaml-simplifier} describe
+a higher-order contract verification system for OCaml by inlining all
+contract monitors and relying on a system of simplifications further
+enhanced by an SMT solver to optimize away dynamic checks.
+}
+
+\section{Overview of temporal higher-order contracts}
+
+Examples examples examples.
 
 \section{Semantics of Temporal Higher-Order Contracts}
 
@@ -132,6 +167,10 @@ Todo.
 \section{Design for a reflective model checker}
 
 Ya... if we actually do this.
+
+\section{Evaluation}
+
+Our examples didn't take hours to check!
 
 \section{Conclusion}
 
