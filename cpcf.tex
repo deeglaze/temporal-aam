@@ -191,6 +191,8 @@ Shit works.
 
 %%
 \section{Everything Technical}\label{sec:technical}
+
+%%
 Syntax:
 \begin{align*}
 \mexp \in \Expr &::=
@@ -201,8 +203,8 @@ Syntax:
  \alt \sMon{\mmlab}{\mmlab}{\mlab}{\mcontract, \mexp}
  \alt \slit{\mconstant} \\
 \mconstant \in \Constant &= -1 \alt 0 \alt 1 \alt \ldots \alt \strue \alt \sfalse \alt \scons \alt \scar \alt \ldots \\
-\mvar \in \Var &\text{ an infinite set} \\
-\mlab \in \Label &\text{ an infinite set} \\
+\mvar \in \Var &\quad\text{ an infinite set} \\
+\mlab \in \Label &\quad\text{ an infinite set} \\
 \mmlab,\mname \in \ModuleLabel &\text{ an infinite set} \\
 \msmlab \in \ModuleLabel^{\toplevel} &::= \mmlab \alt \toplevel \\
 \mcontract \in \Contract &= \SContract \times \TContract \\
@@ -211,11 +213,17 @@ Syntax:
       \mevent
  \alt \snonevent{\mevent}
  \alt \stnot{\mtcon}
- \alt \stOr{\mtcon}{\mtcon}
+ \alt \stOr{\mtcon_1}{\mtcon_2}
  \alt \stseq{\mtcon}{\mtcon}
- \alt \stmany{\mtcon}
+ \alt \stmany{\mtconNoB}
  \alt \sddd \\
-\mevent \in \Event &::= \scallev{\mname}{\mvpat} \alt \sretev{\mname}{\mvpat} \\
+&\text{ where $\mtcon_1$ and $\mtcon_2$ do not cross-bind } \\ %TODO: explain cross-bind in prose
+\mtconNoB \in \TContract \backslash \mbevent &\quad\text{ same as $\mtcon$, but without binding } \\
+\mevent \in \Event &::= \scallev{\mname}{\mvpat} \alt \sretev{\mname}{\mvpat} \alt \mbevent \\
+\mbevent \in \Event &::= \scallev{\mbfun}{\mbvar} \alt \sretev{\mbfun}{\mbvar} \\
+&\alt \scallev{\mbfun}{\mvpat} \alt \sretev{\mbfun}{\mvpat} \\
+&\alt \scallev{\mname}{\mbvar} \alt \sretev{\mname}{\mbvar} \\
+\mbfun, \mbvar &::= \mname_{id} \quad\text{ where $id$ identifies the binding } \\
 \mvpat \in \VPat &::= \mname \alt \swc \alt \mconstant
 \end{align*}
 %%
@@ -240,7 +248,7 @@ Value space:
   \mval \in \Value &=
     \clos{\mvar, \mexp, \menv}
    \alt \blclos{\mname}{\mmlab}{\mmlab}{\mlab}{\mscon}{\mscon}{\menv}{\mtimeline}{\maddr}
-   \alt \mconstant
+   \alt \mconstant \\
 %   \alt \blackhole \\
 &  \alt \vconsf{\maddr}
    \alt \vcons{\maddr}{\maddr}
