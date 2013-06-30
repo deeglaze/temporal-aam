@@ -1,5 +1,5 @@
 \documentclass[preprint,onecolumn,9pt]{sigplanconf} %{onecol}
-\usepackage{alltt,mathpartir}
+\usepackage{alltt,mathpartir,multicol}
 \usepackage{amsmath,amsthm}
 \usepackage{amssymb}
 \usepackage{stmaryrd}
@@ -160,10 +160,96 @@ See section \ref{sec:technical} for now.
 %%
 
 %%
-Todo.
+LTL only has a finite set of atomic proposisitions for states, so there is no hope for a fully precise account for the binding across states.
+%
+We instead have to enumerate the concrete propositions on instantiations of the bindings.
+%
+Binding implicitly requires equality, so we must treat (possible) references conservatively.
+%
+We can use our control-flow analysis to limit how many instantiations we need to do.
+%
+The temporal concatenation operator cannot be translated structurally since bindings in the left contract can have references in the right contract.
+%
+Thus, our translation function takes the contract to translate, the result of the flow analysis, an accumulator for temporal contracts that ``happen next,'' and an environment of bindings.
 %%
 
 %%
+\begin{figure}
+  \begin{align*}
+    \toltl(\mevent, \mgraph, \maccum, \menv) &= \bigwedge\limits_{(\mevent', \mgraph', \menv') \in \splitpattern(\mevent, \mgraph, \menv)}{\ltland{\mevent'}{\ltlnext{\toltl(\maccum, \mgraph', \sddd, \menv')}}}
+    \\
+    \toltl(\snonevent{\mevent}, \mgraph, \maccum, \menv) &= \bigvee\limits_{A \in \ltlactions \setminus \setof{\mevent}}{A}
+    \\
+    \toltl(\stnot{\mtcon}, \mgraph, \maccum, \menv) &= \ltlnot{\toltl(\mtcon, \mgraph, \stnot{\maccum}, \menv)} % WRONG
+    \\
+    \toltl(\stOr{\mtcon_0}{\mtcon_1}, \mgraph, \maccum, \menv) &= \ltlor{\toltl(\mtcon_0, \mgraph, \maccum, \menv)}{\toltl(\mtcon_1, \mgraph, \maccum, \menv)}
+    \\
+    \toltl(\stseq{\mtcon_0}{\mtcon_1}, \mgraph, \maccum, \menv) &= \toltl(\mtcon_0, \mgraph, \stseq{\mtcon_1}{\maccum}, \menv)
+    \\
+    \toltl(\stmany{\mtconNoB}, \mgraph, \maccum, \menv) &= \ltlW{\toltl(\mtconNoB, \mgraph, \sddd, \menv)}{\toltl(\maccum, \mgraph, \sddd, \menv)}
+    \\
+    \toltl(\sddd, \mgraph, \sddd, \menv) &= \ltlTrue
+    \\
+    \toltl(\sddd, \mgraph, \maccum, \menv) &= \ltlW{\ltlTrue}{\toltl(\maccum, \mgraph, \sddd, \menv)}
+  \end{align*}
+  
+  \caption{Translation of temporal contracts to LTL}
+\label{fig:translation}
+\end{figure}
+%%
+
+%%
+The metafunction $\splitpattern$ is crutial for the understanding of bindings in the temporal contract.
+%
+All points in the abstract state space that match the event will contribute their bindings to the environment for interpreting the rest of the contract.
+%
+This can lead to a blow-up for temporal contracts that liberally use binding, but we can prune the number of propositions we construct by restricting the graph to only nodes reachable from the ones we match against the event.
+%
+Since CFA abstracts bindings, we can't always be certain we have exact equality when looking up bindings, too.
+%
+Thus, $\splitpattern$ considers some values to both match and not match a given pattern.
+%%
+
+\begin{align*}
+  \splitpattern(\scallev{\mfnpat}{\mvpat}, \mgraph, \menv) &= \setbuild{(\mnode,\restricttoreachable(\mgraph,\mnode), \menv')}{(\mnode,\menv') \in \matchcall(\mfnpat, \mvpat, \mgraph, \menv)}\\
+\\
+  \splitpattern(\sretev{\mfnpat}{\mvpat}, \mgraph, \menv) &= \setbuild{(\mnode,\restricttoreachable(\mgraph,\mnode), \menv')}{(\mnode,\menv') \in \matchret(\mfnpat, \mvpat, \mgraph, \menv)}\\
+\\
+  \matchcall(\mtoplevelname, \mvpat, \mgraph, \menv) &=
+    \setbuild{(\mnode, \menv')}
+             {\\
+              \mnode\equiv\co{\spush{\kmcall{\mmlab_u}{\mmlab_c}{\mlab}{\mscon_R, \mtimeline, \menv_0, \mtoplevelname, \maddr}}{\mkaddr}, \mval, \msto}{\msmlab}{\mstimeline} \in \mgraph\span\omit \\
+                &\wedge \menv' \in \matchv(\mvpat, \mval, \menv)}
+\\
+  \matchcall(\mname, \mvpat, \mgraph, \menv) &=
+    \setbuild{(\mnode, \menv')}
+             {\\
+              \mnode\equiv\co{\spush{\kmcall{\mmlab_u}{\mmlab_c}{\mlab}{\mscon_R, \mtimeline, \menv_0, \mtoplevelname, \maddr}}{\mkaddr}, \mval, \msto}{\msmlab}{\mstimeline} \in \mgraph\span\omit \\
+                &\wedge \menv' \in \matchv(\mvpat, \mval, \menv)} \\
+  \text{if } & \menv(\mname) = \blclos{\mtoplevelname}{\mmlab_u}{\mmlab_c}{\mlab}{\mscon_?}{\mscon_R}{\menv}{\mtimeline}{\maddr}
+\\
+  \matchret(\mtoplevelname, \mvpat, \mgraph, \menv) &=
+    \setbuild{(\mnode, \menv')}
+             {\\
+              \mnode\equiv\co{\spush{\krt{\mmlab',\mtimeline'}}{\mkaddr}, \mval, \msto}{\mtoplevelname}{\mstimeline} \in \mgraph\span\omit \\
+                &\wedge \menv' \in \matchv(\mvpat, \mval, \menv)}
+\\
+  \matchret(\mname, \mvpat, \mgraph, \menv) &=
+    \setbuild{(\mnode, \menv')}
+             {\\
+              \mnode\equiv\co{\spush{\krt{\mmlab',\mtimeline'}}{\mkaddr}, \mval, \msto}{\mtoplevelname}{\mtimeline} \in \mgraph\span\omit \\
+                &\wedge \menv' \in \matchv(\mvpat, \mval, \menv)} \\
+  \text{if } & \menv(\mname) \equiv \blclos{\mtoplevelname}{\mmlab_u}{\mmlab_c}{\mlab}{\mscon_c}{\mscon_R}{\menv''}{\mtimeline}{\maddr}
+\\
+ \matchv(\swc, \mval, \menv) &= \setof{\menv}
+\\
+ \matchv(\sbind{\mname}, \mval, \menv) &= \setof{\ext{\menv}{\mname}{\mval}}
+\\
+ \matchv(\sref{\mname}, \mval, \menv) &= \text{ if } \mval \sqsupseteq \menv(\mname) \text{ then } \setof{\menv} \text{ else } \varnothing
+\\
+ \matchv(\mconstant, \mval, \menv) &= \text{ if } \mval \sqsupseteq \mconstant \text{ then } \setof{\menv} \text{ else } \varnothing
+\end{align*}
+
 \section{Design for a reflective model checker}
 %%
 
