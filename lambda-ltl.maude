@@ -165,7 +165,7 @@ mod WIDE-CESK-PREDS is
 
   ceq $CEGAR(T0, Tφ, S) = interpretCheck(T0, Tφ, CFA(S)) if S == CFA(S) .
   ceq $CEGAR(T0, Tφ, S) = counterexample(TL0, TL1) if counterexample(TL0, TL1) := interpretCheck(T0, Tφ, CFA(S)) .
-  eq $CEGAR(T0, Tφ, S) = false ***($CEGAR(T0, Tφ, CFA(S))) [owise] .
+  eq $CEGAR(T0, Tφ, S) = $CEGAR(T0, Tφ, CFA(S)) [owise] .
 
 endm
 

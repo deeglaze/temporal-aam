@@ -4,20 +4,28 @@ load full-maude26.maude . select FULL-MAUDE . loop init . load model-checker.mau
 fmod ToDefine is
   pr STRING .
   pr INT .
-  sorts VAR Addr Label .
-  subsorts Addr < VAR < String . *** Get around preregularity with arbitrary ordering .
-  subsorts Label < Int .
+  sorts VAR Addr Label Timeline Toplevel TTimeline .
+  op ⊤ : -> Toplevel .
+  subsorts Toplevel < Timeline < TTimeline .
+  subsorts Timeline < Addr < VAR < String . *** Get around preregularity with arbitrary ordering .
+  subsorts MLabel < Label < Int .
   op vv_ : String -> VAR [ctor] .
   op aa_ : String -> Addr [ctor] .
-  sorts LCTerm Value Prim Binding Point State StateStamp Frame Reducts HeapDelta Contract .
+  subsorts Toplevel < MLabel .
+  sorts LCTerm Value Prim Binding Point State StateStamp Frame Reducts HeapDelta Unit .
+  sorts Contract SContract TContract .
+  op nul : -> Unit [ctor] .
 endfm
 
 view String from TRIV to STRING is sort Elt to String . endv
 view VAR from TRIV to ToDefine is sort Elt to VAR . endv
 view Addr from TRIV to ToDefine is sort Elt to Addr . endv
+view Timeline from TRIV to ToDefine is sort Elt to Timeline . endv
 view Binding from TRIV to ToDefine is sort Elt to Binding . endv
 view LCTerm from TRIV to ToDefine is sort Elt to LCTerm . endv
 view Contract from TRIV to ToDefine is sort Elt to Contract . endv
+view SContract from TRIV to ToDefine is sort Elt to SContract . endv
+view TContract from TRIV to ToDefine is sort Elt to TContract . endv
 view Value from TRIV to ToDefine is sort Elt to Value . endv
 view Frame from TRIV to ToDefine is sort Elt to Frame . endv
 view State from TRIV to ToDefine is sort Elt to State . endv
@@ -64,32 +72,41 @@ mod Syntax is
   pr OPTION{VAR} * (sort Option{VAR} to VARop) .
 
   *** Terms ***
-  op Var : VAR -> LCTerm [ctor] .
-  op Lit : Int -> LCTerm [ctor] .
-  op Lit : Bool -> LCTerm [ctor] .
-  op Lit : Prim -> LCTerm [ctor] .
-  op Lam : VAR ListVar LCTerm -> LCTerm [ctor] . *** name, binders, body
-  op Let : Bindings LCTerm -> LCTerm [ctor] . 
-  op If : LCTerm LCTerm LCTerm -> LCTerm [ctor] .
-  op App : LCTerm LCTerms -> LCTerm [ctor] .
+  op Var : Label VAR -> LCTerm [ctor] .
+  op Lit : Label Int -> LCTerm [ctor] .
+  op Lit : Label Bool -> LCTerm [ctor] .
+  op Lit : Label Unit -> LCTerm [ctor] .
+  op Lit : Label Prim -> LCTerm [ctor] .
+  op Lam : Label ListVar LCTerm -> LCTerm [ctor] . *** name, binders, body
+  op Let : Label Bindings LCTerm -> LCTerm [ctor] . 
+  op If : Label LCTerm LCTerm LCTerm -> LCTerm [ctor] .
+  op App : Label LCTerm LCTerms -> LCTerm [ctor] .
   *** MOAR ***
-  op Mon : Label Label VARop Contract LCTerm -> LCTerm [ctor] .
+  op Mon : MLabel MLabel Label Contract LCTerm -> LCTerm [ctor] .
 
   *** Contracts ***
+  op mkcon : SContract TContract -> Contract [ctor] .
   op ArrCon : VARop List{Contract} Contract -> Contract [ctor] . *** Optionally name the function.
   op FlatCon : LCTerm -> Contract [ctor] .
 
   op add1 : -> Prim [ctor] .
   op sub1 : -> Prim [ctor] .
   op zero? : -> Prim [ctor] .
+  op cons : -> Prim [ctor] .
+  op null? : -> Prim [ctor] .
+  op pair? : -> Prim [ctor] .
+  op car : -> Prim [ctor] .
+  op cdr : -> Prim [ctor] .
 
   *** Values ***
   op LitV_ : Int -> Value [ctor] .
   op LitV_ : Bool -> Value [ctor] .
   op LitV_ : Prim -> Value [ctor] .
+  op LitV_ : Unit -> Value [ctor] .
   op IntTop : -> Value [ctor] .
-  op CloV : VAR ListVar LCTerm Env -> Value [ctor] .
-  op arr : Label Label Contract Contract Value -> Value [ctor] . *** AAAAGH
+  op CloV : ListVar LCTerm Env -> Value [ctor] .
+  op blCloV : Name MLabel MLabel Label List{SContract} SContract Env Timeline Addr -> Value [ctor] .
+  op vcons : Addr Addr TTimeline -> Value [ctor] .
 endm
 
 ***( This would be a functional module to parameterize over allocation 

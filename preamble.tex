@@ -1,5 +1,5 @@
 \input{common}
-\usepackage{textcomp}
+\usepackage{textcomp,wasysym}
 
 % Metavariables
 \newcommand{\mprog}{p}
@@ -39,12 +39,18 @@
 \newcommand{\mvariance}{\pm}
 \newcommand{\varianceite}[3]{\text{if } #1 > 0 ? #2 : #3}
 
+\newcommand{\mtestack}{\Xi}
+\newcommand{\emptytestack}{\epsilon}
+\newcommand{\cons}[2]{#1{\tt :}#2}
+
+
 \newcommand{\toplevel}{\Lambda}
 
 % Functions
 \newcommand{\accept}{\mathit{accept}}
 \newcommand{\convertcons}{\mathit{convert}}
-\newcommand{\toltl}{\mathit{LTL}}
+\newcommand{\toltl}[5]{[\![#2]\!]_{#3,#4}^{#1}(#5)}
+\newcommand{\stacktoltl}[3]{[\![#2]\!]_{#3}^{#1}}
 
 \newcommand{\matchcall}{\mathit{mcall}}
 \newcommand{\matchret}{\mathit{mret}}
@@ -89,6 +95,8 @@
 \newcommand{\stOr}[2]{#1 \cup #2}
 \newcommand{\stseq}[2]{#1 \cdot #2}
 \newcommand{\stmany}[1]{#1*}
+\newcommand{\stcall}[3]{{\tt call}(#1, {\tt ?}#2) #3}
+\newcommand{\stret}[3]{{\tt ret}(#1, {\tt ?}#2) #3}
 \newcommand{\stnot}[1]{\text{\textasciitilde} #1}
 \newcommand{\sddd}{{\tt ...}}
 \newcommand{\snonevent}[1]{! #1}
@@ -97,8 +105,16 @@
 \newcommand{\sflat}[1]{{\tt flat}(#1)}
 
 \newcommand{\scallev}[2]{{\tt call}(#1, #2)}
-\newcommand{\sretev}[2]{{\tt ret}(#1, #2)} 
+\newcommand{\sretev}[2]{{\tt ret}(#1, #2)}
 \newcommand{\swc}{\_} 
+
+\newcommand{\denoteevent}[3]{[\![ #1 ]\!]_{#2}^{#3}}
+\newcommand{\denotevpat}[2]{[\![ #1 ]\!]_{#2}}
+\newcommand{\aptopcall}[3]{{\tt call}_#3^{\toplevel}(#1,#2)}
+\newcommand{\apvcall}[3]{{\tt call}_#3(#1,#2)}
+\newcommand{\aptopret}[3]{{\tt ret}_#3^{\toplevel}(#1,#2)}
+\newcommand{\apvret}[3]{{\tt ret}_{#3}(#1,#2)}
+\newcommand{\apneg}[1]{{\tt not}#1}
 
 \newcommand{\spush}[2]{#1 : #2}
 
@@ -118,12 +134,14 @@
 % Notation
 \newcommand{\many}[1]{\overline{#1}}
 
+\newcommand{\LTLProp}{\mathit{Prop}_\mathit{LTL}}
+\newcommand{\ltlprop}{\varphi}
 \newcommand{\ltland}[2]{#1 \wedge #2}
 \newcommand{\ltlor}[2]{#1 \vee #2}
 \newcommand{\ltlnot}[1]{\neg #1}
 \newcommand{\ltlW}[2]{#1 {\mathcal W} #2}
 \newcommand{\ltlTrue}{\mathit{True}}
-\newcommand{\ltlnext}[1]{\square{#1}}
+\newcommand{\ltlnext}[1]{\Circle{#1}}
 \newcommand{\ltlactions}{\mathbb{A}}
 
 % Spaces
@@ -140,6 +158,9 @@
 \newcommand{\ModuleLabel}{\mathit{ModLabel}}
 \newcommand{\MStore}{\mathit{MStore}}
 \newcommand{\Unit}{\mathit{Unit}}
+\newcommand{\Graph}{\mathit{Graph}}
+
+\newcommand{\TConEnvStack}{\mathit{Following}}
 
 \newcommand{\Timeline}{\mathit{Timeline}}
 \newcommand{\Frame}{\mathit{Frame}}
