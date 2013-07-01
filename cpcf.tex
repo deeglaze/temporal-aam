@@ -1,4 +1,4 @@
- \documentclass[preprint,onecolumn,9pt]{sigplanconf} %{onecol}
+\documentclass[preprint,onecolumn,9pt]{sigplanconf} %{onecol}
 \usepackage{alltt,mathpartir,multicol}
 \usepackage{amsmath,amsthm}
 \usepackage{amssymb}
@@ -362,24 +362,16 @@ Syntax:
 \mcontract \in \Contract &= \SContract \times \TContract \\
 \mscon \in \SContract &::= \sflat{\mexp} \alt \sarr{\mname}{\mscon}{\mscon} \alt \sconsc{\mscon}{\mscon} \\
 \mtcon \in \TContract &::=
-      \stseq{\mbevent}{\mtcon}
- \alt \mtconNoB
+      \mtconNoB
  \alt \stnot{\mtcon}
  \alt \stOr{\mtcon}{\mtcon}
  \alt \stseq{\mtcon}{\mtcon}
  \alt \stmany{\mtconNoB}
-\\&
- \alt \stcall{\mname}{\mname}{\mtcon}
- \alt \stret{\mname}{\mname}{\mtcon}
  \alt \sddd \\
-&\text{ where $\mtcon_1$ and $\mtcon_2$ do not cross-bind } \\ %TODO: explain cross-bind in prose
-\mtconNoB &::= \maevent \alt \snonevent{\maevent} \alt \stOr{\mtconNoB}{\mtconNoB} \\
-\mevent \in \Event &::= \maevent \alt \mbevent \\
-\maevent &::= \scallev{\mname}{\mvpat} \alt \sretev{\mname}{\mvpat} \\
-\mbevent &::= \scallev{\mbfun}{\mbvar} \alt \sretev{\mbfun}{\mbvar} \\
-&\alt \scallev{\mbfun}{\mvpat} \alt \sretev{\mbfun}{\mvpat} \\
-&\alt \scallev{\mname}{\mbvar} \alt \sretev{\mname}{\mbvar} \\
-\mbfun, \mbvar &::= \mname_{id} \quad\text{ where $id$ identifies the binding } \\
+&\alt \stcall{\mname}{\mname}{\mtcon}
+ \alt \stret{\mname}{\mname}{\mtcon} \\
+\mtconNoB &::= \mevent \alt \snonevent{\mevent} \alt \stOr{\mtconNoB}{\mtconNoB} \\
+\mevent \in \Event &::= \scallev{\mname}{\mvpat} \alt \sretev{\mname}{\mvpat} \\
 \mvpat \in \VPat &::= \mname \alt \swc \alt \mconstant
 \end{align*}
 %%
