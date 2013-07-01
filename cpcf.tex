@@ -144,7 +144,22 @@ Our techniques should smoothly integrate with theirs when considering partial pr
 %%
 
 %%
-Examples examples examples.
+\begin{figure}
+%  \begin{align}
+%   SortContract = \\
+%   \quad sort\ &:\ (List Pos) \\
+%               &\rarrow\ (cmp\ :\ Pos \rarrow Pos \rarrow Bool)
+%  \end{align}
+ \caption{Sort example}
+\end{figure}
+
+\begin{figure}
+ \caption{File example}
+\end{figure}
+
+\begin{figure}
+ \caption{TCP example}
+\end{figure}
 %%
 
 %%
@@ -296,17 +311,18 @@ Syntax:
 \mcontract \in \Contract &= \SContract \times \TContract \\
 \mscon \in \SContract &::= \sflat{\mexp} \alt \sarr{\mname}{\mscon}{\mscon} \alt \sconsc{\mscon}{\mscon} \\
 \mtcon \in \TContract &::=
-      \mevent
- \alt \snonevent{\mevent}
+      \stseq{\mbevent}{\mtcon}
+ \alt \mtconNoB
  \alt \stnot{\mtcon}
  \alt \stOr{\mtcon_1}{\mtcon_2}
  \alt \stseq{\mtcon}{\mtcon}
  \alt \stmany{\mtconNoB}
  \alt \sddd \\
 &\text{ where $\mtcon_1$ and $\mtcon_2$ do not cross-bind } \\ %TODO: explain cross-bind in prose
-\mtconNoB \in \TContract \backslash \mbevent &\quad\text{ same as $\mtcon$, but without binding } \\
-\mevent \in \Event &::= \scallev{\mname}{\mvpat} \alt \sretev{\mname}{\mvpat} \alt \mbevent \\
-\mbevent \in \Event &::= \scallev{\mbfun}{\mbvar} \alt \sretev{\mbfun}{\mbvar} \\
+\mtconNoB &::= \maevent \alt \snonevent{\maevent} \alt \stOr{\mtconNoB}{\mtconNoB} \\
+\mevent \in \Event &::= \maevent \alt \mbevent \\
+\maevent &::= \scallev{\mname}{\mvpat} \alt \sretev{\mname}{\mvpat} \\
+\mbevent &::= \scallev{\mbfun}{\mbvar} \alt \sretev{\mbfun}{\mbvar} \\
 &\alt \scallev{\mbfun}{\mvpat} \alt \sretev{\mbfun}{\mvpat} \\
 &\alt \scallev{\mname}{\mbvar} \alt \sretev{\mname}{\mbvar} \\
 \mbfun, \mbvar &::= \mname_{id} \quad\text{ where $id$ identifies the binding } \\
