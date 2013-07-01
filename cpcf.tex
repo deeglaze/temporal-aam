@@ -363,13 +363,9 @@ Syntax:
  \alt \stOr{\mtcon}{\mtcon}
  \alt \stseq{\mtcon}{\mtcon}
  \alt \stmany{\mtconNoB}
-\\&
- \alt \stcall{\mname}{\mname}{\mtcon}
- \alt \stret{\mname}{\mname}{\mtcon}
  \alt \sddd \\
-&\text{ where $\mtcon_1$ and $\mtcon_2$ do not cross-bind } \\ %TODO: explain cross-bind in prose
 \mtconNoB &::= \maevent \alt \snonevent{\maevent} \alt \stOr{\mtconNoB}{\mtconNoB} \\
-\mevent \in \Event &::= \maevent \alt \mbevent \\
+\maevent, \mbevent &\in \Event \\
 \maevent &::= \scallev{\mname}{\mvpat} \alt \sretev{\mname}{\mvpat} \\
 \mbevent &::= \scallev{\mbfun}{\mbvar} \alt \sretev{\mbfun}{\mbvar} \\
 &\alt \scallev{\mbfun}{\mvpat} \alt \sretev{\mbfun}{\mvpat} \\
