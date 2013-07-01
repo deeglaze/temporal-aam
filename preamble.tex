@@ -9,19 +9,26 @@
 \newcommand{\mtcon}{T}
 \newcommand{\mtconNoB}{\mtcon^\prime}
 \newcommand{\mname}{n}
+\newcommand{\mtoplevelname}{n^\toplevel}
 \newcommand{\mbvar}{X}
 \newcommand{\mevent}{A}
 \newcommand{\mbevent}{B}
 \newcommand{\mbfun}{F}
 \newcommand{\mconstant}{c}
 \newcommand{\mvpat}{p}
+\newcommand{\mfnpat}{f}
 \newcommand{\mcontracts}{{\mathcal C}}
 \newcommand{\mnames}{N}
 \newcommand{\premons}{P}
 
+\newcommand{\mnode}{u}
+
+\newcommand{\mgraph}{G}
+\newcommand{\maccum}{T_{\mathit{acc}}}
+
 \newcommand{\mtimeline}{a_t}
 \newcommand{\mstimeline}{a_t^{\toplevel}{}}
-\newcommand{\msmlab}{\beta}
+\newcommand{\msmlab}{\beta^{\toplevel}{}}
 \newcommand{\mmlab}{\beta}
 \newcommand{\mmaddr}{a_m}
 \newcommand{\mpval}{v_\mathit{pre}}
@@ -36,6 +43,14 @@
 % Functions
 \newcommand{\accept}{\mathit{accept}}
 \newcommand{\convertcons}{\mathit{convert}}
+\newcommand{\toltl}{\mathit{LTL}}
+
+\newcommand{\matchcall}{\mathit{mcall}}
+\newcommand{\matchret}{\mathit{mret}}
+\newcommand{\matchv}{\mathit{mv}}
+\newcommand{\restricttoreachable}{{\mathcal R}{\mathcal R}}
+\newcommand{\splitpattern}{\mathit{split}}
+
 
 % States
 \newcommand{\ev}[4][\ ]{\tuple[#1]{ev}{#2}_{#3,#4}}
@@ -66,6 +81,9 @@
 \newcommand{\scar}{{\tt car}}
 \newcommand{\scdr}{{\tt cdr}}
 \newcommand{\spairp}{{\tt pair?}}
+
+\newcommand{\sbind}[1]{{\tt ?} #1}
+\newcommand{\sref}[1]{{\tt \$} #1}
 
 \newcommand{\stOr}[2]{#1 \cup #2}
 \newcommand{\stseq}[2]{#1 \cdot #2}
@@ -98,6 +116,14 @@
 
 % Notation
 \newcommand{\many}[1]{\overline{#1}}
+
+\newcommand{\ltland}[2]{#1 \wedge #2}
+\newcommand{\ltlor}[2]{#1 \vee #2}
+\newcommand{\ltlnot}[1]{\neg #1}
+\newcommand{\ltlW}[2]{#1 {\mathcal W} #2}
+\newcommand{\ltlTrue}{\mathit{True}}
+\newcommand{\ltlnext}[1]{\square{#1}}
+\newcommand{\ltlactions}{\mathbb{A}}
 
 % Spaces
 \newcommand{\Prog}{\mathit{Program}}
