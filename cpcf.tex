@@ -1,4 +1,4 @@
-\documentclass[preprint,onecolumn,9pt]{sigplanconf} %{onecol}
+ \documentclass[preprint,onecolumn,9pt]{sigplanconf} %{onecol}
 \usepackage{alltt,mathpartir,multicol}
 \usepackage{amsmath,amsthm}
 \usepackage{amssymb}
@@ -189,23 +189,69 @@ Thus, our translation function takes the contract to translate, the result of th
 %%
 
 %%
+The atomic propositions we use for checking the temporal contracts are much like the events defined in the temporal contract grammar, except we have additional information about which timeline they appear on.
+%%
+
+% \begin{align*}
+%   \denoteevent{\scallev{\mtoplevelname, \mvpat}}{\menv}{\mtimeline} &=
+%     \aptopcall{\mtoplevelname}{\denotevpat{\mvpat}{\menv}}{\mtimeline}
+% \\
+%   \denoteevent{\scallev{\mname, \mvpat}}{\menv}{\mtimeline} &=
+%     \apvcall{\menv(\mname)}{\denotevpat{\mvpat}{\menv}}{\mtimeline}
+% \\
+%   \denoteevent{\sretev{\mtoplevelname, \mvpat}}{\menv}{\mtimeline} &=
+%     \aptopret{\mtoplevelname}{\denotevpat{\mvpat}{\menv}}{\mtimeline}
+% \\
+%   \denoteevent{\sretev{\mname, \mvpat}}{\menv}{\mtimeline} &=
+%     \apvret{\menv(\mname)}{\denotevpat{\mvpat}{\menv}}{\mtimeline}
+% %%
+% \\[2pt]
+% %%
+%   \denotevpat{\mname}{\menv} &= \menv(\mname)
+% \\
+%   \denotevpat{\mvpat}{\menv} &= \mvpat \quad\text{otherwise}
+% \end{align*}
+%%
+$\toltl{\_}{\_}{\_}{\_}{\_} : \Timeline \times \TContract \times \Graph \times \Env \times \TConEnvStack \to \LTLProp$
 \begin{figure}
   \begin{align*}
-    \toltl(\mevent, \mgraph, \maccum, \menv) &= \bigwedge\limits_{(\mevent', \mgraph', \menv') \in \splitpattern(\mevent, \mgraph, \menv)}{\ltland{\mevent'}{\ltlnext{\toltl(\maccum, \mgraph', \sddd, \menv')}}}
+   \toltl{\mtimeline}{\mevent}{\mgraph}{\menv}{\mtestack} &=
+     \ltland{\denoteevent{\mevent}{\menv}{\mtimeline}}
+            {\ltlnext{\stacktoltl{\mtimeline}{\mtestack}{\mgraph}}}
     \\
-    \toltl(\snonevent{\mevent}, \mgraph, \maccum, \menv) &= \bigvee\limits_{A \in \ltlactions \setminus \setof{\mevent}}{A}
+    \toltl{\mtimeline}{\snonevent{\mevent}}{\mgraph}{\menv}{\mtestack} &=
+      \ltland{\apneg{\denoteevent{\snonevent{\mevent}}{\menv}{\mtimeline}}}
+             {\ltlnext{\stacktoltl{\mtimeline}{\mtestack}{\mgraph}}}
     \\
-    \toltl(\stnot{\mtcon}, \mgraph, \maccum, \menv) &= \ltlnot{\toltl(\mtcon, \mgraph, \stnot{\maccum}, \menv)} % WRONG
+    \toltl{\mtimeline}{\stnot{\mtcon}}{\mgraph}{\menv}{\mtestack} &=
+      \ltlnot{\toltl{\mtimeline}{\mtcon}{\mgraph}{\menv}{\mtestack}}
     \\
-    \toltl(\stOr{\mtcon_0}{\mtcon_1}, \mgraph, \maccum, \menv) &= \ltlor{\toltl(\mtcon_0, \mgraph, \maccum, \menv)}{\toltl(\mtcon_1, \mgraph, \maccum, \menv)}
+    \toltl{\mtimeline}{\stOr{\mtcon_0}{\mtcon_1}}{\mgraph}{\menv}{\mtestack} &=
+      \ltlor{\toltl{\mtimeline}{\mtcon_0}{\mgraph}{\menv}{\mtestack}}
+            {\toltl{\mtimeline}{\mtcon_1}{\mgraph}{\menv}{\mtestack}}
     \\
-    \toltl(\stseq{\mtcon_0}{\mtcon_1}, \mgraph, \maccum, \menv) &= \toltl(\mtcon_0, \mgraph, \stseq{\mtcon_1}{\maccum}, \menv)
+    \toltl{\mtimeline}{\stseq{\mtcon_0}{\mtcon_1}}{\mgraph}{\menv}{\mtestack} &=
+      \toltl{\mtimeline}{\mtcon_0}{\mgraph}{\menv}{\cons{(\mtcon_1,\menv)}{\mtestack}}
     \\
-    \toltl(\stmany{\mtconNoB}, \mgraph, \maccum, \menv) &= \ltlW{\toltl(\mtconNoB, \mgraph, \sddd, \menv)}{\toltl(\maccum, \mgraph, \sddd, \menv)}
+    \toltl{\mtimeline}{\stmany{\mtconNoB}}{\mgraph}{\menv}{\mtestack} &=
+      \ltlW{\toltl{\mtimeline}{\mtconNoB}{\mgraph}{\menv}{\emptytestack}}{\stacktoltl{\mtimeline}{\mtestack}{\mgraph}}
     \\
-    \toltl(\sddd, \mgraph, \sddd, \menv) &= \ltlTrue
+    \toltl{\mtimeline}{\stcall{\mname}{\mname'}{\mtcon}}{\mgraph}{\menv}{\mtestack} &=
+      \bigwedge\limits_{(\ltlprop,\menv') \in \matchcall(\mname,\mname',\menv,\mgraph)}{
+        \mkern-60mu\ltland{\ltlprop}{\ltlnext{\stacktoltl{\mtimeline}{\cons{(\mtcon,\menv)}{\mtestack}}{\mgraph}}}}
     \\
-    \toltl(\sddd, \mgraph, \maccum, \menv) &= \ltlW{\ltlTrue}{\toltl(\maccum, \mgraph, \sddd, \menv)}
+    \toltl{\mtimeline}{\stret{\mname}{\mname'}{\mtcon}}{\mgraph}{\menv}{\mtestack} &=
+      \bigwedge\limits_{(\ltlprop,\menv') \in \matchret(\mname,\mname',\menv,\mgraph)}{
+        \mkern-60mu\ltland{\ltlprop}{\ltlnext{\stacktoltl{\mtimeline}{\cons{(\mtcon,\menv)}{\mtestack}}{\mgraph}}}}
+    \\
+      \toltl{\mtimeline}{\sddd}{\mgraph}{\menv}{\mtestack} &= \stacktoltl{\mtimeline}{\mtestack}{\mgraph}
+%%
+\\[2pt]
+%%
+    \stacktoltl{\mtimeline}{\emptytestack}{\mgraph} &= \ltlTrue
+\\
+    \stacktoltl{\mtimeline}{\cons{(\mtcon,\menv)}{\mtestack}}{\mgraph} &=
+      \toltl{\mtimeline}{\mtcon}{\mgraph}{\menv}{\mtestack}
   \end{align*}
   
   \caption{Translation of temporal contracts to LTL}
@@ -314,9 +360,12 @@ Syntax:
       \stseq{\mbevent}{\mtcon}
  \alt \mtconNoB
  \alt \stnot{\mtcon}
- \alt \stOr{\mtcon_1}{\mtcon_2}
+ \alt \stOr{\mtcon}{\mtcon}
  \alt \stseq{\mtcon}{\mtcon}
  \alt \stmany{\mtconNoB}
+\\&
+ \alt \stcall{\mname}{\mname}{\mtcon}
+ \alt \stret{\mname}{\mname}{\mtcon}
  \alt \sddd \\
 &\text{ where $\mtcon_1$ and $\mtcon_2$ do not cross-bind } \\ %TODO: explain cross-bind in prose
 \mtconNoB &::= \maevent \alt \snonevent{\maevent} \alt \stOr{\mtconNoB}{\mtconNoB} \\
