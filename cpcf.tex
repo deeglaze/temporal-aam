@@ -238,11 +238,11 @@ $\toltl{\_}{\_}{\_}{\_}{\_} : \Timeline \times \TContract \times \Graph \times \
     \\
     \toltl{\mtimeline}{\stcall{\mname}{\mname'}{\mtcon}}{\mgraph}{\menv}{\mtestack} &=
       \bigwedge\limits_{(\ltlprop,\menv') \in \matchcall(\mname,\mname',\menv,\mgraph)}{
-        \mkern-60mu\ltland{\ltlprop}{\ltlnext{\stacktoltl{\mtimeline}{\cons{(\mtcon,\menv)}{\mtestack}}{\mgraph}}}}
+        \mkern-60mu\ltland{\ltlprop}{\ltlnext{\stacktoltl{\mtimeline}{\cons{(\mtcon,\menv')}{\mtestack}}{\mgraph}}}}
     \\
     \toltl{\mtimeline}{\stret{\mname}{\mname'}{\mtcon}}{\mgraph}{\menv}{\mtestack} &=
       \bigwedge\limits_{(\ltlprop,\menv') \in \matchret(\mname,\mname',\menv,\mgraph)}{
-        \mkern-60mu\ltland{\ltlprop}{\ltlnext{\stacktoltl{\mtimeline}{\cons{(\mtcon,\menv)}{\mtestack}}{\mgraph}}}}
+        \mkern-60mu\ltland{\ltlprop}{\ltlnext{\stacktoltl{\mtimeline}{\cons{(\mtcon,\menv')}{\mtestack}}{\mgraph}}}}
     \\
       \toltl{\mtimeline}{\sddd}{\mgraph}{\menv}{\mtestack} &= \stacktoltl{\mtimeline}{\mtestack}{\mgraph}
 %%
