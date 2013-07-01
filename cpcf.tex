@@ -163,7 +163,7 @@ Our techniques should smoothly integrate with theirs when considering partial pr
 %%
 
 %%
-\section{Semantics of Temporal Higher-Order Contracts}
+\section{Semantics of Temporal Contracts}
 %%
 
 %%
@@ -192,27 +192,30 @@ Thus, our translation function takes the contract to translate, the result of th
 The atomic propositions we use for checking the temporal contracts are much like the events defined in the temporal contract grammar, except we have additional information about which timeline they appear on.
 %%
 
-% \begin{align*}
-%   \denoteevent{\scallev{\mtoplevelname, \mvpat}}{\menv}{\mtimeline} &=
-%     \aptopcall{\mtoplevelname}{\denotevpat{\mvpat}{\menv}}{\mtimeline}
-% \\
-%   \denoteevent{\scallev{\mname, \mvpat}}{\menv}{\mtimeline} &=
-%     \apvcall{\menv(\mname)}{\denotevpat{\mvpat}{\menv}}{\mtimeline}
-% \\
-%   \denoteevent{\sretev{\mtoplevelname, \mvpat}}{\menv}{\mtimeline} &=
-%     \aptopret{\mtoplevelname}{\denotevpat{\mvpat}{\menv}}{\mtimeline}
-% \\
-%   \denoteevent{\sretev{\mname, \mvpat}}{\menv}{\mtimeline} &=
-%     \apvret{\menv(\mname)}{\denotevpat{\mvpat}{\menv}}{\mtimeline}
-% %%
-% \\[2pt]
-% %%
-%   \denotevpat{\mname}{\menv} &= \menv(\mname)
-% \\
-%   \denotevpat{\mvpat}{\menv} &= \mvpat \quad\text{otherwise}
-% \end{align*}
+\begin{align*}
+  \denoteevent{\scallev{\mtoplevelname}{\mvpat}}{\menv}{\mtimeline} &=
+    \aptopcall{\mtoplevelname}{\denotevpat{\mvpat}{\menv}}{\mtimeline}
+\\
+  \denoteevent{\scallev{\mname}{\mvpat}}{\menv}{\mtimeline} &=
+    \apvcall{\menv(\mname)}{\denotevpat{\mvpat}{\menv}}{\mtimeline}
+\\
+  \denoteevent{\sretev{\mtoplevelname}{\mvpat}}{\menv}{\mtimeline} &=
+    \aptopret{\mtoplevelname}{\denotevpat{\mvpat}{\menv}}{\mtimeline}
+\\
+  \denoteevent{\sretev{\mname}{\mvpat}}{\menv}{\mtimeline} &=
+    \apvret{\menv(\mname)}{\denotevpat{\mvpat}{\menv}}{\mtimeline}
 %%
-$\toltl{\_}{\_}{\_}{\_}{\_} : \Timeline \times \TContract \times \Graph \times \Env \times \TConEnvStack \to \LTLProp$
+\\[2pt]
+%%
+  \denotevpat{\mname}{\menv} &= \menv(\mname)
+\\
+  \denotevpat{\mvpat}{\menv} &= \mvpat \quad\text{otherwise}
+\end{align*}
+
+The tranlation of temporal constracts to LTL propositions is in figure \ref{fig:translation} with type
+\begin{align*}
+{\scriptsize \toltl{\_}{\_}{\_}{\_}{\_}} &{\scriptsize : \Timeline \times \TContract \times \Graph \times \Env \times \TConEnvStack}\\ & {\scriptsize \to \LTLProp}
+\end{align*}
 \begin{figure}
   \begin{align*}
    \toltl{\mtimeline}{\mevent}{\mgraph}{\menv}{\mtestack} &=
@@ -248,6 +251,8 @@ $\toltl{\_}{\_}{\_}{\_}{\_} : \Timeline \times \TContract \times \Graph \times \
 %%
 \\[2pt]
 %%
+    {\scriptsize \stacktoltl{\_}{\_}{\_} : \Timeline \times \TConEnvStack \times \Graph \to \LTLProp} \span\omit
+\\
     \stacktoltl{\mtimeline}{\emptytestack}{\mgraph} &= \ltlTrue
 \\
     \stacktoltl{\mtimeline}{\cons{(\mtcon,\menv)}{\mtestack}}{\mgraph} &=
