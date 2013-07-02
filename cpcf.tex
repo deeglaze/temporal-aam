@@ -1,6 +1,6 @@
 \documentclass[preprint,onecolumn,9pt]{sigplanconf} %{onecol}
 \usepackage{alltt,mathpartir,multicol}
-\usepackage{amsmath,amsthm}
+\usepackage{amsmath,amsthm,natbib}
 \usepackage{amssymb}
 \usepackage{stmaryrd}
 \usepackage{url}
@@ -45,9 +45,9 @@
 
 Software systems are typically large, consist of many modules, and have invariants that are typically inexpressible or too costly to express (and prove) in the language's static type system, if it has one.
 %
-When this is the case, one might hope to rely on software contracts~\cite{p} to give dynamic guarantees about the behavior of one's system, blaming the correct party responsible for any violation of these invariants.
+When this is the case, one might hope to rely on software contracts~\cite{dvanhorn:Findler2002Contracts} to give dynamic guarantees about the behavior of one's system, blaming the correct party responsible for any violation of these invariants.
 %
-A proposed system of \emph{temporal contracts}~\citep{ianjohnson:dfm:icfp11} provide a linguistic mechanism to describe temporal properties that usually are checked extra-linguistically via model-checking an abstraction of the program.
+A proposed system of \emph{temporal contracts}~\citep{ianjohnson:dfm:icfp2011} provide a linguistic mechanism to describe temporal properties that usually are checked extra-linguistically via model-checking an abstraction of the program.
 %
 Example temporal properties are, ``a file can only be closed if it has been opened'' and, ``if function A is given a function B, then B may not be called once A returns.''
 %
@@ -73,13 +73,13 @@ Temporal contracts pose an additional challenge over higher-order function contr
 %
 We propose a framework that is composable with techniques to verify functional contracts, and transparently leverages model checking technology to verify adherence to temporal contracts.
 %
-The technique uses the Abstracting Abstract Machines (AAM) approach~\citet{dvanhorn:AAM} to forming the Kripke structure that we eventually model-check.
+The technique uses the Abstracting Abstract Machines (AAM) approach~\citet{dvanhorn:VanHorn2010Abstracting} to forming the Kripke structure that we eventually model-check.
 %
 AAM was originally targeted towards describing flow analyses, but is robust enough to apply to model-checking higher-order programs.
 %
 The online nature of higher-order flow analysis algorithms creates demand for an online LTL model checker.
 %
-Since AAM describes its abstractions in terms of a reduction relation, Maude's LTL checker~\citep{?} is our tool of choice.
+Since AAM describes its abstractions in terms of a reduction relation, Maude's LTL checker~\citep{ianjohnson:EMSltl_2002} is our tool of choice.
 %
 There is a fly in the ointment, however.
 %
@@ -109,12 +109,12 @@ Model-checking and contract verification (proving functional correctness) are hu
 
 %%
 \paragraph{First-order model-checking:}{
-The SLAM project~\citep{?} for model-checking C assumes that all function pointers of the same type alias.
+The SLAM project~\citep{ianjohnson:Ball:2002:SLP:503272.503274} for model-checking C assumes that all function pointers of the same type alias.
 %
 For C programs that use callbacks heavily, this overapproximation leads to longer checking times due to more (spurious) paths to follow, and the imprecision inherent in any program approximation gets exacerbated by the additional pressure on abstract resources.
 }
 \paragraph{Higher-order model-checking}{
-A technique that specifically targets higher-order languages, higher-order recursion schemes (HORS)~\citep{?}, assumes a call-by-name semantics for the language it checks.
+A technique that specifically targets higher-order languages, higher-order recursion schemes (HORS)~\citep{ianjohnson:Knapik:2002:HPT:646794.704852}, assumes a call-by-name semantics for the language it checks.
 %
 The current techniques for the initial abstraction of a program to HORS is not generally applicable to untyped or impure languages, since it creates the recursion schemes from the simple types of a given program.
 %
@@ -125,17 +125,17 @@ This still does not address the need for simple types, and does not apply for la
 \paragraph{Static contract verification}{
 In the world of statically verifying software contracts, there is much more work.
 %
-There have been many successful efforts in the realm of first-order contract verification~\citep{?,?,?}, but the techniques employed are inherently first-order: the only values are booleans.
+There have been many successful efforts in the realm of first-order contract verification~\citep{ianjohnson:fahndrich:contracts:2011,ianjohnson:vcc:2009}, but the techniques employed are inherently first-order: the only values are booleans.
 %
-\citet{flanagan:hybrid-type-checking}'s notion of hybrid type checking is one way to state the problem: dynamic types are essentially flat contracts, and are treated as subtypes of anything during static checking.
+\citet{ianjohnson:Flanagan:2006:HTC:1111037.1111059}'s notion of hybrid type checking is one way to state the problem: dynamic types are essentially flat contracts, and are treated as subtypes of anything during static checking.
 %
 If an external theorem prover can prove that the flat contracts always hold, the dynamic checks can be safely removed.
 %
-\citet{dvanhorn:oopsla2012:symbolic-eval} use AAM on a module semantics with higher-order contracts and is the most related to this work; whereas they focus on a concrete semantics for handling unknown values and an external theorem prover to show contract containment, our work focuses on an orthogonal issue of temporal contract monitoring and uses model-checking techniques.
+\citet{dvanhorn:TobinHochstadt2012Higherorder} use AAM on a module semantics with higher-order contracts and is the most related to this work; whereas they focus on a concrete semantics for handling unknown values and an external theorem prover to show contract containment, our work focuses on an orthogonal issue of temporal contract monitoring and uses model-checking techniques.
 %
 Our techniques should smoothly integrate with theirs when considering partial programs, and is left to future work.
 %
-\citet{dvanhorn:xu:ocaml-simplifier} describe a higher-order contract verification system for OCaml by inlining all contract monitors and relying on a system of simplifications further enhanced by an SMT solver to optimize away dynamic checks.
+\citet{dvanhorn:Xu2012Hybrid} describe a higher-order contract verification system for OCaml by inlining all contract monitors and relying on a system of simplifications further enhanced by an SMT solver to optimize away dynamic checks.
 }
 %%
 
@@ -216,6 +216,19 @@ The tranlation of temporal constracts to LTL propositions is in figure \ref{fig:
 \begin{align*}
 {\scriptsize \toltl{\_}{\_}{\_}{\_}{\_}} &{\scriptsize : \Timeline \times \TContract \times \Graph \times \Env \times \TConEnvStack}\\ & {\scriptsize \to \LTLProp}
 \end{align*}
+%
+where $\TConEnvStack$ is a stack of temporal contract, environment pairs that keep track of which temporal contracts must follow the current temporal contract:
+%
+\begin{equation*}
+  \TConEnvStack = (\TContract \times \Env)^*
+\end{equation*}
+%
+Because LTL lacks a modality for ``a trace matching $\psi$ follows a trace matching $\phi$,'' and is instead more closely tied to individual states, we have to carry a stack of contracts that must follow one after another.
+%
+This lack of expressivity led to our restriction of the Kleene star operator to single events rather than general temporal contracts.
+%%
+
+%%
 \begin{figure}
   \begin{align*}
    \toltl{\mtimeline}{\mevent}{\mgraph}{\menv}{\mtestack} &=
@@ -265,22 +278,12 @@ The tranlation of temporal constracts to LTL propositions is in figure \ref{fig:
 %%
 
 %%
-The metafunction $\splitpattern$ is crutial for the understanding of bindings in the temporal contract.
-%
-All points in the abstract state space that match the event will contribute their bindings to the environment for interpreting the rest of the contract.
-%
-This can lead to a blow-up for temporal contracts that liberally use binding, but we can prune the number of propositions we construct by restricting the graph to only nodes reachable from the ones we match against the event.
+All points in the abstract state space that match the binding call/return forms will contribute their bindings to the environment for interpreting the rest of the contract.
 %
 Since CFA abstracts bindings, we can't always be certain we have exact equality when looking up bindings, too.
-%
-Thus, $\splitpattern$ considers some values to both match and not match a given pattern.
 %%
 
 \begin{align*}
-  \splitpattern(\scallev{\mfnpat}{\mvpat}, \mgraph, \menv) &= \setbuild{(\mnode,\restricttoreachable(\mgraph,\mnode), \menv')}{(\mnode,\menv') \in \matchcall(\mfnpat, \mvpat, \mgraph, \menv)}\\
-\\
-  \splitpattern(\sretev{\mfnpat}{\mvpat}, \mgraph, \menv) &= \setbuild{(\mnode,\restricttoreachable(\mgraph,\mnode), \menv')}{(\mnode,\menv') \in \matchret(\mfnpat, \mvpat, \mgraph, \menv)}\\
-\\
   \matchcall(\mtoplevelname, \mvpat, \mgraph, \menv) &=
     \setbuild{(\mnode, \menv')}
              {\\
@@ -664,10 +667,10 @@ State space:
   \caption{Non-standard rules}
 \label{fig:concrete}
 \end{figure*}
-%\balance
-%\bibliographystyle{plain}
+\balance
+\bibliographystyle{plainnat}
 %\input{paper.bbl}
-%\bibliography{local,bibliography}
+\bibliography{bibliography}
 
 % \include{appendix}
 \end{document}
