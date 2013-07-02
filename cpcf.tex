@@ -144,21 +144,98 @@ Our techniques should smoothly integrate with theirs when considering partial pr
 %%
 
 %%
+\newcommand{\call}[1]{\scallev{#1}{\_}}
+ \newcommand{\ret}[1]{\sretev{#1}{\_}}
 \begin{figure}
-%  \begin{align}
-%   SortContract = \\
-%   \quad sort\ &:\ (List Pos) \\
-%               &\rarrow\ (cmp\ :\ Pos \rarrow Pos \rarrow Bool)
-%  \end{align}
+ \small
+ $SortContract = $
+ \begin{flalign*}
+  sort\ &:\     (cmp\ :\ Pos\ \to Pos\ \to\ Bool) \\
+        &\quad\ (List\ Pos) \\
+        &\to    (List\ Pos) \\
+  \text{where}\quad
+  &\stnot{(\sddd~ \call{sort}~ \stmany{\snonevent{\ret{sort}}}~ \call{sort})} \\
+  \text{and}\quad
+  &\stnot{(\sddd~ \scallev{sort}{?cmp}~ \sddd~ \ret{sort} \sddd~ \call{cmp})}
+ \end{flalign*}
  \caption{Sort example}
+\label{fig:sort}
 \end{figure}
 
 \begin{figure}
+ \small
+ $FileSystemContract\, =\, open\, :\, String\, \to\, FileContract$
+ $FileContract =~ Record$
+ \begin{flalign*}
+  read &: Unit\ \to\ String \\
+  write &: String\ \to\ Unit \\
+  close &: Unit\ \to\ Unit \\
+  \text{where}\quad
+  \stnot{(&\sddd~ \ret{close}~ \sddd~ \\
+  &(\stOr{\call{close}}{\stOr{\call{read}}{\call{write}}}))}
+ \end{flalign*}
  \caption{File example}
+\label{fig:file}
 \end{figure}
 
 \begin{figure}
+ \newcommand{\send}[1]{\scallev{send}{#1}}
+ \newcommand{\rcv}[1]{\sretev{recv}{#1}}
+ \newcommand{\notclose}{\snonevent{\call{close}}}
+ \newcommand{\tcpstyle}[1]{\texttt{#1}}
+ \newcommand{\tcpsyn}{\tcpstyle{SYN}}
+ \newcommand{\tcpack}{\tcpstyle{ACK}}
+ \newcommand{\tcpsynack}{\tcpstyle{SYN\&ACK}}
+ \newcommand{\tcpfin}{\tcpstyle{FIN}}
+ %\newcommand{\tcpfinack}{\tcpstyle{FIN\&ACK}}
+ \small
+ $TCPConnectionContract\, =~ Record$
+ \begin{flalign*}
+  open &: TCPSocket\ \to\ TCPSendContract \\
+  listen &: TCPSocket\ \to\ TCPRecvContract
+ \end{flalign*}
+ $TCPData =$
+ $~ \tcpsyn \mid \tcpack \mid \tcpsynack \mid \tcpfin \mid \tcpstyle{Data}(\_)$
+ $TCPConnection =~ Record$
+ \begin{flalign*}
+  send &: TCPData \to Unit \\
+  recv &: Unit \to TCPData \\
+  timeout &: Duration \to Unit \\
+  close &: Unit \to Unit
+ \end{flalign*}
+ 
+ $TCPSendContract =~ TCPConnection$
+ \begin{flalign*}
+  \quad~\text{where}\quad
+  &\sddd~ \send{\tcpsyn}~ \notclose \\
+  &\rcv{\tcpsynack}~ \notclose \\
+  &\send{\tcpack}~ \stmany{\notclose} \\
+  &((\rcv{\tcpfin}~ \send{\tcpack} \\
+  &\quad\send{\tcpfin}~ \rcv{\tcpack}) \\ &\cup
+    (\call{close}~ \send{\tcpfin} \\
+  &\quad\rcv{\tcpack}~ \rcv{\tcpfin}~ \send{\tcpack})) \\
+  &\ret{timeout}~ \ret{close}~ \sddd \\
+  \text{and}\quad
+  &\stnot{(\sddd~ \ret{close}~ \sddd~ \call{send})}
+ \end{flalign*}
+ 
+ $TCPRecvContract =~ TCPConnection$
+ \begin{flalign*}
+  \quad~\text{where}\quad
+  &\sddd~ \rcv{\tcpsyn}~ \notclose \\
+  &\send{\tcpsynack}~ \notclose \\
+  &\rcv{\tcpack}~ \stmany{\notclose} \\
+  &((\call{close}~ \send{\tcpfin} \\
+  &\quad\rcv{\tcpack}~ \rcv{\tcpfin}~ \send{\tcpack}) \\ &\cup
+    (\rcv{\tcpfin}~ \send{\tcpack} \\
+  &\quad\call{close}~ \send{\tcpfin}~ \rcv{\tcpack})) \\
+  &\ret{timeout}~ \ret{close}~ \sddd \\
+  \text{and}\quad
+  &\stnot{(\sddd~ \ret{close}~ \sddd~ \call{send})}
+ \end{flalign*}
+ 
  \caption{TCP example}
+\label{fig:tcp}
 \end{figure}
 %%
 
@@ -212,7 +289,7 @@ The atomic propositions we use for checking the temporal contracts are much like
   \denotevpat{\mvpat}{\menv} &= \mvpat \quad\text{otherwise}
 \end{align*}
 
-The tranlation of temporal constracts to LTL propositions is in figure \ref{fig:translation} with type
+The translation of temporal constracts to LTL propositions is in figure \ref{fig:translation} with type
 \begin{align*}
 {\scriptsize \toltl{\_}{\_}{\_}{\_}{\_}} &{\scriptsize : \Timeline \times \TContract \times \Graph \times \Env \times \TConEnvStack}\\ & {\scriptsize \to \LTLProp}
 \end{align*}
