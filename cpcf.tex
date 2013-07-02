@@ -113,7 +113,7 @@ The SLAM project~\citep{ianjohnson:Ball:2002:SLP:503272.503274} for model-checki
 %
 For C programs that use callbacks heavily, this overapproximation leads to longer checking times due to more (spurious) paths to follow, and the imprecision inherent in any program approximation gets exacerbated by the additional pressure on abstract resources.
 }
-\paragraph{Higher-order model-checking}{
+\paragraph{Higher-order model-checking:}{
 A technique that specifically targets higher-order languages, higher-order recursion schemes (HORS)~\citep{ianjohnson:Knapik:2002:HPT:646794.704852}, assumes a call-by-name semantics for the language it checks.
 %
 The current techniques for the initial abstraction of a program to HORS is not generally applicable to untyped or impure languages, since it creates the recursion schemes from the simple types of a given program.
@@ -122,7 +122,7 @@ HORS can be applied for call-by-value order if the program is first transformed 
 %
 This still does not address the need for simple types, and does not apply for languages that cannot be expressed in CPS.
 }
-\paragraph{Static contract verification}{
+\paragraph{Static contract verification:}{
 In the world of statically verifying software contracts, there is much more work.
 %
 There have been many successful efforts in the realm of first-order contract verification~\citep{ianjohnson:fahndrich:contracts:2011,ianjohnson:vcc:2009}, but the techniques employed are inherently first-order: the only values are booleans.
@@ -131,11 +131,11 @@ There have been many successful efforts in the realm of first-order contract ver
 %
 If an external theorem prover can prove that the flat contracts always hold, the dynamic checks can be safely removed.
 %
+\citet{dvanhorn:Xu2012Hybrid} describe a higher-order contract verification system for OCaml by inlining all contract monitors and relying on a system of simplifications further enhanced by an SMT solver to optimize away dynamic checks.
+%
 \citet{dvanhorn:TobinHochstadt2012Higherorder} use AAM on a module semantics with higher-order contracts and is the most related to this work; whereas they focus on a concrete semantics for handling unknown values and an external theorem prover to show contract containment, our work focuses on an orthogonal issue of temporal contract monitoring and uses model-checking techniques.
 %
 Our techniques should smoothly integrate with theirs when considering partial programs, and is left to future work.
-%
-\citet{dvanhorn:Xu2012Hybrid} describe a higher-order contract verification system for OCaml by inlining all contract monitors and relying on a system of simplifications further enhanced by an SMT solver to optimize away dynamic checks.
 }
 %%
 
@@ -143,10 +143,73 @@ Our techniques should smoothly integrate with theirs when considering partial pr
 \section{Overview of temporal higher-order contracts}
 %%
 
+Temporal contracts provide a declarative language for monitoring the temporal ordering of events that pass through module boundaries.
+%
+We analyze a slightly different presentation than ~\citep{ianjohnson:dfm:icfp2011}'s temporal contracts that is amenable to a translation to LTL, and has a more operational account of binding.
+%
+The syntax is presented in figure \ref{fig:tcontract-syntax}.
+%
+\begin{figure}
+  \begin{align*}
+ \mtcon \in \TContract &::=
+      \mtconNoB
+ \alt \stnot{\mtcon}
+ \alt \stOr{\mtcon}{\mtcon}
+ \alt \stseq{\mtcon}{\mtcon}
+ \alt \stmany{\mtconNoB}
+ \alt \sddd \\
+&\alt \stcall{\mname}{\mname}{\mtcon}
+ \alt \stret{\mname}{\mname}{\mtcon} \\
+\mtconNoB &::= \mevent \alt \snonevent{\mevent} \alt \stOr{\mtconNoB}{\mtconNoB} \\
+\mevent \in \Event &::= \scallev{\mname}{\mvpat} \alt \sretev{\mname}{\mvpat} \\
+\mvpat \in \VPat &::= \mname \alt \swc \alt \mconstant
+  \end{align*}
+  \caption{Syntax of temporal contracts}
+  \label{fig:tcontract-syntax}
+\end{figure}
+%%
+
+%%
+There are two notions of call and return: as simple events that can refer to the context, or as patterns on events that extend the context with the values they match.
+%
+Disney et. al's semantics for referring to functions is problematic; we give a slightly different account that captures the spirit of their prose describing their system.
+%
+One of their motivating examples (recalled in figure \ref{fig:sort}) was to protect the comparator passed to a sort function from escaping the scope of the call.
+%
+What this should mean is the particular binding introduced by a call to {\tt sort} cannot be called after {\tt sort} returns, \ie, each constructed monitor around given comparators should not be called after {\tt sort} returns.
+%
+However, the flat use of \emph{names} instead of bindings causes a second call to an in-spirit-correct {\tt sort} to fail, since it internally calls the comparator of the same name, but different monitor construction.
+%
+We maintain some semantics of names in order to discuss top-level bindings of a module, but encourage the use of binding for contracting the use of first-class functions.
+%%
+
+%%
+The semantics of temporal contracts that we propose uses pointer-equality of monitors for comparisons of non-primitive data, which is why we consider our account to be more operational.
+%
+The difference between $\snonevent{\mevent}$ and $\stnot{\mtcon}$ is that the first must be an event and force time to step forward once, whereas the second may match arbitrarily many events.
+%
+The most glaring grammatical restriction we make in comparison to Disney et. al's language of temporal contracts is that Kleene star may only be applied to a set of actions, $\mtconNoB$, since there is no natural translation of $\mtcon^*$ to LTL.
+%
+Most contracts don't need the full expressiveness of $\mtcon^*$, so we see this as a fair compromise.
+%%
+
+%%
+Temporal contracts are associated with structural contracts that name function components within them.
+%
+For simple exposition, we will consider tuples as the main organizational tool for contracting the interactions between multiple functions.
+%
+Since we consider monitor constructions as a more basic notion of equality, we also see each temporal monitor construction as starting its own ``timeline,'' which sees its own filtered view of events in the system.
+%
+Thus, as values flow through contract boundaries, they are considered on different timelines.
+%
+Disney et. al formalized their semantics in terms of a nondeterministic machine that defined its interactions on all event streams, and thus their machine was on a single ``timeline.''
+%
+We present a semantics that makes interaction between temporal contract monitors explicit, so we can verify whole programs.
+
 %%
 \newcommand{\call}[1]{\scallev{#1}{\_}}
  \newcommand{\ret}[1]{\sretev{#1}{\_}}
-\begin{figure}
+\begin{figure}\label{fig:sort}
  \small
  $SortContract = $
  \begin{flalign*}
@@ -159,8 +222,8 @@ Our techniques should smoothly integrate with theirs when considering partial pr
   &\stnot{(\sddd~ \scallev{sort}{?cmp}~ \sddd~ \ret{sort} \sddd~ \call{cmp})}
  \end{flalign*}
  \caption{Sort example}
-\label{fig:sort}
 \end{figure}
+%% TODO (Alex): Explain
 
 \begin{figure}
  \small
@@ -177,6 +240,7 @@ Our techniques should smoothly integrate with theirs when considering partial pr
  \caption{File example}
 \label{fig:file}
 \end{figure}
+%% TODO (Alex): Explain
 
 \begin{figure}
  \newcommand{\send}[1]{\scallev{send}{#1}}
@@ -237,6 +301,7 @@ Our techniques should smoothly integrate with theirs when considering partial pr
  \caption{TCP example}
 \label{fig:tcp}
 \end{figure}
+%% TODO (Alex): Explain
 %%
 
 %%
@@ -244,6 +309,12 @@ Our techniques should smoothly integrate with theirs when considering partial pr
 %%
 
 %%
+Now that we have a clear view of the behavior of temporal contracts, we nail down a formal semantics that we use to prove the soundness of our later model-checking approach to verification.
+%
+The semantics we present is in the style of Felleisen's reduction semantics~\citep{ianjohnson:Felleisen:2009:SEP:1795772}, which can be systematically transformed into an abstract machine in the form presented in~\citet{dvanhorn:VanHorn2010Abstracting}.
+%
+{\bf TODO (Alex):} Reduction semantics that stores calling function in context.
+%
 See section \ref{sec:technical} for now.
 %%
 
@@ -441,18 +512,6 @@ Syntax:
 \msmlab \in \ModuleLabel^{\toplevel} &::= \mmlab \alt \toplevel \\
 \mcontract \in \Contract &= \SContract \times \TContract \\
 \mscon \in \SContract &::= \sflat{\mexp} \alt \sarr{\mname}{\mscon}{\mscon} \alt \sconsc{\mscon}{\mscon} \\
-\mtcon \in \TContract &::=
-      \mtconNoB
- \alt \stnot{\mtcon}
- \alt \stOr{\mtcon}{\mtcon}
- \alt \stseq{\mtcon}{\mtcon}
- \alt \stmany{\mtconNoB}
- \alt \sddd \\
-&\alt \stcall{\mname}{\mname}{\mtcon}
- \alt \stret{\mname}{\mname}{\mtcon} \\
-\mtconNoB &::= \mevent \alt \snonevent{\mevent} \alt \stOr{\mtconNoB}{\mtconNoB} \\
-\mevent \in \Event &::= \scallev{\mname}{\mvpat} \alt \sretev{\mname}{\mvpat} \\
-\mvpat \in \VPat &::= \mname \alt \swc \alt \mconstant
 \end{align*}
 %%
 
