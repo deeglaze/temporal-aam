@@ -4,15 +4,19 @@ load full-maude26.maude . select FULL-MAUDE . loop init . load model-checker.mau
 fmod ToDefine is
   pr STRING .
   pr INT .
-  sorts VAR Addr Label Timeline Toplevel TTimeline .
-  op ⊤ : -> Toplevel .
-  subsorts Toplevel < Timeline < TTimeline .
-  subsorts Timeline < Addr < VAR < String . *** Get around preregularity with arbitrary ordering .
+  sorts VAR Name ΛTName Addr Label Timeline Toplevel ΛTimeline .
+  op Λ : -> Toplevel [ctor] .
+  op nΛ : Name -> ΛName [ctor] .
+  op tΛ : Timeline -> ΛTimeline [ctor] .
+  subsorts Toplevel < Timeline < ΛTimeline .
+  subsorts Toplevel < ΛName < Name .
+  subsorts Timeline < Addr < Name < VAR < String . *** Get around preregularity with arbitrary ordering .
   subsorts MLabel < Label < Int .
+  subsorts Label < Addr .
   op vv_ : String -> VAR [ctor] .
   op aa_ : String -> Addr [ctor] .
   subsorts Toplevel < MLabel .
-  sorts LCTerm Value Prim Binding Point State StateStamp Frame Reducts HeapDelta Unit .
+  sorts LCTerm Value Prim Binding Point State StateStamp Frame Reducts HeapDelta KHeapDelta Unit .
   sorts Contract SContract TContract .
   op nul : -> Unit [ctor] .
 endfm
@@ -33,6 +37,7 @@ view Point from TRIV to ToDefine is sort Elt to Point . endv
 view StateStamp from TRIV to ToDefine is sort Elt to StateStamp . endv
 
 fmod AVal is pr SET{Value} * (sort Set{Value} to AVal) . endfm
+fmod AKnt is pr SET{Kont} * (sort Set{Kont} to AKnt) . endfm
 view AVal from TRIV to AVal is sort Elt to AVal . endv
 
 fmod Env is
@@ -86,8 +91,8 @@ mod Syntax is
 
   *** Contracts ***
   op mkcon : SContract TContract -> Contract [ctor] .
-  op ArrCon : VARop List{Contract} Contract -> Contract [ctor] . *** Optionally name the function.
-  op FlatCon : LCTerm -> Contract [ctor] .
+  op ArrCon : Name List{SContract} SContract -> SContract [ctor] .
+  op FlatCon : LCTerm -> SContract [ctor] .
 
   op add1 : -> Prim [ctor] .
   op sub1 : -> Prim [ctor] .
@@ -106,7 +111,7 @@ mod Syntax is
   op IntTop : -> Value [ctor] .
   op CloV : ListVar LCTerm Env -> Value [ctor] .
   op blCloV : Name MLabel MLabel Label List{SContract} SContract Env Timeline Addr -> Value [ctor] .
-  op vcons : Addr Addr TTimeline -> Value [ctor] .
+  op vcons : Addr Addr ΛTimeline -> Value [ctor] .
 endm
 
 ***( This would be a functional module to parameterize over allocation 
@@ -118,12 +123,16 @@ mod CESK is
 
   *** pr MAP{VAR, Addr} * (sort Map{VAR, Addr} to Env) .
   pr MAP{Addr, AVal} * (sort Map{Addr, AVal} to Heap ) .
-  pr LIST{Frame} * (sort List{Frame} to Kont) .
+  pr MAP{Addr, AKnt} * (sort Map{Addr, AKnt} to KHeap ) .
+  ***pr LIST{Frame} * (sort List{Frame} to Kont) .
   pr LIST{Binding} * (sort List{Binding} to Bindings) .
   pr LIST{LCTerm} * (sort List{LCTerm} to LCTerms) .
   pr LIST{AVal} .
   pr BOOL-OPS .
   protecting META-LEVEL .
+
+  op mtk : -> Kont [ctor] .
+  op _k+_ : Frame Addr -> Kont [ctor] .
 
   op _vin_ : Value AVal -> Bool .
   op _abs-in_ : AVal AVal -> Bool .
@@ -141,30 +150,44 @@ mod CESK is
   op ifk : LCTerm LCTerm Env -> Frame .
   op ev : LCTerms List{AVal} Env -> Frame .
   op ltk : VAR Bindings ListVar List{AVal} LCTerm Env -> Frame .
-  op mnk : Label Label VARop Contract -> Frame .
-
+  op mnk : MLabel MLabel Label Contract Timeline Env -> Frame .
+  op chkA : MLabel MLabel Label SContract Timeline Addr Addr -> Frame .
+  op chkD : Addr Addr Timeline -> Frame .
+  op chk : MLabel Value -> Frame .
+  *** Expect a blclos (the called function), and name/timeline to return to.
+  op postk : Value Name Timeline -> Frame .
+  op rtk : Value Name Timeline -> Frame .
+  
 
   op bind : ListAddr List{AVal} -> HeapDelta [ctor] .
   op same : -> HeapDelta [ctor] .
 
+  op kbind : Addr AKnt -> KHeapDelta [ctor] .
+  op ksame : -> KHeapDelta [ctor] .
+
   *** Machine states ***
-  op wn : Point Heap -> State [ctor] .
+  op wn : Point Heap KHeap -> State [ctor] .
     *** Only keep the heap so we can apply the delta as a standalone step.
   *** VAR is the inner-most named function we're in the context of.
-  op wd : Point Heap HeapDelta -> State [ctor] .
-  op Eval : LCTerm Env Kont VAR -> Point [ctor] .
-  op Continue : Kont AVal VAR -> Point [ctor] .
-  op Apply : Value List{AVal} Kont VAR -> Point [ctor] .
+  op wd : Point Heap HeapDelta KHeapDelta -> State [ctor] .
+  op Eval : LCTerm Env Kont Name Timeline -> Point [ctor] .
+  op Continue : Kont AVal Name Timeline -> Point [ctor] .
+  op Apply : Value List{AVal} Kont Name Timeline -> Point [ctor] .
   op Fail : -> State [ctor] .
 
   *** Meta-functions ***
   op alloc : ListVar State -> ListVar .
+  op allock : Label State -> Addr .
   op join : Heap Addr AVal -> Heap .
+  op kjoin : KHeap Addr AKnt -> KHeap .
   op join-many : Heap ListAddr List{AVal} -> Heap .
   op bind-many : Env ListVar ListAddr -> Env .
 
   *** Metavariables for matching ***
   vars name x y : VAR .
+  vars ℓ ℓ' : Label .
+  vars β β' βu βc : MLabel .
+  vars βΛ : ΛName .
   vars e e0 e1 e2 : LCTerm .
   vars ς ς' : State .
   vars a a' : Addr .
@@ -173,6 +196,7 @@ mod CESK is
   vars v v' : Value .
   vars ρ ρ0 ρ1 : Env .
   vars σ σ0 σ1 : Heap .
+  vars kσ kσ0 kσ1 : KHeap .
   vars κ κ0 κ1 : Kont .
   vars es es0 es1 : LCTerms .
   vars as as' : ListVar . *** Addr
@@ -180,20 +204,33 @@ mod CESK is
   vars xs xs' : ListVar .
   var bs : Bindings .
   vars vs vs' : AVal .
+  vars κs κs' : AKnt .
   var str : String .
   var δ : HeapDelta .
+  var kδ : KHeapDelta .
   var ςh : Point .
+  var βΛ : Name .
+  var η : Timeline .
+  var ηΛ : ΛTimeline .
 
   *** DEFINITIONS OF META-FUNCTIONS ***
+  eq allock(ℓ, ς) = ℓ .
   eq alloc(nil, ς) = nil .
   eq alloc((vv str) xs, ς) = (aa str) alloc(xs, ς) .
   *** We can't overwrite bindings. Instead, we have to match to get the rest without the binding .
   eq join((σ, a |-> vs'), a, vs) = (σ,a |-> (vs' , vs)) .
   eq join(σ, a, vs) = (σ,a |-> vs) [owise] .
 
+  eq kjoin((kσ, a |-> κs'), a, κs) = (kσ,a |-> (κs' , κs)) .
+  eq kjoin(kσ, a, κs) = (kσ,a |-> κs) [owise] .
+
   op applyΔ : HeapDelta Heap -> Heap .
   eq applyΔ(same, σ) = σ .
   eq applyΔ(bind(as, vss), σ) = join-many(σ, as, vss) .
+
+  op applykΔ : KHeapDelta KHeap -> KHeap .
+  eq applykΔ(ksame, kσ) = kσ .
+  eq applykΔ(kbind(a, κs), kσ) = kjoin(kσ, a, κs) .
 
   op bind-overwrite : Env VAR Addr -> Env .
   eq bind-overwrite((ρ, x |-> a), x, a') = ρ, x |-> a' .
@@ -238,59 +275,80 @@ mod CESK is
   eq join-many(σ, nil, nil) = σ .
   eq join-many(σ, a as, vs vss) = join-many(join(σ,a,vs), as, vss) .
 
-  *** The core semantics ***
-
+  **********************************************************************
+  ************************* The core semantics *************************
+  **********************************************************************
   *** Eval rules ***
-  crl [var-eval] : wn(Eval(Var(x), ρ, κ), σ) => wd(Continue(κ, σ[ρ[x]]), σ, same)
+  crl [var-eval] : wn(Eval(Var(x), ρ, κ), σ, kσ, βΛ, ηΛ) => wd(Continue(κ, σ[ρ[x]], βΛ, ηΛ), σ, kσ, same, ksame)
                    if $hasMapping(ρ,x) .
-  rl [litI-eval] : wn(Eval(Lit(i), ρ, κ), σ) => wd(Continue(κ, LitV i), σ, same) .
-  rl [litB-eval] : wn(Eval(Lit(b), ρ, κ), σ) => wd(Continue(κ, LitV b), σ, same) .
-  rl [Lam-eval] : wn(Eval(Lam(name, xs, e), ρ, κ), σ) => wd(Continue(κ, CloV(name, xs, e, ρ)), σ, same) .
-  rl [app-eval] : wn(Eval(App(e0, es), ρ, κ), σ) => wd(Eval(e0, ρ, ev(es, nil, ρ) κ), σ, same) .
-  rl [if-eval] : wn(Eval(If(e0,e1,e2), ρ, κ), σ) => wd(Eval(e0, ρ, ifk(e1,e2,ρ) κ), σ, same) .
-  rl [let0-eval] : wn(Eval(Let(nil, e), ρ, κ), σ) => wd(Eval(e, ρ, κ), σ, same) .
-  rl [let-eval] : wn(Eval(Let((x gets e0) bs, e1), ρ, κ), σ) => wd(Eval(e0, ρ, ltk(x, bs, nil, nil, e1, ρ) κ), σ, same) .
-  crl [let-bind] : ς => wd(Eval(e, ρ1, κ), σ, bind(as, vs vss))
-                   if wn(Continue(ltk(x, nil, xs, vss, e, ρ0) κ, vs), σ) := ς
+  rl [litI-eval] : wn(Eval(Lit(i), ρ, κ, βΛ, ηΛ), σ, kσ) => wd(Continue(κ, LitV i, βΛ, ηΛ), σ, kσ, same, ksame) .
+  rl [litB-eval] : wn(Eval(Lit(b), ρ, κ, βΛ, ηΛ), σ, kσ) => wd(Continue(κ, LitV b, βΛ, ηΛ), σ, kσ, same, ksame) .
+  rl [Lam-eval] : wn(Eval(Lam(name, xs, e), ρ, κ, βΛ, ηΛ), σ, kσ) => wd(Continue(κ, CloV(name, xs, e, ρ), βΛ, ηΛ), σ, kσ, same, ksame) .
+  crl [app-eval] : ς => wd(Eval(e0, ρ, ev(es, nil, ρ) k+ ak, βΛ, ηΛ), σ, kσ, same, kbind(ak, κ))
+                   if wn(Eval(App(e0, es), ρ, κ, βΛ, ηΛ), σ, kσ) := ς
+                   /\ ak := allock(ℓ, ς) .
+  crl [if-eval] : ς => wd(Eval(e0, ρ, ifk(e1,e2,ρ) k+ ak, βΛ, ηΛ), σ, kσ, same, kbind(ak, κ))
+                  if wn(Eval(If(e0,e1,e2), ρ, κ, βΛ, ηΛ), σ, kσ) := ς
+                  /\ ak := allock(ℓ, ς) .
+  rl [let0-eval] : wn(Eval(Let(nil, e), ρ, κ, βΛ, ηΛ), σ, kσ) => wd(Eval(e, ρ, κ, βΛ, ηΛ), σ, kσ, same, ksame) .
+  crl [let-eval] : ς => wd(Eval(e0, ρ, ltk(x, bs, nil, nil, e1, ρ) k+ ak, βΛ, ηΛ), σ, kσ, same, kbind(ak, κ))
+                   if wn(Eval(Let((x gets e0) bs, e1), ρ, κ, βΛ, ηΛ), σ, kσ) := ς
+                   /\ ak := allock(ℓ, ς) .
+  crl [let-bind] : ς => wd(Eval(e, ρ1, κ, βΛ, ηΛ), σ, kσ, bind(as, vs vss), kbind(ak, κ))
+                   if wn(Continue(ltk(x, nil, xs, vss, e, ρ0) k+ ak, vs, βΛ, ηΛ), σ, kσ) := ς
+                    /\ κ, κs := kσ[ak]
                     /\ xs' := (x xs)
                     /\ as := alloc(xs', ς)
+                    /\ ak := allock(ℓ, ς) *** Distribute ℓ :(
                     /\ ρ1 := bind-many(ρ0, xs', as) .
 
   *** Continue rules ***
-  rl [let-continue] : wn(Continue(ltk(x, (y gets e0) bs, xs, vss, e1, ρ) κ, vs), σ) =>
-                      wd(Eval(e0, ρ, ltk(y, bs, x xs, vs vss, e1, ρ) κ), σ, same) .
-  crl [ev0-continue] : wn(Continue(ev(nil, nil, ρ) κ, vs), σ) =>
-                       wd(Apply(v, nil, κ), σ, same)
-                       if v:Value , vs' := vs .
-  rl [ev-continue] : wn(Continue(ev(e es, vss, ρ) κ, vs), σ) =>
-                     wd(Eval(e, ρ, ev(es, vs vss, ρ) κ), σ, same) .
-  crl [ev-done] : wn(Continue(ev(nil, vss, ρ) κ, vs), σ) =>
-                  wd(Apply(v, vss', κ), σ, same)
-                  if ((v, vs') vss') := reverse(vs vss) .
-  crl [if-then] : wn(Continue(ifk(e0, e1, ρ) κ, vs), σ) =>
-                  wd(Eval(e0, ρ, κ), σ, same)
-                  if LitV true in vs .
-  crl [if-else] : wn(Continue(ifk(e0, e1, ρ) κ, vs), σ) =>
-                  wd(Eval(e1, ρ, κ), σ, same)
-                  if LitV false in vs .
+  rl [let-continue] : wn(Continue(ltk(x, (y gets e0) bs, xs, vss, e1, ρ) k+ ak, vs, βΛ, ηΛ), σ, kσ) =>
+                      wd(Eval(e0, ρ, ltk(y, bs, x xs, vs vss, e1, ρ) k+ ak, βΛ, ηΛ), σ, kσ, same, ksame) .
+  crl [ev0-continue] : wn(Continue(ev(nil, nil, ρ) k+ ak, vs, βΛ, ηΛ), σ, kσ) =>
+                       wd(Apply(v, nil, κ, βΛ, ηΛ), σ, kσ, same, ksame)
+                       if v:Value , vs' := vs 
+                       /\ κ, κs := kσ[ak] .
+  rl [ev-continue] : wn(Continue(ev(e es, vss, ρ) k+ ak, vs, βΛ, ηΛ), σ, kσ) =>
+                     wd(Eval(e, ρ, ev(es, vs vss, ρ) k+ ak, βΛ, ηΛ), σ, kσ, same, ksame) .
+  crl [ev-done] : wn(Continue(ev(nil, vss, ρ) k+ ak, vs, βΛ, ηΛ), σ, kσ) =>
+                  wd(Apply(v, vss', κ), σ, kσ, same, ksame)
+                  if ((v, vs') vss') := reverse(vs vss)
+                  /\ κ, κs := kσ[ak] .
+  crl [if-then] : wn(Continue(ifk(e0, e1, ρ) k+ ak, vs, βΛ, ηΛ), σ, kσ) =>
+                  wd(Eval(e0, ρ, κ, βΛ, ηΛ), σ, kσ, same, ksame)
+                  if LitV true in vs
+                  /\ κ, κs := kσ[ak] .
+  crl [if-else] : wn(Continue(ifk(e0, e1, ρ) k+ ak, vs, βΛ, ηΛ), σ, kσ) =>
+                  wd(Eval(e1, ρ, κ, βΛ, ηΛ), σ, kσ, same, ksame)
+                  if LitV false in vs
+                  /\ κ, κs := kσ[ak] .
 
   *** Apply rules ***
-  crl [Call] : ς => wd(Eval(e, ρ1, κ), σ, bind(as, vss))
-      if wn(Apply(CloV(name, xs, e, ρ0), vss, κ), σ) := ς
+  crl [Call] : ς => wd(Eval(e, ρ1, κ, βΛ, ηΛ), σ, kσ, bind(as, vss))
+      if wn(Apply(CloV(name, xs, e, ρ0), vss, κ, βΛ, ηΛ), σ, kσ) := ς
       /\ as := alloc(xs, ς)
       /\ ρ1 := bind-many(ρ0, xs, as) .
-  crl [Add1] : wn(Apply(LitV add1, vs, κ), σ) => wd(Continue(κ, vs'), σ, same)
+  crl [Add1] : wn(Apply(LitV add1, vs, κ, βΛ, ηΛ), σ, kσ) => wd(Continue(κ, vs', βΛ, ηΛ), σ, kσ, same, ksame)
                if vs' := do-add1(vs)
                /\ vs' =/= empty .
-  crl [Sub1] : wn(Apply(LitV sub1, vs, κ), σ) => wd(Continue(κ, do-sub1(vs)), σ, same)
+  crl [Sub1] : wn(Apply(LitV sub1, vs, κ, βΛ, ηΛ), σ, kσ) => wd(Continue(κ, do-sub1(vs), βΛ, ηΛ), σ, kσ, same, ksame)
                if vs' := do-add1(vs)
                /\ vs' =/= empty .
-  *** INVARIANT: do-zero? can never introduce empty.
-***  rl [Zero?] : wn(Apply(LitV zero?, vs, κ), σ) => wd(Continue(κ, do-zero?(vs)), σ, same) .
+
+*** INVARIANT: do-zero? can never introduce empty.
+***  rl [Zero?] : wn(Apply(LitV zero?, vs, κ), σ, kσ) => wd(Continue(κ, do-zero?(vs)), σ, kσ, same, ksame) .
 
   *** Heap delta application (only for narrow evaluation) ***
-  rl [Heap-change] : wd(ςh, σ, δ) => wn(ςh, applyΔ(δ, σ)) .
+  rl [Heap-change] : wd(ςh, σ, kσ, δ, kδ) => wn(ςh, applyΔ(δ, σ), applykΔ(kδ, kσ)) .
 
   *** Answers self-reduce in order to keep the Kripke structure infinite .
-  rl [Answer] : wn(Continue(nil, vs), σ) => wn(Continue(nil, vs), σ) .
+  rl [Answer] : wn(Continue(nil, vs, βΛ, ηΛ), σ, kσ) => wn(Continue(nil, vs, βΛ, ηΛ), σ, kσ) .
+
+  **********************************************************************
+  ******************* The monitor-specific semantics *******************
+  **********************************************************************
+  crl [Monitor-eval] : ς => wd(Eval(e, ρ, φ k+ ak, βΛ, ηΛ), σ, kσ, same, kbind(ak, κ))
+                       if wn(Eval(Mon(βu, βc, ℓ, mkcon(S, T), e), ρ, κ, βΛ, ηΛ), σ, kσ) := ς
+                       /\ ak := allock(ℓ, ς) .
 endm

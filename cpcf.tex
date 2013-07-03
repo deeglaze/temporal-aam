@@ -392,7 +392,26 @@ The atomic propositions we use for checking the temporal contracts are much like
   \denotevpat{\mvpat}{\menv} &= \mvpat \quad\text{otherwise}
 \end{align*}
 
-The translation of temporal constracts to LTL propositions is in \autoref{fig:translation} with type
+All states that match the atomic propositions are appropriately labeled: \\
+$
+\begin{array}{l}
+ \labelof(\co{\spush{\kmcall{\mmlab_u}{\mmlab_c}{\mlab}{\mscon_R, \mtimeline, \menv, \mtoplevelname, \maddr}}{\mkaddr}, \mval, \msto}{\msmlab}{\mstimeline})
+  =\\
+ \quad \mtconNoB \cup \setbuild{\apneg{\mevent}}{\mevent \in (\ltlactions \setminus \mtconNoB)}
+ \\ \text{where } \mtconNoB = \setbuild{\aptopcall{\mtoplevelname}{\mval'}{\mtimeline},
+                                     \apvcall{\blclos{\mtoplevelname}{\mmlab_?}{\mmlab_c}{\mlab}{\mscon_?}{\mscon_R}{\menv}{\mtimeline}{\maddr}}{\mval'}{\mtimeline}}
+                                       {\mval' \sqsupseteq \mval}
+\\
+ \labelof(\co{\spush{\krt{\mmlab',\mtimeline'}}{\mkaddr}, \mval, \msto}{\mtoplevelname}{\mstimeline}) =\\
+ \quad \mtconNoB \cup \setbuild{\apneg{\mevent}}{\mevent \in (\ltlactions \setminus \mtconNoB)}
+ \\ \text{where } \mtconNoB = \setbuild{\aptopret{?}{\mval'}{\mstimeline},
+                                        \apvret{?}{\mval'}{\mstimeline}}
+                                       {\mval' \sqsupseteq \mval}
+\end{array}$
+\\
+This familiar definition matches the semantics of temporal contracts closely, allowing a smooth and easy proof of soundness.
+
+The translation of temporal constracts to LTL propositions is in figure \autoref{fig:translation} with type
 \begin{align*}
 {\scriptsize \toltl{\_}{\_}{\_}{\_}{\_}} &{\scriptsize : \Timeline \times \TContract \times \Graph \times \Env \times \TConEnvStack}\\ & {\scriptsize \to \LTLProp}
 \end{align*}
@@ -464,40 +483,102 @@ Since CFA abstracts bindings, we can't always be certain we have exact equality 
 %%
 
 \begin{align*}
-  \matchcall(\mtoplevelname, \mvpat, \mgraph, \menv) &=
-    \setbuild{(\mnode, \menv')}
-             {\\
-              \mnode\equiv\co{\spush{\kmcall{\mmlab_u}{\mmlab_c}{\mlab}{\mscon_R, \mtimeline, \menv_0, \mtoplevelname, \maddr}}{\mkaddr}, \mval, \msto}{\msmlab}{\mstimeline} \in \mgraph\span\omit \\
-                &\wedge \menv' \in \matchv(\mvpat, \mval, \menv)}
+  \matchcall_\mtimeline(\mtoplevelname, \mname', \mgraph, \menv) &=
+    \setbuild{(\ltlprop, \menv[\mname' \mapsto \mval])}
+             {\mnode \in \mgraph\\
+               &\wedge \ltlprop:=\aptopcall{\mtoplevelname}{\mval}{\mtimeline} \in \labelof(\mnode)}
 \\
-  \matchcall(\mname, \mvpat, \mgraph, \menv) &=
-    \setbuild{(\mnode, \menv')}
-             {\\
-              \mnode\equiv\co{\spush{\kmcall{\mmlab_u}{\mmlab_c}{\mlab}{\mscon_R, \mtimeline, \menv_0, \mtoplevelname, \maddr}}{\mkaddr}, \mval, \msto}{\msmlab}{\mstimeline} \in \mgraph\span\omit \\
-                &\wedge \menv' \in \matchv(\mvpat, \mval, \menv)} \\
-  \text{if } & \menv(\mname) = \blclos{\mtoplevelname}{\mmlab_u}{\mmlab_c}{\mlab}{\mscon_?}{\mscon_R}{\menv}{\mtimeline}{\maddr}
+  \matchcall_\mtimeline(\mname, \mname', \mgraph, \menv) &=
+    \setbuild{(\ltlprop, \menv[\mname' \mapsto \mval])}
+             {\mnode \in \mgraph\\
+               &\wedge \ltlprop:=\apvcall{\menv(\mname)}{\mval}{\mtimeline} \in \labelof(\mnode)}
+%
+\\[2pt]
+  \matchret_\mtimeline(\mtoplevelname, \mname', \mgraph, \menv) &=
+    \setbuild{(\ltlprop, \menv[\mname' \mapsto \mval])}
+             {\mnode \in \mgraph\\
+               &\wedge \ltlprop:=\aptopret{\mtoplevelname}{\mval}{\mtimeline} \in \labelof(\mnode)}
 \\
-  \matchret(\mtoplevelname, \mvpat, \mgraph, \menv) &=
-    \setbuild{(\mnode, \menv')}
-             {\\
-              \mnode\equiv\co{\spush{\krt{\mmlab',\mtimeline'}}{\mkaddr}, \mval, \msto}{\mtoplevelname}{\mstimeline} \in \mgraph\span\omit \\
-                &\wedge \menv' \in \matchv(\mvpat, \mval, \menv)}
-\\
-  \matchret(\mname, \mvpat, \mgraph, \menv) &=
-    \setbuild{(\mnode, \menv')}
-             {\\
-              \mnode\equiv\co{\spush{\krt{\mmlab',\mtimeline'}}{\mkaddr}, \mval, \msto}{\mtoplevelname}{\mtimeline} \in \mgraph\span\omit \\
-                &\wedge \menv' \in \matchv(\mvpat, \mval, \menv)} \\
-  \text{if } & \menv(\mname) \equiv \blclos{\mtoplevelname}{\mmlab_u}{\mmlab_c}{\mlab}{\mscon_c}{\mscon_R}{\menv''}{\mtimeline}{\maddr}
-\\
- \matchv(\swc, \mval, \menv) &= \setof{\menv}
-\\
- \matchv(\sbind{\mname}, \mval, \menv) &= \setof{\ext{\menv}{\mname}{\mval}}
-\\
- \matchv(\sref{\mname}, \mval, \menv) &= \text{ if } \mval \sqsupseteq \menv(\mname) \text{ then } \setof{\menv} \text{ else } \varnothing
-\\
- \matchv(\mconstant, \mval, \menv) &= \text{ if } \mval \sqsupseteq \mconstant \text{ then } \setof{\menv} \text{ else } \varnothing
+  \matchret_\mtimeline(\mname, \mname', \mgraph, \menv) &=
+    \setbuild{(\ltlprop, \menv[\mname' \mapsto \mval])}
+             {\mnode \in \mgraph\\
+               &\wedge \ltlprop:=\apvret{\menv(\mname)}{\mval}{\mtimeline} \in \labelof(\mnode)}
 \end{align*}
+This familiar definition matches the semantics of temporal contracts closely, allowing a smooth and easy proof of soundness.
+
+The translation of temporal constracts to LTL propositions is in figure \ref{fig:translation} with type
+\begin{align*}
+{\scriptsize \toltl{\_}{\_}{\_}{\_}{\_}} &{\scriptsize : \Timeline \times \TContract \times \Graph \times \Env \times \TConEnvStack}\\ & {\scriptsize \to \LTLProp}
+\end{align*}
+%
+where $\TConEnvStack$ is a stack of temporal contract, environment pairs that keep track of which temporal contracts must follow the current temporal contract:
+%
+\begin{equation*}
+  \TConEnvStack = (\TContract \times \Env)^*
+\end{equation*}
+%
+Because LTL lacks a modality for ``a trace matching $\psi$ follows a trace matching $\phi$,'' and is instead more closely tied to individual states, we have to carry a stack of contracts that must follow one after another.
+%
+This lack of expressivity led to our restriction of the Kleene star operator to single events rather than general temporal contracts.
+%%
+
+%%
+\begin{figure}
+  \begin{align*}
+   \toltl{\mtimeline}{\mevent}{\mgraph}{\menv}{\mtestack} &=
+     \ltland{\denoteevent{\mevent}{\menv}{\mtimeline}}
+            {\ltlnext{\stacktoltl{\mtimeline}{\mtestack}{\mgraph}}}
+    \\
+    \toltl{\mtimeline}{\snonevent{\mevent}}{\mgraph}{\menv}{\mtestack} &=
+      \ltland{\apneg{\denoteevent{\snonevent{\mevent}}{\menv}{\mtimeline}}}
+             {\ltlnext{\stacktoltl{\mtimeline}{\mtestack}{\mgraph}}}
+    \\
+    \toltl{\mtimeline}{\stnot{\mtcon}}{\mgraph}{\menv}{\mtestack} &=
+      \ltlnot{\toltl{\mtimeline}{\mtcon}{\mgraph}{\menv}{\mtestack}}
+    \\
+    \toltl{\mtimeline}{\stOr{\mtcon_0}{\mtcon_1}}{\mgraph}{\menv}{\mtestack} &=
+      \ltlor{\toltl{\mtimeline}{\mtcon_0}{\mgraph}{\menv}{\mtestack}}
+            {\toltl{\mtimeline}{\mtcon_1}{\mgraph}{\menv}{\mtestack}}
+    \\
+    \toltl{\mtimeline}{\stseq{\mtcon_0}{\mtcon_1}}{\mgraph}{\menv}{\mtestack} &=
+      \toltl{\mtimeline}{\mtcon_0}{\mgraph}{\menv}{\cons{(\mtcon_1,\menv)}{\mtestack}}
+    \\
+    \toltl{\mtimeline}{\stmany{\mtconNoB}}{\mgraph}{\menv}{\mtestack} &=
+      \ltlW{\toltl{\mtimeline}{\mtconNoB}{\mgraph}{\menv}{\emptytestack}}{\stacktoltl{\mtimeline}{\mtestack}{\mgraph}}
+    \\
+    \toltl{\mtimeline}{\stcall{\mname}{\mname'}{\mtcon}}{\mgraph}{\menv}{\mtestack} &=
+      \bigwedge\limits_{(\ltlprop,\menv') \in \matchcall(\mname,\mname',\menv,\mgraph)}{
+        \mkern-60mu\ltland{\ltlprop}{\ltlnext{\stacktoltl{\mtimeline}{\cons{(\mtcon,\menv')}{\mtestack}}{\mgraph}}}}
+    \\
+    \toltl{\mtimeline}{\stret{\mname}{\mname'}{\mtcon}}{\mgraph}{\menv}{\mtestack} &=
+      \bigwedge\limits_{(\ltlprop,\menv') \in \matchret(\mname,\mname',\menv,\mgraph)}{
+        \mkern-60mu\ltland{\ltlprop}{\ltlnext{\stacktoltl{\mtimeline}{\cons{(\mtcon,\menv')}{\mtestack}}{\mgraph}}}}
+    \\
+      \toltl{\mtimeline}{\sddd}{\mgraph}{\menv}{\mtestack} &= \stacktoltl{\mtimeline}{\mtestack}{\mgraph}
+%%
+\\[2pt]
+%%
+    {\scriptsize \stacktoltl{\_}{\_}{\_} : \Timeline \times \TConEnvStack \times \Graph \to \LTLProp} \span\omit
+\\
+    \stacktoltl{\mtimeline}{\emptytestack}{\mgraph} &= \ltlTrue
+\\
+    \stacktoltl{\mtimeline}{\cons{(\mtcon,\menv)}{\mtestack}}{\mgraph} &=
+      \toltl{\mtimeline}{\mtcon}{\mgraph}{\menv}{\mtestack}
+  \end{align*}
+  
+  \caption{Translation of temporal contracts to LTL}
+\label{fig:translation}
+\end{figure}
+%%
+
+\begin{theorem}
+  If $\alpha(\denote{\mexp}) \sqsubseteq \paths(\mgraph)$,
+     $\alpha(\menv) \sqsubseteq \maenv$,
+     $\alpha(\mtimeline) \sqsubseteq \matimeline$, and
+     $\alpha(\overline{(\mtcon_\mtestack, \menv_\mtestack)}) \sqsubseteq \mtestack$
+  then
+  $\alpha(\denote{\mexp} \cap \denotetcon{\mtcon}{\mtimeline}) \sqsubseteq \denote{\toltl{\matimeline}{\mtcon}{\mgraph}{\maenv}{\mtestack}}$
+\end{theorem}
 
 \section{Design for a reflective model checker}
 %%
