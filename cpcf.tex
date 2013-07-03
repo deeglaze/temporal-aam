@@ -112,12 +112,12 @@ Model-checking and contract verification (proving functional correctness) are hu
 %%
 
 %%
-\paragraph{First-order model-checking:}{
+\paragraph{First-order model-checking:}
 The SLAM project~\citep{ianjohnson:Ball:2002:SLP:503272.503274} for model-checking C assumes that all function pointers of the same type alias.
 %
 For C programs that use callbacks heavily, this overapproximation leads to longer checking times due to more (spurious) paths to follow, and the imprecision inherent in any program approximation gets exacerbated by the additional pressure on abstract resources.
-}
-\paragraph{Higher-order model-checking:}{
+
+\paragraph{Higher-order model-checking:}
 A technique that specifically targets higher-order languages, higher-order recursion schemes (HORS)~\citep{ianjohnson:Knapik:2002:HPT:646794.704852}, assumes a call-by-name semantics for the language it checks.
 %
 The current techniques for the initial abstraction of a program to HORS is not generally applicable to untyped or impure languages, since it creates the recursion schemes from the simple types of a given program.
@@ -125,8 +125,8 @@ The current techniques for the initial abstraction of a program to HORS is not g
 HORS can be applied for call-by-value order if the program is first transformed into CPS, since then the intended evaluation order is encoded into call-by-name.
 %
 This still does not address the need for simple types, and does not apply for languages that cannot be expressed in CPS.
-}
-\paragraph{Static contract verification:}{
+
+\paragraph{Static contract verification:}
 In the world of statically verifying software contracts, there is much more work.
 %
 There have been many successful efforts in the realm of first-order contract verification~\citep{ianjohnson:fahndrich:contracts:2011,ianjohnson:vcc:2009}, but the techniques employed are inherently first-order: the only values are booleans.
@@ -140,81 +140,76 @@ If an external theorem prover can prove that the flat contracts always hold, the
 \citet{dvanhorn:TobinHochstadt2012Higherorder} use AAM on a module semantics with higher-order contracts and is the most related to this work; whereas they focus on a concrete semantics for handling unknown values and an external theorem prover to show contract containment, our work focuses on an orthogonal issue of temporal contract monitoring and uses model-checking techniques.
 %
 Our techniques should smoothly integrate with theirs when considering partial programs, and is left to future work.
-}
 %%
 
 %%
 \section{Overview of temporal higher-order contracts}
 %%
 
-Temporal contracts provide a declarative language for monitoring the temporal ordering of events that pass through module boundaries.
-%
-We analyze a slightly different presentation than ~\citep{ianjohnson:dfm:icfp2011}'s temporal contracts that is amenable to a translation to LTL, and has a more operational account of binding.
-%
-The syntax is presented in \autoref{fig:tcontract-syntax}.
-%
 \begin{figure}
   \begin{align*}
  \mtcon \in \TContract &::=
       \mtconNoB
+ \alt \stseq{\mtcon}{\mtcon}
  \alt \stnot{\mtcon}
  \alt \stOr{\mtcon}{\mtcon}
- \alt \stseq{\mtcon}{\mtcon}
  \alt \stmany{\mtconNoB}
  \alt \sddd \\
 &\alt \stcall{\mname}{\mname}{\mtcon}
  \alt \stret{\mname}{\mname}{\mtcon} \\
 \mtconNoB &::= \mevent \alt \snonevent{\mevent} \alt \stOr{\mtconNoB}{\mtconNoB} \\
 \mevent \in \Event &::= \scallev{\mname}{\mvpat} \alt \sretev{\mname}{\mvpat} \\
-\mvpat \in \VPat &::= \mname \alt \swc \alt \mconstant
+\mvpat \in \VPat &::= \mconstant \alt \mname \alt \swc
   \end{align*}
   \caption{Syntax of temporal contracts}
   \label{fig:tcontract-syntax}
 \end{figure}
+
+Temporal contracts provide a declarative language for monitoring the temporal ordering of events that pass through module boundaries.
+%
+We analyze a slightly different presentation than ~\citep{ianjohnson:dfm:icfp2011}'s temporal contracts that is amenable to a translation to LTL, and has a more operational account of binding.
+%
+The syntax is presented in \autoref{fig:tcontract-syntax}.
 %%
 
 %%
-There are two notions of call and return: as simple events that can refer to the context, or as patterns on events that extend the context with the values they match.
+Temporal contracts ($\mtcon$) include events ($\mevent$) (for $\mevent$ction), negated events ($\snonevent{\mevent}$), concatenation ($\stseq{\mtcon}{\mtcon}$) (often represented using juxtaposition), negated contracts ($\stnot{\mtcon}$), Kleene closure of events ($\stmany{\mtconNoB}$), union ($\stOr{\mtcon}{\mtcon}$), the universal temporal contract ($\sddd$), and higher-order binding events ($\stcall{\mname}{\mname}$ and $\stret{\mname}{\mname}$).
 %
-Disney et. al's semantics for referring to functions is problematic; we give a slightly different account that captures the spirit of their prose describing their system.
+The difference between $\snonevent{\mevent}$ and $\stnot{\mtcon}$ is that the first must be an event and force time to step forward once, whereas the second may match arbitrarily many events.
+%%
+
+%%
+Events themselves are expressed as patterns denoting calls ($\scallev{\mname}{\mvpat}$) or returns ($\sretev{\mname}{\mvpat}$), with respect to a particular function named $\mname$ and with its argument or result matching a pattern $\mvpat$.
 %
-One of their motivating examples (recalled in \autoref{fig:sort}) was to protect the comparator passed to a sort function from escaping the scope of the call.
+Patterns can match constants ($\mconstant$), bound function names ($\mname$), or simply anything ($\swc$).
+%%
+
+%%
+The most glaring grammatical restriction we make in comparison to \citeauthor{ianjohnson:dfm:icfp2011}'s language of temporal contracts is that Kleene star may only be applied to a set of events, $\mtconNoB$, since there is no natural translation of $\mtcon^*$ to LTL.
 %
-What this should mean is the particular binding introduced by a call to {\tt sort} cannot be called after {\tt sort} returns, \ie, each constructed monitor around given comparators should not be called after {\tt sort} returns.
+We believe that most contracts don't need the full expressiveness of $\mtcon^*$, so we see this as a fair compromise.
+%%
+
+%%
+Before discussing higher-order binding events, one should note there are two notions of ``call'' and ``return'': as simple events that can refer to the context ($\mevent$), or as patterns on events that extend the context with the values they match (the higher-order binding events).
 %
-However, the flat use of \emph{names} instead of bindings causes a second call to an in-spirit-correct {\tt sort} to fail, since it internally calls the comparator of the same name, but different monitor construction.
+\citeauthor{ianjohnson:dfm:icfp2011}'s semantics for referring to functions is problematic; we give a slightly different account that captures the spirit of their prose describing their system.
+%
+One of their motivating examples (recalled in \autoref{fig:sort} and addressed in \autoref{sec:sort}) was to protect the comparator passed to a sort function from escaping the scope of the call.
+%
+What this should mean is the particular binding introduced by a call to $sort$ cannot be called after $sort$ returns, \ie, each constructed monitor around given comparators should not be called after $sort$ returns.
+%
+However, the flat use of \emph{names} instead of bindings causes a second call to an in-spirit-correct $sort$ to fail, since it internally calls the comparator of the same name, but different monitor construction.
 %
 We maintain some semantics of names in order to discuss top-level bindings of a module, but encourage the use of binding for contracting the use of first-class functions.
 %%
 
-%%
-The semantics of temporal contracts that we propose uses pointer-equality of monitors for comparisons of non-primitive data, which is why we consider our account to be more operational.
-%
-The difference between $\snonevent{\mevent}$ and $\stnot{\mtcon}$ is that the first must be an event and force time to step forward once, whereas the second may match arbitrarily many events.
-%
-The most glaring grammatical restriction we make in comparison to Disney et. al's language of temporal contracts is that Kleene star may only be applied to a set of actions, $\mtconNoB$, since there is no natural translation of $\mtcon^*$ to LTL.
-%
-Most contracts don't need the full expressiveness of $\mtcon^*$, so we see this as a fair compromise.
-%%
+\subsection{Sort example} \label{sec:sort}
 
-%%
-Temporal contracts are associated with structural contracts that name function components within them.
-%
-For simple exposition, we will consider tuples as the main organizational tool for contracting the interactions between multiple functions.
-%
-Since we consider monitor constructions as a more basic notion of equality, we also see each temporal monitor construction as starting its own ``timeline,'' which sees its own filtered view of events in the system.
-%
-Thus, as values flow through contract boundaries, they are considered on different timelines.
-%
-Disney et. al formalized their semantics in terms of a nondeterministic machine that defined its interactions on all event streams, and thus their machine was on a single ``timeline.''
-%
-We present a semantics that makes interaction between temporal contract monitors explicit, so we can verify whole programs.
-
-%%
 \renewcommand{\arraystretch}{1.2}
 \newcommand{\call}[1]{\scallev{#1}{\_}}
 \newcommand{\ret}[1]{\sretev{#1}{\_}}
-\begin{figure}\label{fig:sort}
+\begin{figure}
  \small
  $SortContract = $ \\
  $\begin{array}{ @{\quad~}l@{\ } c @{\ }l }
@@ -222,18 +217,37 @@ We present a semantics that makes interaction between temporal contract monitors
       &    &(List\ Pos) \\
       &\to &(List\ Pos) \\
  \end{array}$
- \begin{flalign*}
+ $\begin{array}{ @{\quad~}r@{~} l @{}l }
   \text{where}\quad
-  &\stnot{(\sddd~ \call{sort}~ \stmany{\snonevent{\ret{sort}}}~ \call{sort})} \\
+  &\stnot{(&\sddd~ \call{sort}~ \stmany{\snonevent{\ret{sort}}}~ \call{sort})} \\
   \text{and}\quad
-  &\stnot{(\sddd~ \scallev{sort}{?cmp}~ \sddd~ \ret{sort} \sddd~ \call{cmp})}
- \end{flalign*}
+  &\stnot{(&\sddd~ \scallev{sort}{?cmp}~ \sddd~ \ret{sort} \sddd~ \call{cmp})}
+ \end{array}$
  \caption{Sort example}
+ \label{fig:sort}
 \end{figure}
-%% TODO (Alex): Explain
 
+%%
+In \autoref{fig:sort} we show the contract for a hypothetical $sort$ function which takes two arguments: a comparator and a list (of positive numbers).
+%
+The notation ``$name\ :\ Domain\ \to\ Range$'' describes a function contract where the argument satisfies the $Domain$ contract and the result satisfies the $Range$ contract.
+%
+The ``$name\ :$'' prefix denotes the name of the function, for use in the temporal aspect of the contract.
+%%
 
-\begin{figure}\label{fig:file}
+%%
+$SortContract$ is also has a temporal component, given by the ``where'' clauses following its structural (function) contract.
+%
+The first of these clauses states that a second call to $sort$ may not occur (hence the negation of the trace) if there is no intervening return from $sort$ ($\stmany{\snonevent{\ret{sort}}}$).
+%
+This is specifying a particular safety property (as evidenced by the negation of the trace): $sort$ is supposed to be \emph{non-reentrant}.
+%
+The second temporal clause specifies a higher-order property; it states that, given a call to $sort$, its associated $cmp$ argument cannot be called after $sort$ returns.
+%%
+
+\subsection{File example}
+
+\begin{figure}
  \small
  $FileSystemContract\, =\, open\, :\, String\, \to\, FileContract$ \\
  $FileContract =~ Record$ \\
@@ -248,15 +262,26 @@ We present a semantics that makes interaction between temporal contract monitors
   &(\stOr{\call{close}}{\stOr{\call{read}}{\call{write}}}))}
  \end{flalign*}
  \caption{File example}
-\label{fig:file}
+ \label{fig:file}
 \end{figure}
-%% TODO (Alex): Explain
 
-\begin{figure}\label{fig:tcp}
+%%
+In \autoref{fig:file} we show the contract for a hypothetical file system, which can be used to open files by giving the $open$ function a filename (a $String$); we are then given a file handle contracted by $FileContract$.
+%
+A file handle, in turn, is a record of functions which interact with the file: $read$, $write$, and $close$, all which perform the expected behaviors.
+%%
+
+%%
+The temporal contract states that a user of the file is forbidden from making use of the file handle (through the use of its component functions) after the user has $close$d the file.
+%%
+
+\subsection{TCP example}
+
+\newcommand{\tcpstyle}[1]{\texttt{#1}}
+\begin{figure}
  \newcommand{\send}[1]{\scallev{send}{#1}}
  \newcommand{\rcv}[1]{\sretev{recv}{#1}}
  \newcommand{\notclose}{\snonevent{\call{close}}}
- \newcommand{\tcpstyle}[1]{\texttt{#1}}
  \newcommand{\tcpsyn}{\tcpstyle{SYN}}
  \newcommand{\tcpack}{\tcpstyle{ACK}}
  \newcommand{\tcpsynack}{\tcpstyle{SYN\&ACK}}
@@ -280,60 +305,98 @@ We present a semantics that makes interaction between temporal contract monitors
  \end{array}$ \\
  
  $TCPSendContract =~ TCPConnection$ \\
- $\begin{array}{ @{\quad~}l @{}r @{}l @{}l }
-  &\text{where}\quad
+ $\begin{array}{ @{\quad~}r@{~} l @{}l }
+  \text{where}
   &&\sddd~ \send{\tcpsyn}~ \notclose \\
-  &&&\rcv{\tcpsynack}~ \notclose \\
-  &&&\send{\tcpack}~ \stmany{\notclose} \\
+  &&\rcv{\tcpsynack}~ \notclose \\
+  &&\send{\tcpack}~ \stmany{\notclose} \\
 
-  &&&\left( \begin{aligned}
-    &\rcv{\tcpfin}~ \send{\tcpack} \\
-    &\send{\tcpfin}~ \rcv{\tcpack}
-    \end{aligned} \right) \\
-  &&\cup &\left(\begin{aligned}
-    &\call{close}~ \send{\tcpfin} \\
-    &\rcv{\tcpack}~ \rcv{\tcpfin}~ \send{\tcpack}
-    \end{aligned} \right) \\
-  &&&\ret{timeout}~ \ret{close}~ \sddd \\
+  &&\cup
+  \begin{aligned}
+   &\left(
+    \begin{aligned}
+     &\rcv{\tcpfin}~ \send{\tcpack} \\
+     &\send{\tcpfin}~ \rcv{\tcpack}
+    \end{aligned}
+   \right) \\
+   &\left(
+    \begin{aligned}
+     &\call{close}~ \send{\tcpfin} \\
+     &\rcv{\tcpack}~ \rcv{\tcpfin}~ \send{\tcpack}
+    \end{aligned}
+   \right)
+  \end{aligned} \\
+  &&\ret{timeout}~ \ret{close} \\
   
-  &\text{and}\quad
-  &&\stnot{(\sddd~ \ret{close}~ \sddd~ \call{send})}
+  \text{and}
+  &\stnot{(&\sddd~ \ret{close}~ \sddd~ \\
+  &&(\stOr{\call{send}}{\stOr{\call{recv}}{\call{close}}}))}
  \end{array}$
  
  $TCPRecvContract =~ TCPConnection$ \\
- $\begin{array}{ @{\quad~}l @{}r @{}l @{}l }
-  &\quad~\text{where}\quad
+ $\begin{array}{ @{\quad~}r@{~} l @{}l @{}l }
+  \text{where}
   &&\sddd~ \rcv{\tcpsyn}~ \notclose \\
-  &&&\send{\tcpsynack}~ \notclose \\
-  &&&\rcv{\tcpack}~ \stmany{\notclose} \\
+  &&\send{\tcpsynack}~ \notclose \\
+  &&\rcv{\tcpack}~ \stmany{\notclose} \\
   
-  &&&\left(\begin{aligned}
-    &\call{close}~ \send{\tcpfin} \\
-    &\rcv{\tcpack}~ \rcv{\tcpfin}~ \send{\tcpack}
-    \end{aligned} \right) \\
-  &&\cup &\left( \begin{aligned}
-    &\rcv{\tcpfin}~ \send{\tcpack} \\
-    &\call{close}~ \send{\tcpfin}~ \rcv{\tcpack} \\
-    \end{aligned} \right) \\
-  &&&\ret{timeout}~ \ret{close}~ \sddd \\
+  &&\cup
+  \begin{aligned}
+   &\left(
+    \begin{aligned}
+     &\call{close}~ \send{\tcpfin} \\
+     &\rcv{\tcpack}~ \rcv{\tcpfin}~ \send{\tcpack}
+    \end{aligned}
+   \right) \\
+   &\left(
+    \begin{aligned}
+     &\rcv{\tcpfin}~ \send{\tcpack} \\
+     &\call{close}~ \send{\tcpfin}~ \rcv{\tcpack}
+    \end{aligned}
+   \right)
+  \end{aligned} \\
+  &&\ret{timeout}~ \ret{close} \\
   
-  &\text{and}\quad
-  &&\stnot{(\sddd~ \ret{close}~ \sddd~ \call{send})}
+  \text{and}
+  &\stnot{(&\sddd~ \ret{close}~ \sddd~ \\
+  &&(\stOr{\call{send}}{\stOr{\call{recv}}{\call{close}}}))}
  \end{array}$
  
  \caption{TCP example}
+ \label{fig:tcp}
 \end{figure}
 
 % TODO: Source this from WP
-\begin{figure}\label{fig:tcp-fsm}
+\begin{figure}
  \centering
  \fontsize{4}{5} \selectfont
  \def \svgwidth{\columnwidth}
  \input{tcp-fsm.pdf_tex}
  \caption{Simplified TCP FSM for \autoref{fig:tcp}}
+ \label{fig:tcp-fsm}
 \end{figure}
 
-%% TODO (Alex): Explain
+%%
+In \autoref{fig:tcp} we show the contract for a hypothetical TCP connection module.
+%
+A client of this module may $open$ a $TCPSocket$ for initiating a connection or may $listen$ to a $TCPSocket$ for passively connecting.
+%
+A $TCPConnection$ is defined similarly to our file system example: it is a record of functions which interact with the connection: $send$, $recv$, $timeout$, and $close$.
+%
+Notably, $send$ and $recv$ interact with data in the form of $TCPData$, which can be one of the special packets used in the TCP protocol or can simply be some amount of user data ($\tcpstyle{Data}(\_)$).
+%
+%TODO: maybe express timing out in a better manner?
+The $timeout$ function is simply internally used by the module to set timeouts for interactions with the other end of the TCP connection; clients do not directly use it and it is included solely for the ability to reason over timeouts in the temporal contract.
+%%
+
+%%
+A socket on the ``sending'' end of the TCP connection (having used $open$) is obligated to use the connection according to the temporal component of $TCPSendContract$.
+%
+Likewise, a socket on the ``receiving'' end of the TCP connection (having used $listen$) is constrained by $TCPRecvContract$.
+%
+The contracts are very involved, but they implement a simplified version of the TCP connection lifecycle given in \autoref{fig:tcp-fsm}.
+%
+Note that the first temporal clause in each contract is \emph{not} negated; this indicates that it specifies a \emph{liveness property}: that the client uses the socket in a manner consistent with the TCP protocol and can expect the other end to as well.
 %%
 
 %%
@@ -348,6 +411,22 @@ The semantics we present is in the style of Felleisen's reduction semantics~\cit
 {\bf TODO (Alex):} Reduction semantics that stores calling function in context.
 %
 See \autoref{sec:technical} for now.
+%%
+
+%%
+As noted in \autoref{sec:sort}, temporal contracts are associated with structural contracts that name function components within them.
+%
+For simple exposition, we will consider tuples as the main organizational tool for contracting the interactions between multiple functions.
+%
+Since we consider monitor constructions as a more basic notion of equality, we also see each temporal monitor construction as starting its own ``timeline,'' which sees its own filtered view of events in the system.
+%
+Thus, as values flow through contract boundaries, they are considered on different timelines.
+%
+Disney et. al formalized their semantics in terms of a nondeterministic machine that defined its interactions on all event streams, and thus their machine was on a single ``timeline.''
+%
+The semantics of temporal contracts that we propose uses pointer-equality of monitors for comparisons of non-primitive data, which is why we consider our account to be more operational.
+%
+Our semantics that makes interaction between temporal contract monitors explicit, so we can verify whole programs.
 %%
 
 %%
