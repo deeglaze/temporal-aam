@@ -4,9 +4,13 @@
 \usepackage{amssymb}
 \usepackage{stmaryrd}
 \usepackage{url}
-\usepackage{graphicx}
+\usepackage{graphicx,color}
+\usepackage{anyfontsize}
 \usepackage{balance}
 \usepackage{calc}
+\usepackage[english]{babel}
+\usepackage[noabbrev]{cleveref}
+\usepackage[hidelinks]{hyperref}
 
 \newtheorem{theorem}{Theorem}
 \newtheorem{lemma}{Lemma}
@@ -147,7 +151,7 @@ Temporal contracts provide a declarative language for monitoring the temporal or
 %
 We analyze a slightly different presentation than ~\citep{ianjohnson:dfm:icfp2011}'s temporal contracts that is amenable to a translation to LTL, and has a more operational account of binding.
 %
-The syntax is presented in figure \ref{fig:tcontract-syntax}.
+The syntax is presented in \autoref{fig:tcontract-syntax}.
 %
 \begin{figure}
   \begin{align*}
@@ -174,7 +178,7 @@ There are two notions of call and return: as simple events that can refer to the
 %
 Disney et. al's semantics for referring to functions is problematic; we give a slightly different account that captures the spirit of their prose describing their system.
 %
-One of their motivating examples (recalled in figure \ref{fig:sort}) was to protect the comparator passed to a sort function from escaping the scope of the call.
+One of their motivating examples (recalled in \autoref{fig:sort}) was to protect the comparator passed to a sort function from escaping the scope of the call.
 %
 What this should mean is the particular binding introduced by a call to {\tt sort} cannot be called after {\tt sort} returns, \ie, each constructed monitor around given comparators should not be called after {\tt sort} returns.
 %
@@ -207,15 +211,18 @@ Disney et. al formalized their semantics in terms of a nondeterministic machine 
 We present a semantics that makes interaction between temporal contract monitors explicit, so we can verify whole programs.
 
 %%
+\renewcommand{\arraystretch}{1.2}
 \newcommand{\call}[1]{\scallev{#1}{\_}}
- \newcommand{\ret}[1]{\sretev{#1}{\_}}
+\newcommand{\ret}[1]{\sretev{#1}{\_}}
 \begin{figure}\label{fig:sort}
  \small
- $SortContract = $
+ $SortContract = $ \\
+ $\begin{array}{ @{\quad~}l@{\ } c @{\ }l }
+ sort &:   &(cmp\ :\ Pos\ \to Pos\ \to\ Bool) \\
+      &    &(List\ Pos) \\
+      &\to &(List\ Pos) \\
+ \end{array}$
  \begin{flalign*}
-  sort\ &:\     (cmp\ :\ Pos\ \to Pos\ \to\ Bool) \\
-        &\quad\ (List\ Pos) \\
-        &\to    (List\ Pos) \\
   \text{where}\quad
   &\stnot{(\sddd~ \call{sort}~ \stmany{\snonevent{\ret{sort}}}~ \call{sort})} \\
   \text{and}\quad
@@ -225,14 +232,17 @@ We present a semantics that makes interaction between temporal contract monitors
 \end{figure}
 %% TODO (Alex): Explain
 
-\begin{figure}
+
+\begin{figure}\label{fig:file}
  \small
- $FileSystemContract\, =\, open\, :\, String\, \to\, FileContract$
- $FileContract =~ Record$
+ $FileSystemContract\, =\, open\, :\, String\, \to\, FileContract$ \\
+ $FileContract =~ Record$ \\
+ $\begin{array}{ @{\quad~}l@{\ :} @{~}l@{\ \to\ } l }
+  read & Unit & String \\
+  write & String & Unit \\
+  close & Unit & Unit
+ \end{array}$
  \begin{flalign*}
-  read &: Unit\ \to\ String \\
-  write &: String\ \to\ Unit \\
-  close &: Unit\ \to\ Unit \\
   \text{where}\quad
   \stnot{(&\sddd~ \ret{close}~ \sddd~ \\
   &(\stOr{\call{close}}{\stOr{\call{read}}{\call{write}}}))}
@@ -242,7 +252,7 @@ We present a semantics that makes interaction between temporal contract monitors
 \end{figure}
 %% TODO (Alex): Explain
 
-\begin{figure}
+\begin{figure}\label{fig:tcp}
  \newcommand{\send}[1]{\scallev{send}{#1}}
  \newcommand{\rcv}[1]{\sretev{recv}{#1}}
  \newcommand{\notclose}{\snonevent{\call{close}}}
@@ -253,54 +263,76 @@ We present a semantics that makes interaction between temporal contract monitors
  \newcommand{\tcpfin}{\tcpstyle{FIN}}
  %\newcommand{\tcpfinack}{\tcpstyle{FIN\&ACK}}
  \small
- $TCPConnectionContract\, =~ Record$
- \begin{flalign*}
-  open &: TCPSocket\ \to\ TCPSendContract \\
-  listen &: TCPSocket\ \to\ TCPRecvContract
- \end{flalign*}
+ $TCPConnectionContract\, =~ Record$ \\
+ $\begin{array}{ @{\quad~}l@{\ :} @{~}l @{\ \to\ }l }
+  open & TCPSocket & TCPSendContract \\
+  listen & TCPSocket & TCPRecvContract
+ \end{array}$ \\
  $TCPData =$
  $~ \tcpsyn \mid \tcpack \mid \tcpsynack \mid \tcpfin \mid \tcpstyle{Data}(\_)$
- $TCPConnection =~ Record$
- \begin{flalign*}
-  send &: TCPData \to Unit \\
-  recv &: Unit \to TCPData \\
-  timeout &: Duration \to Unit \\
-  close &: Unit \to Unit
- \end{flalign*}
  
- $TCPSendContract =~ TCPConnection$
- \begin{flalign*}
-  \quad~\text{where}\quad
-  &\sddd~ \send{\tcpsyn}~ \notclose \\
-  &\rcv{\tcpsynack}~ \notclose \\
-  &\send{\tcpack}~ \stmany{\notclose} \\
-  &((\rcv{\tcpfin}~ \send{\tcpack} \\
-  &\quad\send{\tcpfin}~ \rcv{\tcpack}) \\ &\cup
-    (\call{close}~ \send{\tcpfin} \\
-  &\quad\rcv{\tcpack}~ \rcv{\tcpfin}~ \send{\tcpack})) \\
-  &\ret{timeout}~ \ret{close}~ \sddd \\
-  \text{and}\quad
-  &\stnot{(\sddd~ \ret{close}~ \sddd~ \call{send})}
- \end{flalign*}
+ $TCPConnection =~ Record$ \\
+ $\begin{array}{ @{\quad~}l@{\ :} @{~}l@{\ \to\ } l }
+  send & TCPData & Unit \\
+  recv & Unit & TCPData \\
+  timeout & Duration & Unit \\
+  close & Unit & Unit
+ \end{array}$ \\
  
- $TCPRecvContract =~ TCPConnection$
- \begin{flalign*}
-  \quad~\text{where}\quad
-  &\sddd~ \rcv{\tcpsyn}~ \notclose \\
-  &\send{\tcpsynack}~ \notclose \\
-  &\rcv{\tcpack}~ \stmany{\notclose} \\
-  &((\call{close}~ \send{\tcpfin} \\
-  &\quad\rcv{\tcpack}~ \rcv{\tcpfin}~ \send{\tcpack}) \\ &\cup
-    (\rcv{\tcpfin}~ \send{\tcpack} \\
-  &\quad\call{close}~ \send{\tcpfin}~ \rcv{\tcpack})) \\
-  &\ret{timeout}~ \ret{close}~ \sddd \\
-  \text{and}\quad
-  &\stnot{(\sddd~ \ret{close}~ \sddd~ \call{send})}
- \end{flalign*}
+ $TCPSendContract =~ TCPConnection$ \\
+ $\begin{array}{ @{\quad~}l @{}r @{}l @{}l }
+  &\text{where}\quad
+  &&\sddd~ \send{\tcpsyn}~ \notclose \\
+  &&&\rcv{\tcpsynack}~ \notclose \\
+  &&&\send{\tcpack}~ \stmany{\notclose} \\
+
+  &&&\left( \begin{aligned}
+    &\rcv{\tcpfin}~ \send{\tcpack} \\
+    &\send{\tcpfin}~ \rcv{\tcpack}
+    \end{aligned} \right) \\
+  &&\cup &\left(\begin{aligned}
+    &\call{close}~ \send{\tcpfin} \\
+    &\rcv{\tcpack}~ \rcv{\tcpfin}~ \send{\tcpack}
+    \end{aligned} \right) \\
+  &&&\ret{timeout}~ \ret{close}~ \sddd \\
+  
+  &\text{and}\quad
+  &&\stnot{(\sddd~ \ret{close}~ \sddd~ \call{send})}
+ \end{array}$
+ 
+ $TCPRecvContract =~ TCPConnection$ \\
+ $\begin{array}{ @{\quad~}l @{}r @{}l @{}l }
+  &\quad~\text{where}\quad
+  &&\sddd~ \rcv{\tcpsyn}~ \notclose \\
+  &&&\send{\tcpsynack}~ \notclose \\
+  &&&\rcv{\tcpack}~ \stmany{\notclose} \\
+  
+  &&&\left(\begin{aligned}
+    &\call{close}~ \send{\tcpfin} \\
+    &\rcv{\tcpack}~ \rcv{\tcpfin}~ \send{\tcpack}
+    \end{aligned} \right) \\
+  &&\cup &\left( \begin{aligned}
+    &\rcv{\tcpfin}~ \send{\tcpack} \\
+    &\call{close}~ \send{\tcpfin}~ \rcv{\tcpack} \\
+    \end{aligned} \right) \\
+  &&&\ret{timeout}~ \ret{close}~ \sddd \\
+  
+  &\text{and}\quad
+  &&\stnot{(\sddd~ \ret{close}~ \sddd~ \call{send})}
+ \end{array}$
  
  \caption{TCP example}
-\label{fig:tcp}
 \end{figure}
+
+% TODO: Source this from WP
+\begin{figure}\label{fig:tcp-fsm}
+ \centering
+ \fontsize{4}{5} \selectfont
+ \def \svgwidth{\columnwidth}
+ \input{tcp-fsm.pdf_tex}
+ \caption{Simplified TCP FSM for \autoref{fig:tcp}}
+\end{figure}
+
 %% TODO (Alex): Explain
 %%
 
@@ -315,7 +347,7 @@ The semantics we present is in the style of Felleisen's reduction semantics~\cit
 %
 {\bf TODO (Alex):} Reduction semantics that stores calling function in context.
 %
-See section \ref{sec:technical} for now.
+See \autoref{sec:technical} for now.
 %%
 
 %%
@@ -360,7 +392,7 @@ The atomic propositions we use for checking the temporal contracts are much like
   \denotevpat{\mvpat}{\menv} &= \mvpat \quad\text{otherwise}
 \end{align*}
 
-The translation of temporal constracts to LTL propositions is in figure \ref{fig:translation} with type
+The translation of temporal constracts to LTL propositions is in \autoref{fig:translation} with type
 \begin{align*}
 {\scriptsize \toltl{\_}{\_}{\_}{\_}{\_}} &{\scriptsize : \Timeline \times \TContract \times \Graph \times \Env \times \TConEnvStack}\\ & {\scriptsize \to \LTLProp}
 \end{align*}

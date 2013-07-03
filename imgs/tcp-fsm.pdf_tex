@@ -1,0 +1,102 @@
+%% Creator: Inkscape inkscape 0.48.4, www.inkscape.org
+%% PDF/EPS/PS + LaTeX output extension by Johan Engelen, 2010
+%% Accompanies image file 'tcp-fsm.pdf' (pdf, eps, ps)
+%%
+%% To include the image in your LaTeX document, write
+%%   \input{<filename>.pdf_tex}
+%%  instead of
+%%   \includegraphics{<filename>.pdf}
+%% To scale the image, write
+%%   \def\svgwidth{<desired width>}
+%%   \input{<filename>.pdf_tex}
+%%  instead of
+%%   \includegraphics[width=<desired width>]{<filename>.pdf}
+%%
+%% Images with a different path to the parent latex file can
+%% be accessed with the `import' package (which may need to be
+%% installed) using
+%%   \usepackage{import}
+%% in the preamble, and then including the image with
+%%   \import{<path to file>}{<filename>.pdf_tex}
+%% Alternatively, one can specify
+%%   \graphicspath{{<path to file>/}}
+%% 
+%% For more information, please see info/svg-inkscape on CTAN:
+%%   http://tug.ctan.org/tex-archive/info/svg-inkscape
+%%
+\begingroup%
+  \makeatletter%
+  \providecommand\color[2][]{%
+    \errmessage{(Inkscape) Color is used for the text in Inkscape, but the package 'color.sty' is not loaded}%
+    \renewcommand\color[2][]{}%
+  }%
+  \providecommand\transparent[1]{%
+    \errmessage{(Inkscape) Transparency is used (non-zero) for the text in Inkscape, but the package 'transparent.sty' is not loaded}%
+    \renewcommand\transparent[1]{}%
+  }%
+  \providecommand\rotatebox[2]{#2}%
+  \ifx\svgwidth\undefined%
+    \setlength{\unitlength}{766.42395331bp}%
+    \ifx\svgscale\undefined%
+      \relax%
+    \else%
+      \setlength{\unitlength}{\unitlength * \real{\svgscale}}%
+    \fi%
+  \else%
+    \setlength{\unitlength}{\svgwidth}%
+  \fi%
+  \global\let\svgwidth\undefined%
+  \global\let\svgscale\undefined%
+  \makeatother%
+  \begin{picture}(1,0.78293343)%
+    \put(0,0){\includegraphics[width=\unitlength]{tcp-fsm.pdf}}%
+    \put(0.48419878,0.7496214){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{CLOSED}}}%
+    \put(0.3981232,0.75192508){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{(Start)}}}%
+    \put(0.41340769,0.71978934){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{LISTEN/-}}}%
+    \put(0.56742688,0.70607266){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{CLOSE/-}}}%
+    \put(0.48958276,0.67202363){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{LISTEN}}}%
+    \put(0.17407446,0.5894594){\color[rgb]{0,0,0}\makebox(0,0)[b]{\smash{SYNRECEIVED}}}%
+    \put(0.84216362,0.5894594){\color[rgb]{0,0,0}\makebox(0,0)[b]{\smash{SYNSENT}}}%
+    \put(0.62917026,0.7714725){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{CONNECT/}}}%
+    \put(0.75133551,0.77275846){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{(Step 1 of the 3-way-handshake)}}}%
+    \put(0.71058734,0.7714725){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{SYN}}}%
+    \put(0.26220573,0.68334791){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{SYN/SYN+ACK}}}%
+    \put(-0.00187892,0.68518814){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{(Step 2 of the 3-way-handshake)}}}%
+    \put(0.15425514,0.76091855){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{unusual event}}}%
+    \put(0.15425514,0.74630523){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{client/receiver path}}}%
+    \put(0.15425514,0.72960429){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{server/sender path}}}%
+    \put(0.35545752,0.60537956){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{RST/-}}}%
+    \put(0.38534697,0.57268956){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{SYN/SYN+ACK}}}%
+    \put(0.49808457,0.57433982){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{(simultaneous open)}}}%
+    \put(0.68966103,0.49511891){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{SYN+ACK/ACK}}}%
+    \put(0.63217328,0.47402145){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{(Step 3 of the 3-way-handshake)}}}%
+    \put(0.41515084,0.51142636){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{Data exchange occurs}}}%
+    \put(0.45927265,0.48371322){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{ESTABLISHED}}}%
+    \put(0.68126571,0.40072106){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{FIN/ACK}}}%
+    \put(0.30054691,0.49586106){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{ACK/-}}}%
+    \put(0.68065194,0.73151133){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{CLOSE/-}}}%
+    \put(0.61697648,0.60520002){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{SEND/}}}%
+    \put(0.66569312,0.6051969){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{SYN}}}%
+    \put(0.13534076,0.4289519){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{CLOSE/}}}%
+    \put(0.19449563,0.42894772){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{FIN}}}%
+    \put(0.30660101,0.39902277){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{CLOSE/}}}%
+    \put(0.36575678,0.39901856){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{FIN}}}%
+    \put(0.48089409,0.27781984){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{CLOSING}}}%
+    \put(0.47538591,0.12124854){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{TIME WAIT}}}%
+    \put(0.48419878,0.01060481){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{CLOSED}}}%
+    \put(0.12914987,0.27781984){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{FIN WAIT 1}}}%
+    \put(0.12816556,0.12124854){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{FIN WAIT 2}}}%
+    \put(0.78946167,0.27781984){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{CLOSE WAIT}}}%
+    \put(0.79962211,0.12124854){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{LAST ACK}}}%
+    \put(0.84945353,0.20889196){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{CLOSE/}}}%
+    \put(0.90860825,0.20888776){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{FIN}}}%
+    \put(0.31356321,0.29972422){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{FIN/ACK}}}%
+    \put(0.25441892,0.25422769){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{FIN+ACK/ACK}}}%
+    \put(0.1303669,0.20933869){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{ACK/-}}}%
+    \put(0.31386696,0.1022721){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{FIN/ACK}}}%
+    \put(0.52554195,0.07399638){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{Timeout}}}%
+    \put(0.25564017,0.01100459){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{(Go back to start)}}}%
+    \put(0.51823634,0.33161256){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{Active CLOSE}}}%
+    \put(0.6932841,0.33250086){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{Passive CLOSE}}}%
+  \end{picture}%
+\endgroup%
