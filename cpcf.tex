@@ -54,7 +54,9 @@
 %
   Just as higher-order function contracts internalize an extra-linguistic type-checking process to the dynamic semantics, we claim that temporal contracts internalize the extra-linguistic process of model-checking.
 %
-  To demonstrate, we propose a sound analysis for verifying temporal contracts using model-checking techniques.
+  To demonstrate, we propose using abstracting abstract machines (AAM) on a language with temporal higher-order contracts to generate both a finite model and the proof obligations to feed to an off-the-shelf model-checker.
+%
+  This approach affords us a simple and direct proof of soundness.
 \end{abstract}
 
 \section{Introduction}
@@ -140,7 +142,7 @@ The SLAM project~\citep{ianjohnson:Ball:2002:SLP:503272.503274} for model-checki
 For C programs that use callbacks heavily, this overapproximation leads to longer checking times due to more (spurious) paths to follow, and the imprecision inherent in any program approximation gets exacerbated by the additional pressure on abstract resources.
 
 \paragraph{Higher-order model-checking:}
-Java and C++ both have several high-quality model-checking tools.
+Java and C++ both have several high-quality model-checking tools \citep{ianjohnson:bandera, ianjohnson:java-pathfinder, ianjohnson:LLBMC}, some of which are bounded model-checkers, meaning they cannot fully verify temporal properties - only present counter-examples (that may not be true counter-examples).
 %
 Bandera~\citep{ianjohnson:bandera} is a sophisticated tool-chain that uses several static analysis techniques to extract a finite model from a Java program to feed to various back-end model-checkers.
 %
@@ -461,6 +463,46 @@ Our semantics that makes interaction between temporal contract monitors explicit
 %%
 
 %%
+We denote temporal contracts as sets of event traces that satisfy the contract, all parameterized by which timeline the on which the events occur.
+%
+The semantics is close to \citeauthor{ianjohnson:dfm:icfp2011}'s definition, and given in \autoref{fig:tcontract-denotation}.
+%
+\begin{figure}
+  \begin{align*}
+   \denotetcon{\mevent}{\mtimeline}{\menv} &=
+   \denoteevent{\mevent}{\menv}{\mtimeline}
+\\
+   \denotetcon{\stseq{\mtcon_0}{\mtcon_1}}{\mtimeline}{\menv} &=
+   \setbuild{\mtrace_0 \cdot \mtrace_1}{\mtrace_0 \in \denotetcon{\mtcon_0}{\mtimeline}{\menv}, \mtrace_1 \in \denotetcon{\mtcon_1}{\mtimeline}{\menv}}
+\\   
+   \denotetcon{\stnot{\mtcon}}{\mtimeline}{\menv} &=
+   \Traces^\mtimeline \setminus \denotetcon{\mtcon}{\mtimeline}{\menv}
+\\
+   \denotetcon{\stOr{\mtcon_0}{\mtcon_1}}{\mtimeline}{\menv} &=
+   \denotetcon{\mtcon_0}{\mtimeline}{\menv} \cup \denotetcon{\mtcon_1}{\mtimeline}{\menv}
+\\
+   \denotetcon{\stmany{\mtconNoB}}{\mtimeline}{\menv} &=
+   \setbuild{\mtrace^i}{i \le \omega, \mtrace \in \denotetcon{\mtconNoB}{\mtimeline}{\menv}}
+\\
+   \denotetcon{\sddd}{\mtimeline}{\menv} &=
+   \Traces^\mtimeline
+\\
+   \denotetcon{\stcall{\mname}{\mname'}{\mtcon}}{\mtimeline}{\menv} &=
+   \setbuild{\apvcall{\menv(\mname)}{\mval}{\mtimeline}\cdot \mtrace}{\mtrace \in \denotetcon{\mtcon}{\mtimeline}{\menv[\mname' \mapsto \mval]}}
+\\
+   \denotetcon{\stcall{\mtoplevelname}{\mname'}{\mtcon}}{\mtimeline}{\menv} &=
+   \setbuild{\aptopcall{\mtoplevelname}{\mval}{\mtimeline}\cdot \mtrace}{\mtrace \in \denotetcon{\mtcon}{\mtimeline}{\menv[\mname' \mapsto \mval]}}
+\\
+\\
+   \denotetcon{\stret{\mname}{\mname'}{\mtcon}}{\mtimeline}{\menv} &=
+   \setbuild{\apvret{\menv(\mname)}{\mval}{\mtimeline}\cdot \mtrace}{\mtrace \in \denotetcon{\mtcon}{\mtimeline}{\menv[\mname' \mapsto \mval]}}
+\\
+   \denotetcon{\stret{\mtoplevelname}{\mname'}{\mtcon}}{\mtimeline}{\menv} &=
+   \setbuild{\aptopret{\mtoplevelname}{\mval}{\mtimeline}\cdot \mtrace}{\mtrace \in \denotetcon{\mtcon}{\mtimeline}{\menv[\mname' \mapsto \mval]}}
+  \end{align*}
+  \caption{Denotation of Temporal Contracts}
+  \label{fig:tcontract-denotation}
+\end{figure}
 \section{Approximation of Temporal Contracts into LTL}
 %%
 
@@ -497,22 +539,36 @@ The atomic propositions we use for checking the temporal contracts are much like
 
 \begin{align*}
   \denoteevent{\scallev{\mtoplevelname}{\mvpat}}{\menv}{\mtimeline} &=
-    \aptopcall{\mtoplevelname}{\denotevpat{\mvpat}{\menv}}{\mtimeline}
+    % XXX: names are shared across module boundaries
+    \setbuild{\aptopcall{\mtoplevelname}{\mval}{\mtimeline'}}
+             {\mval \in \denotevpat{\mvpat}{\menv}}
+    \\ &\cup
+    \setbuild{\apvcall{\blclos{\mtoplevelname}{\mmlab_u}{\mmlab_c}{\mlab}{\mscon_D}{\mscon_R}{\menv'}{\mtimeline}{\maddr}}{\mval'}{\mtimeline'}}
+             {\mval' \in \denotevpat{\mvpat}{\menv}}
 \\
   \denoteevent{\scallev{\mname}{\mvpat}}{\menv}{\mtimeline} &=
-    \apvcall{\menv(\mname)}{\denotevpat{\mvpat}{\menv}}{\mtimeline}
+    \setbuild{\apvcall{\menv(\mname)}{\mval'}{\mtimeline'}}
+            {\mval' \in \denotevpat{\mvpat}{\menv}}
 \\
   \denoteevent{\sretev{\mtoplevelname}{\mvpat}}{\menv}{\mtimeline} &=
-    \aptopret{\mtoplevelname}{\denotevpat{\mvpat}{\menv}}{\mtimeline}
+    % XXX: names are shared across module boundaries
+    \setbuild{\aptopret{\mtoplevelname}{\mval}{\mtimeline'}}
+             {\mval \in \denotevpat{\mvpat}{\menv}}
+    \\ &\cup
+    \setbuild{\apvret{\blclos{\mtoplevelname}{\mmlab_u}{\mmlab_c}{\mlab}{\mscon_D}{\mscon_R}{\menv'}{\mtimeline}{\maddr}}{\mval'}{\mtimeline'}}
+             {\mval' \in \denotevpat{\mvpat}{\menv}}
 \\
   \denoteevent{\sretev{\mname}{\mvpat}}{\menv}{\mtimeline} &=
-    \apvret{\menv(\mname)}{\denotevpat{\mvpat}{\menv}}{\mtimeline}
+    \setbuild{\apvret{\menv(\mname)}{\mval'}{\mtimeline'}}
+            {\mval' \in \denotevpat{\mvpat}{\menv}}
 %%
 \\[2pt]
 %%
-  \denotevpat{\mname}{\menv} &= \menv(\mname)
+  \denotevpat{\mname}{\menv} &= \setof{\menv(\mname)}
 \\
-  \denotevpat{\mvpat}{\menv} &= \mvpat \quad\text{otherwise}
+  \denotevpat{\mconstant}{\menv} &= \setof{\mconstant}
+\\
+  \denotevpat{\swc}{\menv} &= \Value
 \end{align*}
 
 All states that match the atomic propositions are appropriately labeled: \\
@@ -638,15 +694,15 @@ Denotations of program actions restricted to a particular timeline:
   \mathit{AP}_\mtimeline(\mstate) &= \setbuild{\ltlprop}{\ltlprop \in \labelof(\mstate), \ltlprop \text{ matches }\\
                                &\qquad\aptopcall{\_}{\_}{\mtimeline} \vee \apvcall{\_}{\_}{\mtimeline} \vee \aptopret{\_}{\_}{\mtimeline} \vee \apvret{\_}{\_}{\mtimeline}} \\
   \traces(\mexp) &= \gfp{{\mathcal F}} \\
-  \text{where } {\mathcal F}(S) &= S \cup \setof{\inject(\mexp)} \cup \setbuild{\pi \mstate \mstate'}{\pi \mstate \in S, \mstate \machstep \mstate'}
+  \text{where } {\mathcal F}(S) &= S \cup \setof{\inject(\mexp)} \cup \setbuild{\mtrace \mstate \mstate'}{\mtrace \mstate \in S, \mstate \machstep \mstate'}
 \end{align*}
 
 Paths through a graph are defined as the greatest fixed point of these two rules:
 \begin{mathpar}
   \inferrule{ }{\inject(e) \in \paths(\mgraph)}\quad
-  \inferrule{\pi\mstate \in \paths(\mgraph) \\
+  \inferrule{\mtrace\mstate \in \paths(\mgraph) \\
              (\mstate, \mstate') \in \mgraph.E}
-            {\pi\mstate\mstate' \in \paths(\mgraph)}
+            {\mtrace\mstate\mstate' \in \paths(\mgraph)}
 \end{mathpar}
 
 \begin{theorem}
@@ -655,7 +711,7 @@ Paths through a graph are defined as the greatest fixed point of these two rules
      $\alpha(\mtimeline) \sqsubseteq \matimeline$, and
      $\alpha(\overline{(\mtcon_\mtestack, \menv_\mtestack)}) \sqsubseteq \mtestack$
   then
-  $\alpha(\denote{\mexp}_\mtimeline \cap \denotetcon{\mtcon}{\mtimeline}) \sqsubseteq \denote{\toltl{\matimeline}{\mtcon}{\mgraph}{\maenv}{\mtestack}}$
+  $\alpha(\denote{\mexp}_\mtimeline \cap \denotetcon{\mtcon}{\mtimeline}{\bot}) \sqsubseteq \denote{\toltl{\matimeline}{\mtcon}{\mgraph}{\maenv}{\mtestack}}$
 \end{theorem}
 
 \section{Design for a reflective model checker}

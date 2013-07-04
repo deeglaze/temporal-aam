@@ -23,6 +23,7 @@
 \newcommand{\mgraph}{G}
 \newcommand{\maccum}{T_{\mathit{acc}}}
 
+\newcommand{\mtrace}{\pi}
 \newcommand{\mtimeline}{\eta}
 \newcommand{\matimeline}{\hat{\eta}}
 \newcommand{\mstimeline}{a_t^{\toplevel}{}}
@@ -111,7 +112,7 @@
 \newcommand{\swc}{\_} 
 
 \newcommand{\denote}[1]{[\![ #1 ]\!]}
-\newcommand{\denotetcon}[2]{[\![ #1 ]\!]_{#2}}
+\newcommand{\denotetcon}[3]{[\![ #1 ]\!]^{#2}_{#3}}
 \newcommand{\denoteevent}[3]{\llparenthesis #1 \rrparenthesis_{#2}^{#3}}
 \newcommand{\denotevpat}[2]{\llparenthesis #1 \rrparenthesis_{#2}}
 \newcommand{\aptopcall}[3]{{\tt call}_{#3}^{\toplevel}(#1,#2)}
@@ -141,12 +142,15 @@
 \newcommand{\LTLProp}{\mathit{Prop}_\mathit{LTL}}
 \newcommand{\ltlprop}{\varphi}
 \newcommand{\ltland}[2]{#1 \wedge #2}
+\newcommand{\ltluntil}[2]{#1 {\mathbf U} #2}
 \newcommand{\ltlor}[2]{#1 \vee #2}
 \newcommand{\ltlnot}[1]{\neg #1}
 \newcommand{\ltlW}[2]{#1 {\mathcal W} #2}
 \newcommand{\ltlTrue}{\mathit{True}}
 \newcommand{\ltlnext}[1]{\Circle{#1}}
 \newcommand{\ltlactions}{\mathbb{A}}
+\newcommand{\ltlatom}{p}
+\newcommand{\ltlAP}{\mathit{AP}}
 
 % Spaces
 \newcommand{\Prog}{\mathit{Program}}
