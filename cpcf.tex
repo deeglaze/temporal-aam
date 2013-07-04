@@ -44,13 +44,13 @@
 \begin{abstract}
   Behavioral contracts allow languages to internalize a notion of ``type checking'' at run time, so that untyped or statically-typed-but-currently-failing-the-type-checker programs can still be run/tested with expected invariants checked on-the-fly.
 %
-  Contract violations during testing help correct both the implementation and specification of software without having to provide a proof of correctness up-front.
+  Contracts go beyond typical type systems because they give full access to the language, allowing expression of strong invariants that a traditional type checker could not verify.
+%
+  Contract violations during testing or even after deployment help correct both the implementation and specification of software without having to provide a proof of correctness up-front.
 %%
 
 %%
-  Painful though it is to admit, impure programming constructs are here to stay, and we need better tools to tame them;
-%
-  temporal contracts are a proposed declarative language for specifying and dynamically monitoring adhereance to stateful protocols.
+  Temporal higher-order contracts provide a language for specifying and dynamically monitoring adhereance to stateful protocols in a higher-order language.
 %
   Just as higher-order function contracts internalize an extra-linguistic type-checking process to the dynamic semantics, we claim that temporal contracts internalize the extra-linguistic process of model-checking.
 %
@@ -128,7 +128,7 @@ Contracts are defined by their behavior of witnessing program execution, and thu
 %
 In that vein, temporal contracts can never guarantee liveness properties of a program.
 %
-\citep{ianjohnson:dthf:complete} show that contracts that simulate types will never violate the guarantee that well-typed programs will never be blamed in a gradually-typed system.
+\citet{ianjohnson:dthf:complete} show that contracts that simulate types will never violate the guarantee that well-typed programs will never be blamed in a gradually-typed system.
 %
 Likewise, if we interpret temporal contracts in a stricter fashion --- sequenced events \emph{must} happen --- then in the abstract we can verify liveness properties.
 %%
@@ -142,7 +142,7 @@ For C programs that use callbacks heavily, this overapproximation leads to longe
 \paragraph{Higher-order model-checking:}
 Java and C++ both have several high-quality model-checking tools.
 %
-Bandera~\citet{ianjohnson:bandera} is a sophisticated tool-chain that uses several static analysis techniques to extract a finite model from a Java program to feed to various back-end model-checkers.
+Bandera~\citep{ianjohnson:bandera} is a sophisticated tool-chain that uses several static analysis techniques to extract a finite model from a Java program to feed to various back-end model-checkers.
 %
 Similar to our approach, Bandera employs control-flow analysis in order to produce compact models.
 %%
@@ -234,6 +234,7 @@ However, the flat use of \emph{names} instead of bindings causes a second call t
 We maintain some semantics of names in order to discuss top-level bindings of a module, but encourage the use of binding for contracting the use of first-class functions.
 %%
 
+%%
 \subsection{Sort example} \label{sec:sort}
 
 \renewcommand{\arraystretch}{1.2}
@@ -464,6 +465,19 @@ Our semantics that makes interaction between temporal contract monitors explicit
 %%
 
 %%
+We choose linear temporal logic as our target due to linear behavior of temporal contract monitoring.
+%
+The syntax of core LTL is in \autoref{fig:ltl-syntax}, but we use some definable constructs for brevity.
+%
+\begin{figure}
+  \begin{align*}
+    \ltlprop \in \LTLProp &::= \ltlTrue \alt \ltlatom \alt \ltlor{\ltlprop}{\ltlprop} \alt \ltlnot{\ltlprop} \alt \ltlnext{\ltlprop} \alt \ltluntil{\ltlprop}{\ltlprop}
+\\
+    \ltlatom \in \ltlAP & \text{ a finite set of atomic propositions}
+  \end{align*}
+  \caption{Syntax of LTL}
+  \label{fig:ltl-syntax}
+\end{figure}
 LTL only has a finite set of atomic proposisitions for states, so there is no hope for a fully precise account for the binding across states.
 %
 We instead have to enumerate the concrete propositions on instantiations of the bindings.
@@ -507,8 +521,8 @@ $
  \labelof(\co{\spush{\kmcall{\mmlab_u}{\mmlab_c}{\mlab}{\mscon_R, \mtimeline, \menv, \mtoplevelname, \maddr}}{\mkaddr}, \mval, \msto}{\msmlab}{\mstimeline})
   =\\
  \quad \mtconNoB \cup \setbuild{\apneg{\mevent}}{\mevent \in (\ltlactions \setminus \mtconNoB)}
- \\ \text{where } \mtconNoB = \setbuild{\aptopcall{\mtoplevelname}{\mval'}{\mtimeline},
-                                     \apvcall{\blclos{\mtoplevelname}{\mmlab_?}{\mmlab_c}{\mlab}{\mscon_?}{\mscon_R}{\menv}{\mtimeline}{\maddr}}{\mval'}{\mtimeline}}
+ \\ \text{where } \mtconNoB = \setbuild{\aptopcall{\mtoplevelname}{\mval'}{\mtimeline},\\
+                                     \phantom{\text{where } \mtconNoB = \{}\apvcall{\blclos{\mtoplevelname}{\mmlab_?}{\mmlab_c}{\mlab}{\mscon_?}{\mscon_R}{\menv}{\mtimeline}{\maddr}}{\mval'}{\mtimeline}}
                                        {\mval' \sqsupseteq \mval}
 \\
  \labelof(\co{\spush{\krt{\mmlab',\mtimeline'}}{\mkaddr}, \mval, \msto}{\mtoplevelname}{\mstimeline}) =\\
