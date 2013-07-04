@@ -42,7 +42,19 @@
            {dvanhorn@ccs.neu.edu}
 \maketitle
 \begin{abstract}
-  Shwazam.
+  Behavioral contracts allow languages to internalize a notion of ``type checking'' at run time, so that untyped or statically-typed-but-currently-failing-the-type-checker programs can still be run/tested with expected invariants checked on-the-fly.
+%
+  Contract violations during testing help correct both the implementation and specification of software without having to provide a proof of correctness up-front.
+%%
+
+%%
+  Painful though it is to admit, impure programming constructs are here to stay, and we need better tools to tame them;
+%
+  temporal contracts are a proposed declarative language for specifying and dynamically monitoring adhereance to stateful protocols.
+%
+  Just as higher-order function contracts internalize an extra-linguistic type-checking process to the dynamic semantics, we claim that temporal contracts internalize the extra-linguistic process of model-checking.
+%
+  To demonstrate, we propose a sound analysis for verifying temporal contracts using model-checking techniques.
 \end{abstract}
 
 \section{Introduction}
@@ -109,6 +121,16 @@ Our contributions in this paper are as follows:
 
 %%
 Model-checking and contract verification (proving functional correctness) are huge fields and it is important to view our work in the greater context of these worlds of research.
+%
+The main separating factor between this work and related work is that all model-checking literature so far has treated the specification of temporal properties as \emph{extra-linguistic}, meaning there is no mechanism in the object language that could monitor for the properties.
+%
+Contracts are defined by their behavior of witnessing program execution, and thus do not have the same guarantees that a static type system has, such as, ``this function \emph{always} returns an integer when given an integer.''
+%
+In that vein, temporal contracts can never guarantee liveness properties of a program.
+%
+\citep{ianjohnson:dthf:complete} show that contracts that simulate types will never violate the guarantee that well-typed programs will never be blamed in a gradually-typed system.
+%
+Likewise, if we interpret temporal contracts in a stricter fashion --- sequenced events \emph{must} happen --- then in the abstract we can verify liveness properties.
 %%
 
 %%
@@ -118,6 +140,14 @@ The SLAM project~\citep{ianjohnson:Ball:2002:SLP:503272.503274} for model-checki
 For C programs that use callbacks heavily, this overapproximation leads to longer checking times due to more (spurious) paths to follow, and the imprecision inherent in any program approximation gets exacerbated by the additional pressure on abstract resources.
 
 \paragraph{Higher-order model-checking:}
+Java and C++ both have several high-quality model-checking tools.
+%
+Bandera~\citet{ianjohnson:bandera} is a sophisticated tool-chain that uses several static analysis techniques to extract a finite model from a Java program to feed to various back-end model-checkers.
+%
+Similar to our approach, Bandera employs control-flow analysis in order to produce compact models.
+%%
+
+%%
 A technique that specifically targets higher-order languages, higher-order recursion schemes (HORS)~\citep{ianjohnson:Knapik:2002:HPT:646794.704852}, assumes a call-by-name semantics for the language it checks.
 %
 The current techniques for the initial abstraction of a program to HORS is not generally applicable to untyped or impure languages, since it creates the recursion schemes from the simple types of a given program.
@@ -504,6 +534,10 @@ where $\TConEnvStack$ is a stack of temporal contract, environment pairs that ke
 Because LTL lacks a modality for ``a trace matching $\psi$ follows a trace matching $\phi$,'' and is instead more closely tied to individual states, we have to carry a stack of contracts that must follow one after another.
 %
 This lack of expressivity led to our restriction of the Kleene star operator to single events rather than general temporal contracts.
+%
+The graph we use is a finite abstraction of the programming language semantics for the program in question.
+%
+It is implicitly rooted at the entry-point of the program.
 %%
 
 %%
@@ -584,13 +618,30 @@ Since CFA abstracts bindings, we can't always be certain we have exact equality 
                &\wedge \ltlprop:=\apvret{\menv(\mname)}{\mval}{\mtimeline} \in \labelof(\mnode)}
 \end{align*}
 
+Denotations of program actions restricted to a particular timeline:
+\begin{align*}
+  \denote{\mexp}_\mtimeline &= \filter(\mathit{AP}_\mtimeline, \traces(\mexp)) \\
+  \mathit{AP}_\mtimeline(\mstate) &= \setbuild{\ltlprop}{\ltlprop \in \labelof(\mstate), \ltlprop \text{ matches }\\
+                               &\qquad\aptopcall{\_}{\_}{\mtimeline} \vee \apvcall{\_}{\_}{\mtimeline} \vee \aptopret{\_}{\_}{\mtimeline} \vee \apvret{\_}{\_}{\mtimeline}} \\
+  \traces(\mexp) &= \gfp{{\mathcal F}} \\
+  \text{where } {\mathcal F}(S) &= S \cup \setof{\inject(\mexp)} \cup \setbuild{\pi \mstate \mstate'}{\pi \mstate \in S, \mstate \machstep \mstate'}
+\end{align*}
+
+Paths through a graph are defined as the greatest fixed point of these two rules:
+\begin{mathpar}
+  \inferrule{ }{\inject(e) \in \paths(\mgraph)}\quad
+  \inferrule{\pi\mstate \in \paths(\mgraph) \\
+             (\mstate, \mstate') \in \mgraph.E}
+            {\pi\mstate\mstate' \in \paths(\mgraph)}
+\end{mathpar}
+
 \begin{theorem}
-  If $\alpha(\denote{\mexp}) \sqsubseteq \paths(\mgraph)$,
+  If $\alpha(\denote{\mexp}_\mtimeline) \sqsubseteq \filter(\mathit{AP}_{\matimeline}, \paths(\mgraph))$,
      $\alpha(\menv) \sqsubseteq \maenv$,
      $\alpha(\mtimeline) \sqsubseteq \matimeline$, and
      $\alpha(\overline{(\mtcon_\mtestack, \menv_\mtestack)}) \sqsubseteq \mtestack$
   then
-  $\alpha(\denote{\mexp} \cap \denotetcon{\mtcon}{\mtimeline}) \sqsubseteq \denote{\toltl{\matimeline}{\mtcon}{\mgraph}{\maenv}{\mtestack}}$
+  $\alpha(\denote{\mexp}_\mtimeline \cap \denotetcon{\mtcon}{\mtimeline}) \sqsubseteq \denote{\toltl{\matimeline}{\mtcon}{\mgraph}{\maenv}{\mtestack}}$
 \end{theorem}
 
 \section{Design for a reflective model checker}
