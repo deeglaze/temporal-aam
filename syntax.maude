@@ -1,0 +1,65 @@
+load todefine.maude .
+mod Syntax is
+  pr BOOL .
+  pr INT .
+  pr Env .
+  pr LCTerms .
+  pr PMSM-Data .
+  pr LIST{VAR} * (sort List{VAR} to ListVar) .
+  pr LIST{Addr} * (sort List{Addr} to ListAddr) .
+  pr LIST{Contract} .
+  pr LIST{SContract} .
+  pr LIST{WCNamePat} .
+  pr Bindings .
+  pr OPTION{VAR} * (sort Option{VAR} to VARop) .
+
+  *** Terms ***
+  op Var : Label VAR -> LCTerm [ctor] .
+  op Lit : Label Int -> LCTerm [ctor] .
+  op Lit : Label Bool -> LCTerm [ctor] .
+  op Lit : Label Unit -> LCTerm [ctor] .
+  op Lit : Label Prim -> LCTerm [ctor] .
+  op Lam : Label ListVar LCTerm -> LCTerm [ctor] . *** name, binders, body
+  op Let : Label Bindings LCTerm -> LCTerm [ctor] . 
+  op If : Label LCTerm LCTerm LCTerm -> LCTerm [ctor] .
+  op App : Label LCTerm LCTerms -> LCTerm [ctor] .
+  *** MOAR ***
+  op Mon : Label MLabel MLabel Contract LCTerm -> LCTerm [ctor] .
+
+  *** Contracts ***
+  op mkcon : SContract TContract -> Contract [ctor] .
+  op ArrCon : MLabel List{SContract} SContract -> SContract [ctor] .
+  op FlatCon : LCTerm -> SContract [ctor] .
+  op PairCon : SContract SContract -> SContract [ctor] .
+
+  op tev : Event -> TContract [ctor] .
+  op !ev : Event -> TContract [ctor] .
+  op _∪_ : TContract TContract -> TContract [assoc ctor] .
+  op ddd : -> TContract [ctor] .
+  op _·_ : TContract TContract -> TContract [assoc ctor] .
+  op ¬_ : TContract -> TContract [ctor] .
+  op kl_ : TContract -> TContract [ctor] .
+  op dseq : Pattern TContract -> TContract [ctor] .
+
+  op callact : NamePat List{WCNamePat} -> Event [ctor] .
+  op retact : NamePat WCNamePat -> Event [ctor] .
+
+  op add1 : -> Prim [ctor] .
+  op sub1 : -> Prim [ctor] .
+  op zero? : -> Prim [ctor] .
+  op cons : -> Prim [ctor] .
+  op null? : -> Prim [ctor] .
+  op pair? : -> Prim [ctor] .
+  op car : -> Prim [ctor] .
+  op cdr : -> Prim [ctor] .
+
+  *** Values ***
+  op LitV_ : Int -> Value [ctor] .
+  op LitV_ : Bool -> Value [ctor] .
+  op LitV_ : Prim -> Value [ctor] .
+  op LitV_ : Unit -> Value [ctor] .
+  op IntTop : -> Value [ctor] .
+  op CloV : ListVar LCTerm Env -> Value [ctor] .
+  op blCloV : MLabel Label MLabel MLabel List{SContract} SContract Env Timeline Addr -> Value [ctor] .
+  op vcons : Addr Addr ΛTimeline -> Value [ctor] .
+endm

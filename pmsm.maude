@@ -1,0 +1,280 @@
+
+fmod WEAK-OPTION{X :: TRIV} is
+ sort Weak-Option{X} .
+ pr SET{X} .
+ op Never : -> Weak-Option{X} [ctor] .
+ op May_ : Set{X} -> Weak-Option{X} [ctor] .
+ op Must_ : X$Elt -> Weak-Option{X} [ctor] .
+endfm
+
+mod BindEnv is
+ pr ToDefine .
+ pr Syntax .
+ pr AVal .
+ pr MAP{VAR, AVal} * (sort Map{VAR, AVal} to BindEnv) .
+endm
+view BindEnv from TRIV to BindEnv is sort Elt to BindEnv . endv
+
+mod PMSM is
+  pr Syntax .
+  pr BindEnv .
+  pr INT .
+  pr WEAK-OPTION{BindEnv} .
+  pr LIST{AllPat} .
+  pr LIST{SContract} .
+  pr Abstraction .
+
+  op r$_ : VAR -> NamePat [ctor] .
+  op rΛ_ : MLabel -> NamePat [ctor] .
+  op cnst_ : Value -> ConstPat [ctor] .
+
+  op b?_ : VAR -> BindPat [ctor] .
+  op wc : -> RefPat [ctor] .
+
+  vars x y : VAR .
+  var v v' : Value .
+  var a : Addr .
+  var η : Timeline .
+  vars δ δ' : BindEnv .
+  var ρ : Env .
+  vars n n' : NamePat .
+  vars p p' : AllPat .
+  vars vs vs' : AVal .
+  vars ps ps' : List{AllPat} .
+  vars pat pat' : Pattern .
+  vars β β' βu βc : MLabel .
+  vars ℓ : Label .
+  vars S D R R' : SContract .
+  vars Ds Ds' : List{SContract} .
+  vars A A' : Event .
+  var wδ : Weak-Option{BindEnv} .
+
+  op matchpat : Pattern Pattern BindEnv -> Weak-Option{BindEnv} .
+  op nonmatchpat : Pattern Pattern BindEnv -> Weak-Option{BindEnv} .
+  op matchname : NamePat AllPat BindEnv -> Trit .
+  op match : AllPat AllPat Weak-Option{BindEnv} -> Weak-Option{BindEnv} .
+  op matches : List{AllPat} List{AllPat} Weak-Option{BindEnv} -> Weak-Option{BindEnv} .
+
+  op weak-if : Trit Weak-Option{BindEnv} -> Weak-Option{BindEnv} [strat (1 0)] .
+  eq weak-if(true, wδ) = wδ .
+  eq weak-if(U, Must δ) = May δ .
+  eq weak-if(U, May δ) = May δ .
+  eq weak-if(U, Never) = Never .
+  eq weak-if(false, wδ) = Never .
+
+  eq matchpat(callev(n, ps), callev(n', ps'), δ) = weak-if(matchname(n,n',δ), matches(ps, ps', Must δ)) .
+  eq matchpat(retev(n, p), retev(n', p'), δ) = weak-if(matchname(n, n', δ), match(p, p', Must δ)) .
+
+  ceq nonmatchpat(pat, pat', δ) = May δ' if May δ' := matchpat(pat, pat', δ) .
+  ceq nonmatchpat(pat, pat', δ) = Never if Must δ' := matchpat(pat, pat', δ) .
+  ceq nonmatchpat(pat, pat', δ) = Must δ if Never := matchpat(pat, pat', δ) .
+
+  eq matchname(r$ x, cnst v, (δ, x |-> vs)) = v vcouldeq vs .
+  eq matchname(rΛ β, cnst blCloV(β, ℓ, βu, βc, Ds, R, ρ, η, a), δ) = true . *** Same β
+  eq matchname(cnst v, cnst v', δ) = v veq v' .
+  eq matchname(n, p, δ) = false [owise] .
+
+  eq matches(nil, nil, wδ) = wδ .
+  ceq matches(p ps, p' ps', wδ) = matches(ps, ps', Must δ') if Must δ' := match(p, p', wδ) .
+  ceq matches(p ps, p' ps', wδ) = matches(ps, ps', May δ') if May δ' := match(p, p', wδ) .
+  eq matches(ps, ps', wδ) = Never [owise] .
+
+  eq match(b? x, cnst v, Must (δ, x |-> vs)) = Must (δ, x |-> v) .
+  eq match(b? x, cnst v, May (δ, x |-> vs)) = May (δ, x |-> v) .
+  eq match(b? x, cnst v, Must δ) = Must (δ, x |-> v) .
+  eq match(b? x, cnst v, May δ) = Must (δ, x |-> v) .
+  eq match(wc, cnst v, wδ) = wδ .
+  eq match(r$ x, cnst v, Must (δ, x |-> vs)) = weak-if(v vcouldeq vs, Must (δ, x |-> vs)) .
+  eq match(r$ x, cnst v, May (δ, x |-> vs)) = weak-if(v vcouldeq vs, May (δ, x |-> vs)) .
+  eq match(cnst v, cnst v', wδ) = weak-if(v veq v', wδ) .
+  eq match(p, p', wδ) = Never [owise] .
+
+  sorts SMState StatePat .
+
+  op mkq : Int BindEnv Bool -> SMState [ctor] . *** Bool true iff accepting state.
+  op qp : SMState Pattern -> StatePat [ctor] .
+  op Fail : -> StatePat [ctor] .
+endm
+view SMState from TRIV to PMSM is sort Elt to SMState . endv
+
+*** No epsilon transitions allowed.
+mod NPMSM is
+  pr PMSM .
+  pr META-LEVEL .
+  pr INT .
+  pr SET{SMState} .
+
+  vars qs acc : Set{SMState} .
+  var q : SMState .
+  var M : Module .
+  var p : Pattern .
+  vars i i' : Int .
+  vars T P : Term .
+
+  *** Take the module defining the reduction relation, the state (which is a set of states),
+  *** the /fully qualified/ pattern, and produce the next state (another set of states).
+  *** The machine is stuck if it steps to the empty set.
+  op run : Module Set{SMState} Pattern -> Set{SMState} .
+  *** Step all states in a set of states.
+  op $run : Module Set{SMState} Term Term Set{SMState} -> Set{SMState} .
+  op $run1 : Module Term Term Set{SMState} Int -> Set{SMState} .
+  eq run(M, qs, p) = $run(M, qs, upTerm(p), 'q:SMState, empty, 0) .
+
+  *** Get all 1 step reductions of each state in qs.
+  eq $run(M, empty, T, P, acc) = acc .
+  eq $run(M, (q, qs), T, P, acc) = $run(M, qs, T, P, $run1('qp[upTerm(q), T], P, acc, 0) .
+
+  *** Get all possible one step reductions from T.
+  ceq $run1(M, T, P, acc, i) = acc if metaSearch(M, T, P, nil, '+, 1, i) == failure .
+  eq $run1(M, T, P, acc, i) = $run1(M, T, P,
+                                 (downTerm(getTerm(metaSearch(M, T, P, nil, '+, 1, i)), Fail), acc),
+                                 i+1) .
+endm
+
+mod TConPMSM is
+  pr PMSM .
+  pr INT .
+  inc PMSM-Data .
+  pr LIST{WCNamePat} .
+  pr META-LEVEL .
+  pr SET{εrule} .
+  pr LIST{rules} .
+
+  op qε : Int Int -> εrule [ctor] .
+
+  sorts Machine MachineDo MakeMachine .
+  vars m0 m1 m m' : Machine .
+  vars d d' d0 d1 : MachineDo .
+  vars mkm1 mkm : MakeMachine .
+  vars δ δ' δ0 δ1 : BindEnv .
+  op machine : MachineDo BindEnv -> Machine [ctor] .
+  op machine-accepting : MachineDo BindEnv -> Machine [ctor] .
+
+  op machine-null : -> MachineDo [ctor] .
+  op machine-sigma-star : -> MachineDo [ctor] .
+  op machine-union : MachineDo MachineDo -> MachineDo [ctor] .
+  op machine-seq : MachineDo MakeMachine -> MachineDo [ctor] .
+  op machine-complement : MachineDo -> MachineDo [ctor] .
+  op machine-match : Pattern -> MachineDo [ctor] .
+  op machine-nonmatch : Pattern -> MachineDo [ctor] .
+
+  op mk-star : Machine -> MakeMachine [ctor] .
+
+  op machine->accepting : Machine -> Machine .
+  op machine->nonaccepting : Machine -> Machine .
+  machine->accepting(machine(d, δ)) = machine-accepting(d, δ) .
+  machine->accepting(m) = m [owise] .
+
+  machine->nonaccepting(machine-accepting(d, δ)) = machine(d, δ) .
+  machine->nonaccepting(m) = m [owise] .
+
+  op machine-accepting? : Machine -> Bool .
+  machine-accepting?(machine(d, δ)) = false .
+  machine-accepting?(machine-accepting(d, δ)) = true .
+
+  op null-machine : BindEnv -> Machine .
+  eq null-machine(δ) = machine(machine-null, δ) .
+
+  op epsilon-machine : BindEnv -> Machine .
+  eq epsilon-machine(δ) = machine-accepting(machine-null, δ) .
+
+  op sigma-star-machine : BindEnv -> Machine .
+  eq sigma-star-machine(δ) = machine-accepting(machine-sigma-star, δ) .
+
+  op machine-do : Machine -> MachineDo .
+  machine-do(machine(d, δ)) = d .
+  machine-do(machine-accepting(d, δ)) = d .
+
+  op machine-bind : Machine -> BindEnv .
+  machine-bind(machine(d, δ)) = δ .
+  machine-bind(machine-accepting(d, δ)) = δ .
+
+  op union-machine : Machine Machine -> Machine .
+  eq union-machine(machine(machine-null, δ), m1) = m1 .
+  eq union-machine(m0, machine(machine-null, δ)) = m0 .
+  eq union-machine(machine-accepting(machine-null, δ), m1) = machine->accepting(m1) .
+  eq union-machine(m0, machine-accepting(machine-null, δ)) = machine->accepting(m0) .
+  eq union-machine(machine(d0, δ0), machine(d1, δ1)) = machine(machine-union(d0, d1, δ0, δ1), δ0) . *** choice?
+  eq union-machine(m0, m1) = machine-accepting(machine-union(machine-do(m0), machine-do(m1), machine-bind(m0), machine-bind(m1))) .
+
+  op complement-machine : Machine -> Machine .
+  eq complement-machine(machine(d, δ)) = machine-accepting(machine-complement(d), δ) .
+  eq complement-machine(machine-accepting(d, δ)) = machine(machine-complement(d), δ) .
+
+  op make-machine : MachineMake BindEnv -> Machine .
+  eq make-machine(mk-star(m)) = star-machine(m) .
+
+  op seq-machine : Machine MakeMachine -> Machine .
+  eq seq-machine(machine-accepting(machine-null, δ), mkm1) = make-machine(mkm1, δ) .
+  eq seq-machine(machine(machine-null, δ), mkm1) = null-machine .
+  eq seq-machine(machine-accepting(d0, δ0), mkm1) = union-machine(machine-seq(d0, mkm1), make-machine(mkm1)) . *** add δ to seq?
+  eq seq-machine(machine(d0), mkm1) = machine(machine-seq(d0, mkm1)) .
+  
+  op star-machine : Machine BindEnv -> Machine .
+  ceq star-machine(machine-accepting(machine-sigma-star, δ), δ') = sigma-star-machine(δ') . *** ???
+  ceq star-machine(machine(null-machine, δ), δ') = machine-null .
+  eq star-machine(m, δ) = machine->accepting(seq-machine(machine->nonaccepting(m), mk-star(m))) .
+
+  op do-machine : Machine Pattern -> Machine .
+  op do-machine-do : MachineDo Pattern -> Machine .
+  eq do-machine(m, p) = do-machine-do(machine-do(m), p) .
+  
+  eq do-machine-do(machine-null, p) = null-machine .
+  eq do-machine-do(machine-sigma-star, p) = sigma-star-machine .
+  eq do-machine-do(machine-union(d0, d1), p) = union-machine(do-machine-do(d0, p), do-machine-do(d1, p)) .
+  eq do-machine-do(machine-seq(d, mkm), p) = seq-machine(do-machine-do(d, p), mkm) .
+  eq do-machine-do(machine-complement(d), p) = complement-machine(do-machine-do(d, p)) .
+
+  vars T T' : TContract .
+  vars Rs Rs' : RuleSet .
+  vars qεs qεs' qεs'' : Set{εrule} .
+  vars i i' i'' icur ifinal ifinal' : Int .
+  vars qcur qfinal : SMState .
+  var wcns : List{WCNamePat} .  
+
+  op event->pattern : Event -> Pattern .
+  eq event->pattern(callact(n, wcns)) = callev(n, wcns) .
+  eq event->pattern(retact(n, wcns)) = retev(n, wcns) .
+
+  sort EpsRuleSetFinalInt .
+  *** We compute ε-closure for ε-rules, so we don't have to keep track when running.
+  op rg : List{εrule} RuleSet Int Int -> EpsRuleSetFinalInt [ctor] .
+
+  op TCon->PMSM : TContract SMState Int List{εrule} -> EpsRuleSetFinalInt .
+  eq TCon->PMSM(tev A, icur, i, qεs) =
+   rg(qεs, crl 'qp['mkq[upTerm(icur),'δ:BindEnv,'b:Bool], 'p:Pattern] =>
+               'mkq(upTerm(i), 'δ, 'true)
+               if ('Must 'δ':BindEnv := 'matchpat(event->pattern(A), 'p, 'δ)) [none]. ,
+      i+1, i+1) .
+  eq TCon->PMSM(!ev A, icur,  i, qεs) =
+   rg(qεs, crl 'qp['mkq[upTerm(icur),'δ:BindEnv,'b:Bool], 'p:Pattern] =>
+               'mkq(upTerm(i), 'δ, 'true)
+               if ('Must 'δ':BindEnv := 'nonmatchpat(event->pattern(A), 'p, 'δ)) [none]. ,
+      i+1, i+1) .
+  ceq TCon->PMSM(T · T', icur, i, qεs) =
+     rg(qεs'', Rs Rs', ifinal', i'')
+     if rg(qεs', Rs, ifinal, i') := TCon->PMSM(T, icur, i, qεs)
+     /\ rg(qεs'', Rs', ifinal', i'') := TCon->PMSM(T', ifinal, i', qεs') .
+  ceq TCon->PMSM(dseq(p, T), icur, i, qεs) =
+   rg(qεs', Rs crl 'qp['mkq(upTerm(icur), 'δ:BindEnv, 'b:Bool], 'p1:Pattern] =>
+                   'mkq(upTerm(i), 'δ, 'true)
+                   if ('Must 'δ1:BindEnv := 'matchpat('p, 'p1, 'δ)) [none]. ,
+      ifinal, i')
+   if rg(qεs' Rs, ifinal, i') := TCon->PMSM(T, i, i+1, qεs) .
+
+  *** Epsilon rule introducers
+  ceq TCon->PMSM(T ∪ T', icur, i, qεs) =
+    rg(qε(ifinal, i'') qε(ifinal', i'') qεs'', Rs Rs', i''+1)
+    if rg(qεs', Rs, ifinal, i') := TCon->PMSM(T, icur, i, qεs)
+    /\ rg(qεs'', Rs', ifinal', i'') := TCon->PMSM(T', icur, i', qεs') .
+  eq TCon->PMSM(ddd, icur, i, qεs) =
+   rg(qεs,
+      *** Consume anything.
+      rl 'qp['mkq(upTerm(icur), 'δ:BindEnv, 'true), 'p:Pattern] => 'mkq(upTerm(icur), 'δ, 'true) [none]. ,
+      i, i) .
+  ceq TCon->PMSM(kl T, icur, i, qεs) =
+    rg(qε(ifinal, icur) qεs', Rs, ifinal, i')
+    if rg(qεs', Rs, ifinal, i') = TCon->PMSM(T, icur, i, qεs) .
+  ceq TCon->PMSM(¬ T, icur, i, qεs) = rg(Negate(NFA->DFA(Rs)), ifinal, i')
+   if rg(Rs, ifinal, i') := TCon->PMSM(T, icur, i) .
+endm

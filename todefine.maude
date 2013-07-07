@@ -1,0 +1,81 @@
+***( Stupid boilerplate)
+fmod ToDefine is
+  pr STRING .
+  pr INT .
+  sorts VAR Addr Label MLabel ΛMLabel Timeline ΛTimeline .
+  op ΛLab : -> ΛMLabel [ctor] .
+  op ΛTime : -> ΛTimeline [ctor] .
+  ops ConsA ConsD : Addr -> Addr [ctor] .
+  op ℓ→a : Label -> Addr [ctor] .
+  op nΛ : MLabel -> ΛMLabel [ctor] .
+  op tΛ : Timeline -> ΛTimeline [ctor] .
+  subsorts Timeline < ΛTimeline .
+  subsorts ΛMLabel < MLabel .
+  subsorts Timeline < Addr < VAR < String . *** Get around preregularity with arbitrary ordering .
+  subsorts MLabel < Label < Int .
+  op vv_ : String -> VAR [ctor] .
+  op aa_ : String -> Addr [ctor] .
+  sorts LCTerm Value Kont Prim Binding Point State StateStamp Frame Reducts HeapDelta KHeapDelta Unit .
+  sorts Contract SContract TContract .
+  op nul : -> Unit [ctor] .
+
+  *** PMSM
+  sorts Event Pattern ConstPat NamePat BindPat RefPat AllPat WCNamePat .
+  sorts εrule rules .
+  subsort ConstPat < NamePat < WCNamePat < AllPat .
+  subsort BindPat < AllPat .
+  subsort RefPat < WCNamePat .
+endfm
+
+view VAR from TRIV to ToDefine is sort Elt to VAR . endv
+view Addr from TRIV to ToDefine is sort Elt to Addr . endv
+
+view Timeline from TRIV to ToDefine is sort Elt to Timeline . endv
+view Binding from TRIV to ToDefine is sort Elt to Binding . endv
+view LCTerm from TRIV to ToDefine is sort Elt to LCTerm . endv
+view Contract from TRIV to ToDefine is sort Elt to Contract . endv
+view SContract from TRIV to ToDefine is sort Elt to SContract . endv
+view TContract from TRIV to ToDefine is sort Elt to TContract . endv
+view Value from TRIV to ToDefine is sort Elt to Value . endv
+view Kont from TRIV to ToDefine is sort Elt to Kont . endv
+view Frame from TRIV to ToDefine is sort Elt to Frame . endv
+view State from TRIV to ToDefine is sort Elt to State . endv
+view Point from TRIV to ToDefine is sort Elt to Point . endv
+view StateStamp from TRIV to ToDefine is sort Elt to StateStamp . endv
+
+view WCNamePat from TRIV to ToDefine is sort Elt to WCNamePat . endv
+view AllPat from TRIV to ToDefine is sort Elt to AllPat . endv
+view εrule from TRIV to ToDefine is sort Elt to εrule . endv
+view rules from TRIV to ToDefine is sort Elt to rules . endv
+
+fmod LCTerms is
+  pr ToDefine .
+  pr LIST{LCTerm} * (sort List{LCTerm} to LCTerms) .
+endfm
+
+view List`{LCTerm`} from TRIV to LIST{LCTerm} is
+  sort Elt to List{LCTerm} .
+endv
+
+fmod Bindings is
+  pr ToDefine .
+  pr LIST{Binding} * (sort List{Binding} to Bindings) .
+endfm
+
+fmod OPTION{X :: TRIV} is
+ sort Option{X} .
+ op Some : X$Elt -> Option{X} [ctor] .
+ op None : -> Option{X} [ctor] .
+endfm
+
+fmod Env is
+ pr ToDefine .
+ pr MAP{VAR, Addr} * (sort Map{VAR, Addr} to Env) .
+endfm
+
+mod PMSM-Data is
+  pr ToDefine .
+  pr LIST{AllPat} .
+  op callev : NamePat List{AllPat} -> Pattern [ctor] .
+  op retev : NamePat AllPat -> Pattern [ctor] .
+endm

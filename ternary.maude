@@ -1,0 +1,21 @@
+fmod TRIT is
+  pr BOOL .
+  sort Trit .
+  subsort Bool < Trit .
+
+  op U : -> Trit .
+  op _and_ : Trit Trit -> Trit [assoc comm prec 55] .
+  op _or_ : Trit Trit -> Trit [assoc comm prec 59] .
+  op not_ : Trit -> Trit [prec 53] .
+
+  vars t t' : Trit .
+  vars b b' : Bool .
+
+  eq U and t = U .
+  eq t and U = U .
+
+  eq U or t = U .
+  eq t or U = U .
+
+  eq not U = U .
+endfm

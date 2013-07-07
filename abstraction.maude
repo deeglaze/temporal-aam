@@ -1,0 +1,55 @@
+mod Abstraction is
+  pr Syntax .
+  pr AVal .
+  pr BOOL .
+  pr TRIT .
+  pr INT .
+
+  vars v v' : Value .
+  vars vs vs' : AVal .
+  vars xs : ListVar .
+  vars e : LCTerm .
+  vars ρ : Env .
+  var i : Int .
+  var b : Bool .
+  var p : Prim .
+  var η : Timeline .
+  var ηΛ : ΛTimeline .
+  var a d : Addr .
+  vars β βu βc : MLabel .
+  var ℓ : Label .
+  var Ds : List{SContract} .
+  vars R : SContract .
+
+  op _vin_ : Value AVal -> Bool .
+  op _veq_ : Value Value -> Trit [comm] .
+  op _vcouldeq_ : Value AVal -> Trit .
+  op _abs-in_ : AVal AVal -> Bool .
+  op _abs-has_ : AVal AVal -> Bool . *** like abs-in, only or instead of and.
+
+  eq LitV i vin (IntTop, vs) = true .
+  eq v vin (v, vs) = true .
+  eq v vin vs = false [owise] .
+
+  *** Changes for concrete vs abstract (first three equalities are true in concrete)
+  eq CloV(xs, e, ρ) veq CloV(xs, e, ρ) = U .
+  eq blCloV(β, ℓ, βu, βc, Ds, R, ρ, η, a) veq blCloV(β, ℓ, βu, βc, Ds, R, ρ, η, a) = U .
+  eq vcons(a, d, ηΛ) veq vcons(a, d, ηΛ) = U .
+  eq IntTop veq LitV i = U .
+  eq LitV i veq IntTop = U .
+  eq IntTop veq IntTop = U .
+  eq LitV i veq LitV i = true .
+  eq LitV p veq LitV p = true .
+  eq LitV b veq LitV b = true .
+  eq LitV nul veq LitV nul = true .
+  eq v veq v' = false .
+
+  eq v vcouldeq empty = false .
+  eq v vcouldeq (v', vs) = (v veq v') or (v vcouldeq vs) .
+
+  eq empty abs-in vs = true .
+  eq (v, vs) abs-in vs' = (v vin vs') and-then (vs abs-in vs') .
+
+  eq empty abs-has vs = false .
+  eq (v, vs) abs-has vs' = (v vin vs') or-else (vs abs-has vs') .
+endm
