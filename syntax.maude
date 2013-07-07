@@ -34,8 +34,8 @@ mod Syntax is
 
   op tev : Event -> TContract [ctor] .
   op !ev : Event -> TContract [ctor] .
-  op _∪_ : TContract TContract -> TContract [assoc ctor] .
   op ddd : -> TContract [ctor] .
+  op _∪_ : TContract TContract -> TContract [assoc ctor] .
   op _·_ : TContract TContract -> TContract [assoc ctor] .
   op ¬_ : TContract -> TContract [ctor] .
   op kl_ : TContract -> TContract [ctor] .
