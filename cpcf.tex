@@ -83,37 +83,35 @@ In addition, contracts can introduce considerable overhead to the program.
 %
 Just wrapping a function in a contract monitor can disable compiler optimizations, and depending on the level of checking a contract does, the entry and exit of contract boundaries can also take a long time (indeed, we run arbitary programs as such checks!).
 %
-These are important costs to pay at the beginning of development, but as programs mature, we need a way to safely transition away from contracts and have a performance and correctness return on the initial investment.
+These are important costs to pay at the beginning of development, but as programs mature, we need a way to safely remove contract checking and have a performance and correctness return on the initial investment.
 %%
 
 %%
 Temporal contracts pose an additional challenge over higher-order function contracts to statically verify, as they monitor extended interactions with a module, and not just localized pieces.
 %
-We propose a framework that is composable with techniques to verify functional contracts, and transparently leverages model checking technology to verify adherence to temporal contracts.
+We propose a framework that is composable with techniques to verify functional contracts, that has low technical overhead (no translation to a model-checker's language necessary).
 %
-The technique uses the Abstracting Abstract Machines (AAM) approach~\citet{dvanhorn:VanHorn2010Abstracting} to forming the Kripke structure that we eventually model-check.
+The technique uses the Abstracting Abstract Machines (AAM) approach~\citet{dvanhorn:VanHorn2010Abstracting} to check for reachability of a temporal contract blame.
 %
-AAM was originally targeted towards describing flow analyses, but is robust enough to apply to model-checking higher-order programs.
+The language for temporal contracts closely mimics linear temporal logic (LTL), but distinguishes itself in a way that makes LTL model-checking prohibitive on top of the initial cost of constructing a model to feed an LTL model-checker.
 %
-The online nature of higher-order flow analysis algorithms creates demand for an online LTL model checker.
+Temporal contracts can talk about value flow and use over time via binding in the specification --- this is not something that LTL can locally express.
 %
-Since AAM describes its abstractions in terms of a reduction relation, Maude's LTL checker~\citep{ianjohnson:EMSltl_2002} is our tool of choice.
+The semantics of temporal contracts also is geared towards checking safety properties, since dynamic liveness checking is undecidable.
 %
-There is a fly in the ointment, however.
+AAM was originally targeted towards describing flow analyses, but is robust enough to apply to model-checking safety properties of higher-order programs.
 %
-To converge on a Kripke structure more quickly we sometimes apply a \emph{store widening} technique, that is expressed in terms of a \emph{meta-}reduction-relation.
+It is well-known that control-flow analysis can be stated in terms of model-checking, but this observation is misleading; one must use quadratically many model-checking queries to discover what a monovariant flow analysis can discover in one run.
 %
-We can use Maude's reflective capabilities to express this relation, but the Kripke structure we want must be reifed from the states of the meta-reduction-relation.
+The realm of temporal contract verification is similar: to use a model-checker, we would have to run a data-flow analysis up front in order to collect values that might be used as bindings, enumerate all possible binding/reference insantiations of the temporal contract, and then translate those contracts into LTL queries --- much more work than just running the program abstractly and reporting reachable blame states.
 %
-Maude's checker does not have an interface for driving a meta-reduction-relation to reify a Kripke structure from its states, so we propose a design for such a mechanism, but evaluate our current system on a fully-run store-widened semantics.
-%%
 
 %%
 Our contributions in this paper are as follows:
 \begin{itemize}
- \item{a sound translation of temporal higher-order contracts to LTL propositions}
- \item{a sound abstraction scheme for creating a Kripke structure for a higher-order program}
- \item{a design for a demand-driven reflective model-checking interface}
+ \item{an extension to \citeauthor{ianjohnson:dfm:icfp2011}'s temporal contract semantics;}
+ \item{a new automaton model that we use to implement the monitor for this new semantics; and}
+ \item{a sound abstraction to computably verify temporal contract adhereance}
 \end{itemize}
 %%
 
@@ -146,7 +144,7 @@ Java and C++ both have several high-quality model-checking tools \citep{ianjohns
 %
 Bandera~\citep{ianjohnson:bandera} is a sophisticated tool-chain that uses several static analysis techniques to extract a finite model from a Java program to feed to various back-end model-checkers.
 %
-Similar to our approach, Bandera employs control-flow analysis in order to produce compact models.
+Similar to our approach, Bandera employs control-flow analysis in order to produce compact models, but unsimilarly, the checking mechanisms are not in the control-flow analysis itself.
 %%
 
 %%
@@ -180,18 +178,28 @@ Our techniques should smoothly integrate with theirs when considering partial pr
 
 \begin{figure}
   \begin{align*}
+    \mscon \in \SContract &::= \sflat(\mexp) \alt \sarr{\mtoplevelname}{\mscon}{\mscon} \alt \sconsc{\mscon}{\mscon}
+  \end{align*}
+  \caption{Syntax of structural contracts with labels}
+  \label{fig:scontract-syntax}
+\end{figure}
+
+\begin{figure}
+  \begin{align*}
  \mtcon \in \TContract &::=
-      \mtconNoB
+      \mevent \alt \snonevent{\mevent}
  \alt \stseq{\mtcon}{\mtcon}
  \alt \stnot{\mtcon}
  \alt \stOr{\mtcon}{\mtcon}
- \alt \stmany{\mtconNoB}
+ \alt \stmany{\mtcon}
  \alt \sddd \\
 &\alt \stcall{\mname}{\mname}{\mtcon}
  \alt \stret{\mname}{\mname}{\mtcon} \\
-\mtconNoB &::= \mevent \alt \snonevent{\mevent} \alt \stOr{\mtconNoB}{\mtconNoB} \\
-\mevent \in \Event &::= \scallev{\mname}{\mvpat} \alt \sretev{\mname}{\mvpat} \\
-\mvpat \in \VPat &::= \mconstant \alt \mname \alt \swc
+\mevent \in \Event &::= \scallev{\mvar}{\mvpat} \alt \sretev{\mvar}{\mvpat} \\
+\mvpat \in \VPat &::= \mconstant \alt \mvar \alt \swc \\
+\mname \in \Name &\text{ an infinite set} \\
+\mtoplevelname \in \Label&\text{ an infinite set} \\
+\mvar &::= \mname \alt \mtoplevelname
   \end{align*}
   \caption{Syntax of temporal contracts}
   \label{fig:tcontract-syntax}
@@ -199,41 +207,39 @@ Our techniques should smoothly integrate with theirs when considering partial pr
 
 Temporal contracts provide a declarative language for monitoring the temporal ordering of events that pass through module boundaries.
 %
-We analyze a slightly different presentation than ~\citep{ianjohnson:dfm:icfp2011}'s temporal contracts that is amenable to a translation to LTL, and has a more operational account of binding.
+We analyze a slightly different presentation than ~\citep{ianjohnson:dfm:icfp2011}'s temporal contracts that allows more precise specification of value use.
 %
 The syntax is presented in \autoref{fig:tcontract-syntax}.
 %%
 
 %%
-Temporal contracts ($\mtcon$) include events ($\mevent$) (for $\mevent$ction), negated events ($\snonevent{\mevent}$), concatenation ($\stseq{\mtcon}{\mtcon}$) (often represented using juxtaposition), negated contracts ($\stnot{\mtcon}$), Kleene closure of events ($\stmany{\mtconNoB}$), union ($\stOr{\mtcon}{\mtcon}$), the universal temporal contract ($\sddd$), and higher-order binding events ($\stcall{\mname}{\mname}$ and $\stret{\mname}{\mname}$).
+Temporal contracts ($\mtcon$) include events ($\mevent$) (for $\mevent$ction), negated events ($\snonevent{\mevent}$), concatenation ($\stseq{\mtcon}{\mtcon}$) (often represented using juxtaposition), negated contracts ($\stnot{\mtcon}$), Kleene closure of events ($\stmany{\mtcon}$), union ($\stOr{\mtcon}{\mtcon}$), the universal temporal contract ($\sddd$), and higher-order binding events ($\stcall{\mname}{\mname}$ and $\stret{\mname}{\mname}$).
 %
 The difference between $\snonevent{\mevent}$ and $\stnot{\mtcon}$ is that the first must be an event and force time to step forward once, whereas the second may match arbitrarily many events.
 %%
 
 %%
-Events themselves are expressed as patterns denoting calls ($\scallev{\mname}{\mvpat}$) or returns ($\sretev{\mname}{\mvpat}$), with respect to a particular function named $\mname$ and with its argument or result matching a pattern $\mvpat$.
+Events themselves are expressed as patterns denoting calls ($\scallev{\mvar}{\mvpat}$) or returns ($\sretev{\mvar}{\mvpat}$), with respect to a particular function $\mvar$ and with its argument or result matching a pattern $\mvpat$.
 %
-Patterns can match constants ($\mconstant$), bound function names ($\mname$), or simply anything ($\swc$).
+If $\mvar$ is a label, we simply check that the monitor wrapping the function has the same label (attached via the structural contract).
+%
+However, if $\mvar$ is a name, then we consult a binding environment that the monitoring system builds as we pass binding events to determine if the function is exactly equal to the value bound.
+%
+The distinction between names (bound by temporal contract) and labels (bound by structural contract) is what separates our semantics from \citeauthor{ianjohnson:dfm:icfp2011}'s.
+%
+Patterns can match constants ($\mconstant$), bound names ($\mname$), labeled functions ($\mtoplevelname$), or simply anything ($\swc$).
 %%
 
 %%
-The most glaring grammatical restriction we make in comparison to \citeauthor{ianjohnson:dfm:icfp2011}'s language of temporal contracts is that Kleene star may only be applied to a set of events, $\mtconNoB$, since there is no natural translation of $\mtcon^*$ to LTL.
-%
-We believe that most contracts don't need the full expressiveness of $\mtcon^*$, so we see this as a fair compromise.
-%%
-
-%%
-Before discussing higher-order binding events, one should note there are two notions of ``call'' and ``return'': as simple events that can refer to the context ($\mevent$), or as patterns on events that extend the context with the values they match (the higher-order binding events).
-%
 \citeauthor{ianjohnson:dfm:icfp2011}'s semantics for referring to functions is problematic; we give a slightly different account that captures the spirit of their prose describing their system.
 %
 One of their motivating examples (recalled in \autoref{fig:sort} and addressed in \autoref{sec:sort}) was to protect the comparator passed to a sort function from escaping the scope of the call.
 %
 What this should mean is the particular binding introduced by a call to $sort$ cannot be called after $sort$ returns, \ie, each constructed monitor around given comparators should not be called after $sort$ returns.
 %
-However, the flat use of \emph{names} instead of bindings causes a second call to an in-spirit-correct $sort$ to fail, since it internally calls the comparator of the same name, but different monitor construction.
+However, the flat use of \emph{labels} instead of bindings causes a second call to an in-spirit-correct $sort$ to fail, since it internally calls the comparator of the same label, but different monitor construction.
 %
-We maintain some semantics of names in order to discuss top-level bindings of a module, but encourage the use of binding for contracting the use of first-class functions.
+We maintain the semantics of labels in order to discuss top-level bindings of a module, but encourage the use of binding for contracting the use of first-class functions.
 %%
 
 %%
@@ -481,8 +487,8 @@ The semantics is close to \citeauthor{ianjohnson:dfm:icfp2011}'s definition, and
    \denotetcon{\stOr{\mtcon_0}{\mtcon_1}}{\mtimeline}{\menv} &=
    \denotetcon{\mtcon_0}{\mtimeline}{\menv} \cup \denotetcon{\mtcon_1}{\mtimeline}{\menv}
 \\
-   \denotetcon{\stmany{\mtconNoB}}{\mtimeline}{\menv} &=
-   \setbuild{\mtrace^i}{i \le \omega, \mtrace \in \denotetcon{\mtconNoB}{\mtimeline}{\menv}}
+   \denotetcon{\stmany{\mtcon}}{\mtimeline}{\menv} &=
+   \setbuild{\mtrace^i}{i \le \omega, \mtrace \in \denotetcon{\mtcon}{\mtimeline}{\menv}}
 \\
    \denotetcon{\sddd}{\mtimeline}{\menv} &=
    \Traces^\mtimeline
@@ -576,14 +582,14 @@ $
 \begin{array}{l}
  \labelof(\co{\spush{\kmcall{\mmlab_u}{\mmlab_c}{\mlab}{\mscon_R, \mtimeline, \menv, \mtoplevelname, \maddr}}{\mkaddr}, \mval, \msto}{\msmlab}{\mstimeline})
   =\\
- \quad \mtconNoB \cup \setbuild{\apneg{\mevent}}{\mevent \in (\ltlactions \setminus \mtconNoB)}
- \\ \text{where } \mtconNoB = \setbuild{\aptopcall{\mtoplevelname}{\mval'}{\mtimeline},\\
-                                     \phantom{\text{where } \mtconNoB = \{}\apvcall{\blclos{\mtoplevelname}{\mmlab_?}{\mmlab_c}{\mlab}{\mscon_?}{\mscon_R}{\menv}{\mtimeline}{\maddr}}{\mval'}{\mtimeline}}
+ \quad \mtcon \cup \setbuild{\apneg{\mevent}}{\mevent \in (\ltlactions \setminus \mtcon)}
+ \\ \text{where } \mtcon = \setbuild{\aptopcall{\mtoplevelname}{\mval'}{\mtimeline},\\
+                                     \phantom{\text{where } \mtcon = \{}\apvcall{\blclos{\mtoplevelname}{\mmlab_?}{\mmlab_c}{\mlab}{\mscon_?}{\mscon_R}{\menv}{\mtimeline}{\maddr}}{\mval'}{\mtimeline}}
                                        {\mval' \sqsupseteq \mval}
 \\
  \labelof(\co{\spush{\krt{\mmlab',\mtimeline'}}{\mkaddr}, \mval, \msto}{\mtoplevelname}{\mstimeline}) =\\
- \quad \mtconNoB \cup \setbuild{\apneg{\mevent}}{\mevent \in (\ltlactions \setminus \mtconNoB)}
- \\ \text{where } \mtconNoB = \setbuild{\aptopret{?}{\mval'}{\mstimeline},
+ \quad \mtcon \cup \setbuild{\apneg{\mevent}}{\mevent \in (\ltlactions \setminus \mtcon)}
+ \\ \text{where } \mtcon = \setbuild{\aptopret{?}{\mval'}{\mstimeline},
                                         \apvret{?}{\mval'}{\mstimeline}}
                                        {\mval' \sqsupseteq \mval}
 \end{array}$
@@ -750,7 +756,8 @@ Syntax:
  \alt \sapp[^\mlab]{\mexp}{\mexp}
  \alt \slam[^\mlab]{\mvar}{\mexp} \\
 &\alt \sif[^\mlab]{\mexp}{\mexp}{\mexp} 
- \alt \sMon{\mmlab}{\mmlab}{\mlab}{\mcontract, \mexp}
+ \alt \sSMon{\mmlab}{\mmlab}{\mlab}{\mcontract, \mexp}
+ \alt \sTMon{\mmlab}{\mmlab}{\mlab}{\mscon, \mexp}
  \alt \slit{\mconstant} \\
 \mconstant \in \Constant &= -1 \alt 0 \alt 1 \alt \ldots \alt \strue \alt \sfalse \alt \scons \alt \scar \alt \ldots \\
 \mvar \in \Var &\quad\text{ an infinite set} \\
@@ -902,7 +909,7 @@ State space:
     \begin{array}{@{}r@{\ }c@{\ }l@{}}
       \mstate & \machstep &\mstate' \text{ defined to be the following} \\
       %% EVAL
-      \ev{\sMon{\mmlab_u}{\mmlab_c}{\mlab}{(\mscon, \mtcon), \mexp}, \menv, \msto, \mkont}
+      \ev{\sTMon{\mmlab_u}{\mmlab_c}{\mlab}{(\mscon, \mtcon), \mexp}, \menv, \msto, \mkont}
          {\msmlab}{\mstimeline} &\machstep&
       \ev[^\mlab]{\mexp, \menv, \msto', \spush{\kmon{\mmlab_u}{\mmlab_c}{\mlab}{\mscon, \mtimeline, \menv}}{\mkaddr}}
          {\msmlab}{\mstimeline} \\

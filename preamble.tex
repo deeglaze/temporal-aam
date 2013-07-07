@@ -9,7 +9,7 @@
 \newcommand{\mtcon}{T}
 \newcommand{\mtconNoB}{{\mathcal A}}
 \newcommand{\mname}{n}
-\newcommand{\mtoplevelname}{n^\toplevel}
+\newcommand{\mtoplevelname}{\ell}
 \newcommand{\mevent}{A}
 \newcommand{\mconstant}{c}
 \newcommand{\mvpat}{p}
@@ -80,7 +80,8 @@
 \newcommand{\kmcall}[4]{\tuple[^{#1,#2}_{#3}]{call}{#4}}
 \newcommand{\kpost}[2][\ ]{\tuple[#1]{post}{#2}}
 % Syntax
-\newcommand{\sMon}[4]{\tuple[^{#1,#2}_{#3}]{mon}{#4}}
+\newcommand{\sSMon}[4]{\tuple[^{#1,#2}_{#3}]{smon}{#4}}
+\newcommand{\sTMon}[4]{\tuple[^{#1,#2}_{#3}]{tmon}{#4}}
 \newcommand{\sdefine}[3][\ ]{\tuple[#1]{define}{#2, #3}}
 \newcommand{\sdefinec}[4][\ ]{\tuple[#1]{define/contract}{#2,#3,#4}}
 \newcommand{\sunit}{{\tt '()}}
@@ -169,6 +170,8 @@
 \newcommand{\Graph}{\mathit{Graph}}
 
 \newcommand{\TConEnvStack}{\mathit{Following}}
+
+\newcommand{\Name}{\mathit{Name}}
 
 \newcommand{\Timeline}{\mathit{Timeline}}
 \newcommand{\Frame}{\mathit{Frame}}
