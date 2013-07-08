@@ -15,10 +15,10 @@
 \newtheorem{theorem}{Theorem}
 \newtheorem{lemma}{Lemma}
 
-\newcommand{\naive}{naive}
-\newcommand{\naively}{naively}
-\newcommand{\Naive}{Naive}
-\newcommand{\Naively}{Naively}
+\newcommand*{\naive}{naive}
+\newcommand*{\naively}{naively}
+\newcommand*{\Naive}{Naive}
+\newcommand*{\Naively}{Naively}
 % \usepackage{xltxtra}
 % \setmonofont[Scale=MatchLowercase]{DejaVu Sans Mono}
 %
@@ -252,18 +252,17 @@ We maintain the semantics of labels in order to discuss top-level bindings of a 
 %%
 \subsection{Sort example} \label{sec:sort}
 
-\renewcommand{\arraystretch}{1.2}
-\newcommand{\call}[1]{\scallev{#1}{\_}}
-\newcommand{\ret}[1]{\sretev{#1}{\_}}
+\renewcommand*{\arraystretch}{1.2}
+\newcommand*{\call}[1]{\scallev{#1}{\_}}
+\newcommand*{\ret}[1]{\sretev{#1}{\_}}
 \begin{figure}
- \small
  $SortContract = $ \\
- $\begin{array}{ @{\quad~}l@{\ } c @{\ }l }
+ $\begin{array}{ @{\quad}l@{\ } c @{\ }l }
  sort &:   &(cmp\ :\ Pos\ \to Pos\ \to\ Bool) \\
       &    &(List\ Pos) \\
       &\to &(List\ Pos) \\
  \end{array}$
- $\begin{array}{ @{\quad~}r@{~} l @{}l }
+ $\begin{array}{ @{~}r@{} l @{}l }
   \text{where}\quad
   &\stnot{(&\sddd~ \call{sort}~ \stmany{\snonevent{\ret{sort}}}~ \call{sort})} \\
   \text{and}\quad
@@ -294,7 +293,6 @@ The second temporal clause specifies a higher-order property; it states that, gi
 \subsection{File example}
 
 \begin{figure}
- \small
  $FileSystemContract\, =\, open\, :\, String\, \to\, FileContract$ \\
  $FileContract =~ Record$ \\
  $\begin{array}{ @{\quad~}l@{\ :} @{~}l@{\ \to\ } l }
@@ -323,17 +321,16 @@ The temporal contract states that a user of the file is forbidden from making us
 
 \subsection{TCP example}
 
-\newcommand{\tcpstyle}[1]{\texttt{#1}}
+\newcommand*{\tcpstyle}[1]{\texttt{#1}}
 \begin{figure}
- \newcommand{\send}[1]{\scallev{send}{#1}}
- \newcommand{\rcv}[1]{\sretev{recv}{#1}}
- \newcommand{\notclose}{\snonevent{\call{close}}}
- \newcommand{\tcpsyn}{\tcpstyle{SYN}}
- \newcommand{\tcpack}{\tcpstyle{ACK}}
- \newcommand{\tcpsynack}{\tcpstyle{SYN\&ACK}}
- \newcommand{\tcpfin}{\tcpstyle{FIN}}
- %\newcommand{\tcpfinack}{\tcpstyle{FIN\&ACK}}
- \small
+ \newcommand*{\send}[1]{\scallev{send}{#1}}
+ \newcommand*{\rcv}[1]{\sretev{recv}{#1}}
+ \newcommand*{\notclose}{\snonevent{\call{close}}}
+ \newcommand*{\tcpsyn}{\tcpstyle{SYN}}
+ \newcommand*{\tcpack}{\tcpstyle{ACK}}
+ \newcommand*{\tcpsynack}{\tcpstyle{SYN\&ACK}}
+ \newcommand*{\tcpfin}{\tcpstyle{FIN}}
+ %\newcommand*{\tcpfinack}{\tcpstyle{FIN\&ACK}}
  $TCPConnectionContract\, =~ Record$ \\
  $\begin{array}{ @{\quad~}l@{\ :} @{~}l @{\ \to\ }l }
   open & TCPSocket & TCPSendContract \\
@@ -351,9 +348,9 @@ The temporal contract states that a user of the file is forbidden from making us
  \end{array}$ \\
  
  $TCPSendContract =~ TCPConnection$ \\
- $\begin{array}{ @{\quad~}r@{~} l @{}l }
+ $\begin{array}{ @{~}r@{\quad} l @{}l }
   \text{where}
-  &&\sddd~ \send{\tcpsyn}~ \notclose \\
+  &&\send{\tcpsyn}~ \notclose \\
   &&\rcv{\tcpsynack}~ \notclose \\
   &&\send{\tcpack}~ \stmany{\notclose} \\
 
@@ -372,17 +369,13 @@ The temporal contract states that a user of the file is forbidden from making us
     \end{aligned}
    \right)
   \end{aligned} \\
-  &&\ret{timeout}~ \ret{close} \\
-  
-  \text{and}
-  &\stnot{(&\sddd~ \ret{close}~ \sddd~ \\
-  &&(\stOr{\call{send}}{\stOr{\call{recv}}{\call{close}}}))}
+  &&\ret{timeout}~ \ret{close}
  \end{array}$
  
  $TCPRecvContract =~ TCPConnection$ \\
- $\begin{array}{ @{\quad~}r@{~} l @{}l @{}l }
+ $\begin{array}{ @{~}r@{\quad} l @{}l @{}l }
   \text{where}
-  &&\sddd~ \rcv{\tcpsyn}~ \notclose \\
+  &&\rcv{\tcpsyn}~ \notclose \\
   &&\send{\tcpsynack}~ \notclose \\
   &&\rcv{\tcpack}~ \stmany{\notclose} \\
   
@@ -401,11 +394,7 @@ The temporal contract states that a user of the file is forbidden from making us
     \end{aligned}
    \right)
   \end{aligned} \\
-  &&\ret{timeout}~ \ret{close} \\
-  
-  \text{and}
-  &\stnot{(&\sddd~ \ret{close}~ \sddd~ \\
-  &&(\stOr{\call{send}}{\stOr{\call{recv}}{\call{close}}}))}
+  &&\ret{timeout}~ \ret{close}
  \end{array}$
  
  \caption{TCP example}
@@ -442,7 +431,7 @@ Likewise, a socket on the ``receiving'' end of the TCP connection (having used $
 %
 The contracts are very involved, but they implement a simplified version of the TCP connection lifecycle given in \autoref{fig:tcp-fsm}.
 %
-Note that the first temporal clause in each contract is \emph{not} negated; this indicates that it specifies a \emph{liveness property}: that the client uses the socket in a manner consistent with the TCP protocol and can expect the other end to as well.
+Note that the temporal clause in each contract is \emph{not} negated; this indicates that it specifies a \emph{liveness property}: that the client uses the socket in a manner consistent with the TCP protocol and can expect the other end to as well.
 %%
 
 %%
@@ -743,18 +732,20 @@ Shit works.
 Syntax:
 \begin{align*}
 \mexp \in \Expr &::=
-      \svar[^\mlab]{\mvar}
- \alt \sapp[^\mlab]{\mexp}{\mexp}
- \alt \slam[^\mlab]{\mvar}{\mexp} \\
-&\alt \sif[^\mlab]{\mexp}{\mexp}{\mexp} 
- \alt \sSMon{\mmlab}{\mmlab}{\mlab}{\mcontract, \mexp}
- \alt \sTMon{\mmlab}{\mmlab}{\mlab}{\mscon, \mexp}
- \alt \slit{\mconstant} \\
-\mconstant \in \Constant &= -1 \alt 0 \alt 1 \alt \ldots \alt \strue \alt \sfalse \alt \scons \alt \scar \alt \ldots \\
+      \svar{\mvar}
+ \alt \slit{\mconstant}
+ \alt \sapp{\mexp}{\mexp}
+ \alt \slam{\mvar}{\mexp}
+ \alt \sif{\mexp}{\mexp}{\mexp} \\
+&\alt \sSMon{\mmlab}{\mmlab}{\mlab}{\mcontract}{\mexp}
+ \alt \sTMon{\mmlab}{\mmlab}{\mlab}{\mscon}{\mexp} \\
+\mconstant \in \Constant &=
+ -1 \alt 0 \alt 1 \alt \ldots \alt + \alt - \alt \ldots \\
+&\alt \strue \alt \sfalse \alt \vee \alt \wedge \alt \ldots \\
+&\alt \sunit \alt \scons \alt \scar \alt \scdr \alt \ldots \\
 \mvar \in \Var &\quad\text{ an infinite set} \\
-\mlab \in \Label &\quad\text{ an infinite set} \\
-\mmlab,\mname \in \ModuleLabel &\text{ an infinite set} \\
-\msmlab \in \ModuleLabel^{\toplevel} &::= \mmlab \alt \toplevel \\
+\beta \in \ModuleLabel &\quad\text{ an infinite set} \\
+\mmlab,\mname &::= \beta \alt \toplevel \quad\text{where $\toplevel$ is the top-level} \\
 \mcontract \in \Contract &= \SContract \times \TContract \\
 \mscon \in \SContract &::= \sflat{\mexp} \alt \sarr{\mname}{\mscon}{\mscon} \alt \sconsc{\mscon}{\mscon} \\
 \end{align*}
@@ -777,277 +768,124 @@ Since we run CFA before appealing to the model checker, the former is feasible, 
 %%
 Value space:
 \begin{align*}
+  \mexp &::= \ldots
+   \alt \sblame{\mmlab}{\mmlab}
+   \alt \schk{\mmlab}{\mmlab}{\mexp}{\mval}
+   \alt \sown{\mexp}{\mmlab}
+  \\
   \mval \in \Value &=
-    \clos{\mvar, \mexp, \menv}
-   \alt \blclos{\mname}{\mmlab}{\mmlab}{\mlab}{\mscon}{\mscon}{\menv}{\mtimeline}{\maddr}
-   \alt \mconstant \\
-%   \alt \blackhole \\
-&  \alt \vconsf{\maddr}{\mstimeline}
-   \alt \vcons{\maddr}{\maddr}
-   \alt \vconst{\maddr}{\maddr}{\mstimeline}
-   \alt \sunit \\
-  \menv \in \Env &= \Var \parto (\Addr \times \Timeline^{\toplevel}) \\
+        \mconstant
+   \alt \vcons{\maddr}{\maddr}  
+   \alt \maddr
+   \alt \sown{\mval}{\mmlab} \\
+&  \alt \bclos{\mname}{\mscon}{\mmlab}{\mmlab}{\mtimeline}{\mscon}{\mmlab}{\maddr}
+  \\
   \maddr \in \Addr &\text{ an infinite set} \\
   \mstimeline \in \Timeline^{\toplevel} &::= \maddr \alt \toplevel \\
-  \mnames &\in \wp(\Var) \\
+  \mnames &\in \wp(\Var) %TODO: Do we still need this?
+  \\
+  \mscon &::= \ldots
+   \alt \sown*{\sflat{\mexp}}{\mmlab}
 \end{align*}
 %%
 
 %%
 State space:
 \begin{align*}
-  \mstate \in \State &::=
-      \ev[^\mlab]{\mexp, \menv, \msto, \mkont}{\msmlab}{\mstimeline}
- \alt \co{\mkont, \mval, \msto}{\msmlab}{\mstimeline} \\
-&\alt \ap[^\mlab]{\mval, \mval, \msto, \mkont}{\msmlab}{\mstimeline}
- \alt \ck{\mmlab}{\mmlab}{\mlab}{\pm}{\mscon, \maddr, \menv, \mval, \msto, \mkont}{\msmlab}{\mstimeline}
- \alt \sblame{\mmlab} \\
+\mctx{\mmlab} &::=
+      \sapp{\mctx{\mmlab}}{\mexp}
+ \alt \sapp{\mval}{\mctx{\mmlab}}
+ \alt \sif{\mctx{\mmlab}}{\mexp}{\mexp}
+ \alt \mlctx{\mmlab} \\
+&\alt \sSMon*{\ell}{k}{j}{\mtimeline}{\mcontract}{\mctx{\ell_\bot}}
+ \alt \sSMon*{\ell^\prime}{k}{j}{\mtimeline}{\mcontract}{\mctx{\ell}} \\
+&\alt \sTMon{\ell}{k}{j}{\mscon}{\mctx{\ell_\bot}}
+ \alt \sTMon{\ell^\prime}{k}{j}{\mscon}{\mctx{\ell}} \\
+&\alt \schk*{k}{\ell}{\mtimeline}{\mctx{\ell_\bot}}{\mval}
+ \alt \schk*{k}{\ell^\prime}{\mtimeline}{\mctx{\ell}}{\mval} \\
+&\alt \sown{\mctx{\ell_\bot}}{\ell}
+ \alt \sOwn{\mctx{\ell}}{\ell^\prime}
+\\
+\mctx{\mmlab_\bot} &::=
+      \hole
+ \alt \sapp{\mctx{\mmlab_\bot}}{\mexp}
+ \alt \sapp{\mval}{\mctx{\mmlab_\bot}}
+ \alt \sif{\mctx{\mmlab_\bot}}{\mexp}{\mexp}
+ \alt \mlctx{\mmlab_\bot}
+\\
+\mlctx{\mmlab} &::=
+      \sunit
+ \alt \mval
+ \alt \vcons{\mlactx{\mmlab}}{\mctx{\mmlab}}
+ \\
+\mlactx{\mmlab} &::=
+ \hole \alt \maddr
+\\
 \msto \in \Store &= \Addr \parto \wp(\Storeable) \\
-\Storeable &= \Value + \Kont + \TContract \\
-\mframe \in \Frame &::=
-      \kar[^\mlab]{\mexp,\menv}
- \alt \kfn[^\mlab]{\mval}
- \alt \kif{\mexp, \mexp, \menv} \\
-&\alt \krt{\mmlab, \mtimeline}
- \alt \kmon{\mmlab}{\mmlab}{\mlab}{\mscon, \mtimeline, \menv}
- \alt \kflat[^\mlab]{\mmlab, \mval} \\
-&\alt \kchkA[^\mlab]{\mmlab, \mmlab, \mscon, \maddr, \maddr, \maddr}
- \alt \kchkD[^\mlab]{\mmlab, \mmlab, \maddr, \maddr, \maddr, \maddr}
- \alt \kcheck[^\mlab]{\mmlab, \mval} \\
-&\alt \kpost[^\mlab]{\mscon, \mtimeline, \menv}
- \alt \kmcall{\mmlab}{\mmlab}{\mlab}{\mscon, \mtimeline, \menv, \mname, \maddr} \\
-\mkont \in \Kont &::= \kmt \alt \spush{\mframe}{\mkaddr}
+\Storeable &= \Value + \TContract \\
+\sOwn{\mexp}{\mmlab} = \sown{ \ldots \sown{\mexp}{\mmlab} \ldots }{\mmlab}
+&\text{where $\forall$ labels $k$, terms $\mexp^\prime$: $\mexp \neq \sown{\mexp^\prime}{k}$}
 \end{align*}
 
-% \begin{align*}
-%     \accept &: \ModuleLabel \times \ModuleLabel \times \Label \times \SContract \times \Value \\
-%             &\to (\Value \times \Store) + \Expr + \bot
-% \end{align*}
-% \begin{align*}
-%   \accept(\mmlab_u, \mmlab_c, \mlab, \sarr{\mname}{\mscon_D}{\mscon_R}, \mval) &=
-%           \blclos{\mname}{\mmlab_u}{\mmlab_c}{\mlab}{\mscon_D}{\mscon_R}{\menv}{\maddr}, \\
-% \phantom{\accept(\mmlab_u, \mmlab_c, \mlab, \sarr{\mname}{\mscon_D}{\mscon_R}, \mval)} &\phantom{= }
-%           \ext{\msto}{\maddr}{\setof{\mval}} \\
-%   \text{if } \mval \equiv \clos{\mvar, \mexp, \menv'} \text{ or }&
-%              \mval \equiv \blclos{\mname'}{\mmlab_u'}{\mmlab_c'}{\mlab'}{\mscon_D'}{\mscon_R'}{\menv'}{\maddr'}
-%   \\
-%   \accept(\mmlab_u, \mmlab_c, \mlab, \sflat(\mexp), \mval) &= \mexp \\
-%   \accept(\mmlab_u, \mmlab_c, \mlab, \sarr{\mname}{\mscon_D}{\mscon_R}, \mval) &= \bot \text{ otherwise}
-% \end{align*}
-
+% TODO:
+% * Should addresses be owned? Does this imply stores need to be owned...?
+% * Should conses be owned?
 \begin{figure*}
-  \begin{gather*}
-    \begin{array}{@{}r@{\ }c@{\ }l@{}}
-      \mstate & \machstep &\mstate' \text{ defined to be the following} \\
-      %% EVAL
-      \ev{\svar\mvar, \menv, \msto, \mkont}{\msmlab}{\mstimeline} &\machstep&
-      \co{\mkont, \mval, \msto}{\msmlab}{\mstimeline}
-      \text{ if } (\maddr, \mstimeline') = \menv(\mvar), \mval \in \msto(\maddr)
+  \centering
+    $\begin{array}{@{}l @{\ }c@{\ } l@{}}
+      \mctx{\mmlab}[\ldots], \msto, \mTMons &\machstep& \mctx{\mmlab^\prime}[\ldots], \msto^\prime, \mTMons
+      \\ \hline
+      \sif{ \sOwn{\strue}{\mmlab} }{\mexp_1}{\mexp_2}
+      &\machstep&
+      \mexp_1
       \\
-    %%
-      \ev{\sapp[^\mlab]{\mexpi0}{\mexpi1}, \menv, \msto, \mkont}{\msmlab}{\mstimeline} &\machstep&
-      \ev{\mexpi0, \menv, \msto', \spush{\kar[^\mlab]{\mexpi1, \menv}}{\mkaddr}}{\msmlab}{\mstimeline}
+      \sif{ \sOwn{\sfalse}{\mmlab} }{\mexp_1}{\mexp_2}
+      &\machstep&
+      \mexp_2
       \\
-      &&\text{where } \mkaddr = \alloc(\mstate) \\
-      &&\phantom{\text{where }} \msto' = \ext{\msto}{\mkaddr}{\setof{\mkont}} \\
-      %%
-      \ev{\sif{\mexpi0}{\mexpi1}{\mexpi2}, \menv, \msto, \mkont}{\msmlab}{\mstimeline} &\machstep&
-      \ev{\mexpi0, \menv, \msto', \spush{\kif{\mexpi1, \mexpi2, \menv}}{\mkaddr}}{\msmlab}{\mstimeline} \\
-      &&\text{where } \mkaddr = \alloc(\mstate) \\
-      &&\phantom{\text{where }} \msto' = \ext{\msto}{\mkaddr}{\setof{\mkont}} \\
-     %%
-      \ev{\slam{\mvar}{\mexp}, \menv, \msto, \mkont}{\msmlab}{\mstimeline} &\machstep&
-      \co{\mkont, \clos{\mvar, \mexp, \menv}, \msto}{\msmlab}{\mstimeline}
+      \sapp{ \sOwn{\slam{\mvar}{\mexp}}{\mmlab} }{ \sOwn{\mval}{\mmlab} }
+      &\machstep&
+      \sown{ \sapp{\{ \sown{\mval}{\mmlab}/\mvar \}}{\mexp} }{\mmlab}
       \\
-      %%
-      \ev{\slit{\mconstant}, \menv, \msto, \mkont}{\msmlab}{\mstimeline} &\machstep&
-      \co{\mkont, \mconstant, \msto}{\msmlab}{\mstimeline}
+      \sSMon*{k}{\mmlab}{j}{\mtimeline}{ \sown*{\sflat{\mexp}}{\mmlab^{\prime\prime}} }{ \sOwn{\mconstant}{\mmlab^{\prime\prime}} }
+      &\machstep&
+      \schk*{k}{j}{\mtimeline}{ \sapp{\mexp}{\mconstant} }{\mconstant}
+      \\ %TODO: Fix
+      \sSMon*{k}{\mmlab}{j}{\mtimeline}{\sconsc{\mscon_A}{\mscon_D}}{ \vcons{\maddr_A}{\maddr_D} }
+      &\machstep&
+      \vcons{ \sSMon*{k}{\mmlab}{j}{\mtimeline}{\mscon_A}{\maddr_A} }{ \sSMon*{k}{\mmlab}{j}{\mtimeline}{\mscon_D}{\maddr_D} }
       \\
-      %%
-      %% CONTINUE
-      \co{\spush{\kif{\mexpi0, \mexpi1, \menv}}{\mkaddr}, \strue, \menv, \msto}{\msmlab}{\mstimeline} &\machstep&
-      \ev{\mexpi0, \menv, \msto, \mkont}{\msmlab}{\mstimeline} \text{ if } \mkont \in \msto(\mkaddr)
+      \sSMon*{k}{\mmlab}{j}{\mtimeline}{ \sarr{\mname}{\mscon_D}{\mscon_R} }{\mval}
+      &\machstep&
+      \bclos{\mname}{\mscon_D}{k}{j}{\mtimeline}{\mscon_R}{\mmlab}{\maddr} \\
+      &&\text{where } \maddr = alloc(\mstate)
       \\
-      %%
-      \co{\spush{\kif{\mexpi0, \mexpi1, \menv}}{\mkaddr}, \sfalse, \menv, \msto}{\msmlab}{\mstimeline} &\machstep&
-      \ev{\mexpi1, \menv, \msto, \mkont}{\msmlab}{\mstimeline} \text{ if } \mkont \in \msto(\mkaddr)
+      \schk{k}{j}{ \sOwn{\strue}{j} }{\mval}
+      &\machstep&
+      \mval
       \\
-      %%
-      \co{\spush{\kar[^\mlab]{\mexp, \menv}}{\mkaddr}, \mval, \msto}{\msmlab}{\mstimeline} &\machstep&
-      \ev[^\mlab]{\mexpi, \menv, \msto', \spush{\kfn[^\mlab]{\mval}}{\mkaddr}}{\msmlab}{\mstimeline}
+      \schk{k}{j}{ \sOwn{\sfalse}{j} }{\mval}
+      &\machstep&
+      \sblame{k}{j}
       \\
-      && \text{where } \maddr' = \alloc(\mstate) \\
-      &&\phantom{\text{where }} \msto' = \ext{\msto}{\maddr'}{\setof{\mval}} \\
-      %%
-      \co{\spush{\kfn[^\mlab]{\mval_f}}{\mkaddr}, \mval, \msto}{\msmlab}{\mstimeline} &\machstep&
-      \ap{\mval_f, \mval, \msto, \mkont}{\msmlab}{\mstimeline} \text{ if } \mkont \in \msto(\mkaddr)
+      \bclos{\mmlab^\prime}{\mscon_D}{k}{j}{\mtimeline}{\mscon_R}{\mmlab^{\prime\prime}}{\maddr}
+      &\machstep&
+      %TODO: Should the timeline be different?
+      \slam{\mvar}{ \sSMon*{k}{\mmlab^{\prime\prime}}{j}{\mtimeline}{\mscon_R}{%
+      \sapp{\mval}{ \sSMon*{\mmlab^{\prime\prime}}{k}{j}{\mtimeline}{\mscon_D}{\mvar} } } } \\
+      %TODO: Do we even need to explicitly deref here?
+      &&\text{where } \mval = \msto(\maddr)
       \\
-      %%
-      %% APPLY
-      \ap{\clos{\mvar, \mexp, \menv}, \mval, \msto, \mkont}{\msmlab}{\mstimeline} &\machstep&
-      \ev{\mexp, \menv', \msto', \mkont}{\msmlab}{\mstimeline} \\
-      &&\text{where } \maddr = \alloc(\mstate) \\
-      &&\phantom{\text{where }} \menv' = \menv[\mvar \mapsto (\maddr, \mstimeline)] \\
-      &&\phantom{\text{where }} \msto' = \ext{\msto}{\maddr}{\setof{\mval}}
-    \end{array}    
-  \end{gather*}
-  \caption{Standard reduction rules}
+      \maddr &\machstep& \mval \qquad\text{where } \mval = \msto(\maddr)
+      \\ \hline
+      \mctx{\mmlab}[\sblame{k}{j}]
+      &\machstep&
+      \sblame{k}{j}
+    \end{array}$
+  \caption{Reduction rules (eliding temporal contract checking)}
   \label{fig:standard}
 \end{figure*}
 
-\begin{figure*}
-  \begin{gather*}
-    \begin{array}{@{}r@{\ }c@{\ }l@{}}
-      \mstate & \machstep &\mstate' \text{ defined to be the following} \\
-      %% EVAL
-      \ev{\sTMon{\mmlab_u}{\mmlab_c}{\mlab}{(\mscon, \mtcon), \mexp}, \menv, \msto, \mkont}
-         {\msmlab}{\mstimeline} &\machstep&
-      \ev[^\mlab]{\mexp, \menv, \msto', \spush{\kmon{\mmlab_u}{\mmlab_c}{\mlab}{\mscon, \mtimeline, \menv}}{\mkaddr}}
-         {\msmlab}{\mstimeline} \\
-      &&\text{where } (\mkaddr, \mtimeline) = \alloc(\mstate) \\
-      &&\phantom{\text{where }}
-         \msto' = \msto \sqcup [\mkaddr \mapsto \setof{\mkont},
-                                \mtimeline \mapsto \setof{\mtcon}]
-      \\
-      %%
-      %% CONTINUE
-      \co{\spush{\krt{\mmlab',\mtimeline'}}{\mkaddr}, \mval, \msto}
-         {\msmlab}{\mstimeline}
-        &\machstep&
-      \co{\mkont, \mval, \msto}
-         {\mmlab'}{\mtimeline'} \text{ if } \mkont \in \msto(\mkaddr)
-      \\
-      %%
-      \co{\spush{\kmon{\mmlab_u}{\mmlab_c}{\mlab}{\mscon, \mtimeline, \menv}}{\mkaddr}, \mval, \msto}
-         {\msmlab}{\mstimeline} &\machstep&
-      \ck{\mmlab_u}{\mmlab_c}{\mlab}{+}
-         {\mscon, \mtimeline, \menv, \mval, \msto, \mkont}
-         {\msmlab}{\mstimeline} \text{ if } \mkont \in \msto(\mkaddr)
-      \\
-      %%
-      %% Administrative contract checking
-      %% Flat
-      \ck{\mmlab_u}{\mmlab_c}{\mlab}{\mvariance}
-         {\sflat{\mexp}, \mtimeline, \menv, \mval, \msto, \mkont}
-         {\msmlab}{\mstimeline} &\machstep&
-      \ev{\mexp, \menv, \msto', \spush{\kflat[^\mlab]{\mmlab_p, \mval}}{\mkaddr}}
-         {\msmlab}{\mstimeline} \\
-      &&\text{where } \mkaddr = \alloc(\mstate) \\
-      &&\phantom{\text{where }} \msto' = \ext{\msto}{\mkaddr}{\setof{\mkont}} \\
-      &&\phantom{\text{where }} \mmlab_p = \varianceite{\mvariance}{\mmlab_u}{\mmlab_c}
-      \\
-      % %% Higher-order
-      \ck{\mmlab_u}{\mmlab_c}{\mlab}{\mvariance}
-         {\sarr{\mname}{\mscon_D}{\mscon_R}, \mtimeline, \menv, \mval, \msto, \mkont}
-         {\msmlab}{\mstimeline} &\machstep&
-      \co{\mkont, \blclos{\mname}{\mmlab_u}{\mmlab_c}{\mlab}{\mscon_D}{\mscon_R}{\menv}{\mtimeline}{\maddr}, \msto'}
-         {\msmlab}{\mstimeline} \\
-      &\text{ if }& \mval \equiv \clos{\mvar, \mexp, \menv'}
-       \text{ or }  \mval \equiv \blclos{\mname'}{\mmlab_u'}{\mmlab_c'}{\mlab'}{\mscon_D'}{\mscon_R'}{\menv'}{\mtimeline'}{\maddr'} \\
-      &&\text{where } \maddr = \alloc(\mstate) \\
-      &&\phantom{\text{where }} \msto' = \ext{\msto}{\maddr}{\setof{\mval}}
-      \\
-      %%
-      \ck{\mmlab_u}{\mmlab_c}{\mlab}{\mvariance}
-         {\sarr{\mname}{\mscon_D}{\mscon_R}, \mtimeline, \menv, \mval, \msto, \mkont}
-         {\msmlab}{\mstimeline} &\machstep&
-      \sblame{\mmlab_p} \\
-      &\text{ if }& \mval \nequiv \clos{\mvar, \mexp, \menv'}
-       \text{ and } \mval \nequiv \blclos{\mname'}{\mmlab_u'}{\mmlab_c'}{\mlab'}{\mscon_D'}{\mscon_R'}{\menv'}{\mtimeline'}{\maddr'} \\
-      &&\text{where } \mmlab_p = \varianceite{\mvariance}{\mmlab_u}{\mmlab_c}
-      \\
-      %% CONS CONTRACT
-      % Start checking car
-      \co{\spush{\kmon{\mmlab_u}{\mmlab_c}{\mlab}{\sconsc{\mscon_A}{\mscon_D}, \mtimeline, \menv}}{\mkaddr},
-          \mval,
-          \msto}
-         {\msmlab}{\mstimeline} &\machstep&
-      \ck{\mmlab_u}{\mmlab_c}{\mlab}{+}
-         {\mscon_A,
-          \mtimeline,
-          \menv,
-          \mval_A,
-          \msto,
-          \spush{\kchkA[^{\mmlab_u, \mmlab_c}_\mlab]{\mscon_D, \mtimeline, \menv, \maddr'_A, \maddr'_D, \maddr_D}}
-                {\mkaddr}}
-         {\msmlab}{\mstimeline} \\
-      &\text{ if }& \mval \equiv \vcons{\maddr_A}{\maddr_D} \text{ or }
-                    \mval \equiv \vconst{\maddr_A}{\maddr_D}{\mstimeline'} \text{ and } \mval_A \in \msto(\maddr_A) \\
-      &&\text{where } (\maddr'_A, \maddr'_D) = \alloc(\mstate)
-      \\
-      % Start checking cdr
-      \co{\spush{\kchkA[^{\mmlab_u, \mmlab_c}_\mlab]{\mscon_D, \mtimeline, \menv, \maddr'_A, \maddr'_D, \maddr_D}}{\mkaddr},
-          \mval, \msto}
-         {\msmlab}{\mstimeline} &\machstep&
-      \ck{\mmlab_u}{\mmlab_c}{\mlab}{+}
-         {\mscon_D, \mtimeline, \menv, \mval_D, \msto',
-                                \spush{\kchkD{\maddr'_A, \maddr'_D, \mtimeline}}{\mkaddr}}
-         {\msmlab}{\mstimeline}
-      \text{ if } \mval_D \in \msto(\maddr_D) \\
-      &&\text{where } \msto' = \ext{\msto}{\maddr'_A}{\setof{\mval}}
-      \\
-      %%
-      % End checking cdr
-      \co{\spush{\kchkD{\maddr_A, \maddr_D, \mtimeline}}{\mkaddr}, \mval, \msto}
-         {\msmlab}{\mstimeline}
-       &\machstep&
-      \co{\mkont, \vconst{\maddr_A}{\maddr_D}{\mtimeline}, \ext{\msto}{\maddr_D}{\setof{\mval}}}
-         {\msmlab}{\mstimeline}
-        \text{ if } \mkont \in \msto(\mkaddr)
-      \\
-      %% END CONS CONTRACT
-      %%
-      \co{\spush{\kflat[^\mlab]{\mmlab_u, \mval'}}{\mkaddr}, \mval, \msto}{\msmlab}{\mstimeline} &\machstep&
-      \ap[^\mlab]{\mval, \mval', \msto, \spush{\kcheck{\mmlab_u, \mval'}}{\mkaddr}}{\msmlab}{\mstimeline}
-      \\
-      %%
-      \co{\spush{\kcheck{\mmlab_u, \mval}}{\mkaddr}, \strue, \msto}{\msmlab}{\mstimeline} &\machstep&
-      \co{\mkont, \mval, \msto}{\msmlab}{\mstimeline} \text{ if } \mkont \in \msto(\mkaddr)
-      %% \attach{\mval_C}{\mval}
-      \\
-      %%
-      \co{\spush{\kcheck{\mmlab_u, \mval}}{\mkaddr}, \sfalse, \msto}{\msmlab}{\mstimeline} &\machstep&
-      \sblame{\mmlab_u}
-      \\
-      %%
-      \co{\spush{\kmcall{\mmlab_u}{\mmlab_c}{\mlab}{\mscon_R, \mtimeline, \menv, \mname, \maddr}}{\mkaddr},
-          \mval,
-          \msto}{\msmlab}{\mstimeline} &\machstep&
-      \ap{\mval_f,
-          \mval,
-          \msto,
-          \spush{\kpost[^{\mmlab_u, \mmlab_c}_\mlab]{\mscon_R, \mtimeline, \menv, \msmlab}}{\mkaddr}}
-         {\mname}{\mtimeline}
-        \text{ if } \mval_f \in \msto(\maddr)
-      \\
-      %%
-      % Start checking the post-condition before returning
-      \co{\spush{\kpost[^{\mmlab_u, \mmlab_c}_\mlab]{\mscon_R, \mtimeline, \menv, \mname}}{\mkaddr}, \mval, \msto}
-         {\msmlab}{\mstimeline}
-       &\machstep&
-      \ck{\mmlab_u}{\mmlab_c}{\mlab}{+}
-         {\mscon_R, \menv, \mval, \msto, \spush{\krt{\mname, \mtimeline}}{\mkaddr}}
-         {\msmlab}{\mstimeline}
-      \\
-      %%
-      %% APPLY
-      \ap[^\mlab]{\blclos{\mname}{\mmlab_u}{\mmlab_c}{\mlab'}{\mscon_D}{\mscon_R}{\menv}{\mtimeline}{\maddr},
-                  \mval,
-                  \msto,
-                  \mkont}
-                 {\msmlab}{\mstimeline} &\machstep&
-      \ck{\mmlab_u}{\mmlab_c}{\mlab'}{-}
-         {\mscon_D, \menv, \mval, \msto',
-          \spush{\kmcall{\mmlab_u}{\mmlab_c}{\mlab}{\mscon_R, \mtimeline, \menv, \mname, \maddr}}{\mkaddr}}
-         {\msmlab}{\mstimeline} \\
-      &&\text{where } \mkaddr = \alloc(\mstate) \\
-      &&\phantom{\text{where }} \msto' = \ext{\msto}{\mkaddr}{\setof{\mkont}}
-      %%
-    \end{array}
-  \end{gather*}
-  \caption{Non-standard rules}
-\label{fig:concrete}
-\end{figure*}
 \balance
 \bibliographystyle{plainnat}
 %\input{paper.bbl}

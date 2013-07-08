@@ -1,113 +1,114 @@
 \usepackage{centernot}
-\newcommand{\nequiv}{\centernot\equiv}
+\usepackage{suffix}
+
+\newcommand*{\nequiv}{\centernot\equiv}
 \newcommand\ie{\emph{i}.\emph{e}.}
 
-\newcommand{\superscript}[1]{\ensuremath{^{#1}}}
-\newcommand{\subscript}[1]{\ensuremath{_{#1}}}
-\newcommand{\tuple}[3][\ ]{{\tt #2}{#1}({#3})}
+\newcommand*{\superscript}[1]{\ensuremath{^{#1}}}
+\newcommand*{\subscript}[1]{\ensuremath{_{#1}}}
+\newcommand*{\tuple}[3][\ ]{{\tt #2}{#1}({#3})}
+\WithSuffix\newcommand\tuple*[4][\ ]{{\tt #2}{#1}[#3]({#4})}
 
 % Values
-\newcommand{\clos}[1]{\tuple{clos}{#1}}
-\newcommand{\rlos}[1]{\tuple{rlos}{#1}}
+\newcommand*{\clos}[1]{\tuple{clos}{#1}}
+\newcommand*{\rlos}[1]{\tuple{rlos}{#1}}
 
 % Continuations
-\newcommand{\kfnalone}{{\tt fun}}
-\newcommand{\kmt}{{\tt halt}}
-\newcommand{\kar}[2][\ ]{\tuple[#1]{arg}{#2}}
-\newcommand{\kfn}[2][\ ]{\tuple[#1]{fun}{#2}}
-\newcommand{\kif}[2][\ ]{\tuple[#1]{ifk}{#2}}
+\newcommand*{\kfnalone}{{\tt fun}}
+\newcommand*{\kmt}{{\tt halt}}
+\newcommand*{\kar}[2][\ ]{\tuple[#1]{arg}{#2}}
+\newcommand*{\kfn}[2][\ ]{\tuple[#1]{fun}{#2}}
+\newcommand*{\kif}[2][\ ]{\tuple[#1]{ifk}{#2}}
 
 % Syntax
-\newcommand{\syntax}[1]{{\tt #1}}
-\newcommand{\sapp}[3][\ ]{\tuple[#1]{app}{#2,#3}}
-\newcommand{\slam}[3][\ ]{\tuple[#1]{lam}{#2,#3}}
-\newcommand{\srec}[4][\ ]{\tuple[#1]{rec}{#2,#3,#4}}
-\newcommand{\svar}[2][\ ]{\tuple[#1]{var}{#2}}
-\newcommand{\snum}[2][\ ]{\tuple[#1]{num}{#2}}
-\newcommand{\sbln}[2][\ ]{\tuple[#1]{bool}{#2}}
+\newcommand*{\syntax}[1]{{\tt #1}}
+\newcommand*{\sapp}[2]{#1\ #2}
+\newcommand*{\slam}[2]{\lambda #1.\ #2}
+\newcommand*{\svar}[1]{#1}
+\newcommand*{\snum}[2][\ ]{\tuple[#1]{num}{#2}}
+\newcommand*{\sbln}[2][\ ]{\tuple[#1]{bool}{#2}}
 
-\newcommand{\sif}[4][\ ]{\tuple[#1]{if}{#2,#3,#4}}
-\newcommand{\sop}[2][\ ]{\tuple[#1]{op}{#2}}
-\newcommand{\sopu}[3][\ ]{\tuple[#1]{op}{#2,#3}}
-\newcommand{\sopb}[4][\ ]{\tuple[#1]{op2}{#2,#3,#4}}
-\newcommand{\strue}{{\tt tt}}
-\newcommand{\sfalse}{{\tt ff}}
-\newcommand{\saddone}{{\tt add1}}
-\newcommand{\ssubone}{{\tt sub1}}
-\newcommand{\szerohuh}{\syntax{zero?}}
-\newcommand{\szero}{\syntax{0}}
-\newcommand{\slit}[2][\ ]{\tuple[#1]{lit}{#2}}
+\newcommand*{\sif}[4][\ ]{\tuple[#1]{if}{#2,#3,#4}}
+\newcommand*{\sop}[2][\ ]{\tuple[#1]{op}{#2}}
+\newcommand*{\sopu}[3][\ ]{\tuple[#1]{op}{#2,#3}}
+\newcommand*{\sopb}[4][\ ]{\tuple[#1]{op2}{#2,#3,#4}}
+\newcommand*{\strue}{{\tt tt}}
+\newcommand*{\sfalse}{{\tt ff}}
+\newcommand*{\saddone}{{\tt add1}}
+\newcommand*{\ssubone}{{\tt sub1}}
+\newcommand*{\szerohuh}{\syntax{zero?}}
+\newcommand*{\szero}{\syntax{0}}
+\newcommand*{\slit}[1]{#1}
 
-%\newcommand{\ext}[3]{ext(#1,#2,#3)}
+%\newcommand*{\ext}[3]{ext(#1,#2,#3)}
 
 % Metavariables
-\newcommand{\maddr}{a}
-\newcommand{\mkaddr}{a_\kappa}
-\newcommand{\maddralt}{b}
-\newcommand{\mvar}{x}
-\newcommand{\mvarf}{f}
-\newcommand{\mexp}{e}
-\newcommand{\mexpi}[1]{e_{#1}}
-\newcommand{\mexpf}{f}
-\newcommand{\menv}{\rho}
-\newcommand{\mkont}{\kappa}
-\newcommand{\msto}{\sigma}
-\newcommand{\mval}{v}
-\newcommand{\mvalx}[1]{#1}
-\newcommand{\mlit}{l}
-\newcommand{\mstate}{\varsigma}
-\newcommand{\interpdelta}{\Delta}
-\newcommand{\msdiff}{\xi}
-\newcommand{\mlab}{\ell}
-\newcommand{\mstore}{\sigma}
+\newcommand*{\maddr}{a}
+\newcommand*{\mkaddr}{a_\kappa}
+\newcommand*{\maddralt}{b}
+\newcommand*{\mvar}{x}
+\newcommand*{\mvarf}{f}
+\newcommand*{\mexp}{e}
+\newcommand*{\mexpi}[1]{e_{#1}}
+\newcommand*{\mexpf}{f}
+\newcommand*{\menv}{\rho}
+\newcommand*{\mkont}{\kappa}
+\newcommand*{\msto}{\sigma}
+\newcommand*{\mval}{v}
+\newcommand*{\mvalx}[1]{#1}
+\newcommand*{\mlit}{l}
+\newcommand*{\mstate}{\varsigma}
+\newcommand*{\interpdelta}{\Delta}
+\newcommand*{\msdiff}{\xi}
+\newcommand*{\mlab}{\ell}
+\newcommand*{\mstore}{\sigma}
 
 % Notations for proofs
-\newcommand{\maddrx}[1]{#1}
-\newcommand{\mastate}{\hat{\mstate}}
-\newcommand{\masto}{\hat{\msto}}
-\newcommand{\maenv}{\hat{\menv}}
-\newcommand{\makont}{\hat{\mkont}}
-\newcommand{\maval}{\hat{\mval}}
+\newcommand*{\maddrx}[1]{#1}
+\newcommand*{\mastate}{\hat{\mstate}}
+\newcommand*{\masto}{\hat{\msto}}
+\newcommand*{\maenv}{\hat{\menv}}
+\newcommand*{\makont}{\hat{\mkont}}
+\newcommand*{\maval}{\hat{\mval}}
 
 % Metavariables for functions
-\newcommand{\eval}{\mathit{eval}}
-\newcommand{\alloc}{\mathit{alloc}}
-\newcommand{\allockont}{\mathit{allockont}}
-\newcommand{\tick}{\mathit{tick}}
-\newcommand{\inject}{\mathit{inject}}
+\newcommand*{\eval}{\mathit{eval}}
+\newcommand*{\alloc}{\mathit{alloc}}
+\newcommand*{\allockont}{\mathit{allockont}}
+\newcommand*{\tick}{\mathit{tick}}
+\newcommand*{\inject}{\mathit{inject}}
 
 % Notations
-\newcommand{\lfp}[1]{\mathbf{lfp}(#1)}
-\newcommand{\gfp}[1]{\mathbf{gfp}(#1)}
-\newcommand{\setof}[1]{\{#1\}}
-\newcommand{\setbuild}[2]{\{#1 : #2\}}
-\newcommand{\ext}[3]{#1\sqcup[#2\mapsto#3]}
-\newcommand{\alt}{\mid}
-\newcommand{\parto}{\mathrel{\rightharpoonup}}
-\newcommand{\vect}[1]{\langle #1 \rangle}
+\newcommand*{\lfp}[1]{\mathbf{lfp}(#1)}
+\newcommand*{\gfp}[1]{\mathbf{gfp}(#1)}
+\newcommand*{\setof}[1]{\{#1\}}
+\newcommand*{\setbuild}[2]{\{#1 : #2\}}
+\newcommand*{\ext}[3]{#1\sqcup[#2\mapsto#3]}
+\newcommand*{\alt}{\mid}
+\newcommand*{\parto}{\mathrel{\rightharpoonup}}
+\newcommand*{\vect}[1]{\langle #1 \rangle}
 
 
-\newcommand{\machstep}{\mathrel{\longmapsto}}
+\newcommand*{\machstep}{\mathrel{\longmapsto}}
 
 % Spaces
-\newcommand{\Nat}{{\mathbb N}}
-\newcommand{\Context}{\mathit{Context}}
+\newcommand*{\Nat}{{\mathbb N}}
+\newcommand*{\Context}{\mathit{Context}}
 
-\newcommand{\Store}{\mathit{Store}}
-\newcommand{\StoreDelta}{\mathit{Store\Delta}}
-\newcommand{\Addr}{\mathit{Addr}}
-\newcommand{\Value}{\mathit{Value}}
-\newcommand{\Var}{\mathit{Var}}
-\newcommand{\Env}{\mathit{Env}}
-\newcommand{\Expr}{\mathit{Expr}}
-\newcommand{\Kont}{\mathit{Kont}}
-\newcommand{\State}{\mathit{State}}
-\newcommand{\Storeable}{\mathit{Storeable}}
-\newcommand{\Timestamp}{\Nat} %{\mathit{Time}}
-\newcommand{\Traces}{\mathit{Traces}}
-\newcommand{\Boolean}{\mathit{Boolean}}
+\newcommand*{\Store}{\mathit{Store}}
+\newcommand*{\StoreDelta}{\mathit{Store\Delta}}
+\newcommand*{\Addr}{\mathit{Addr}}
+\newcommand*{\Value}{\mathit{Value}}
+\newcommand*{\Var}{\mathit{Var}}
+\newcommand*{\Env}{\mathit{Env}}
+\newcommand*{\Expr}{\mathit{Expr}}
+\newcommand*{\Kont}{\mathit{Kont}}
+\newcommand*{\State}{\mathit{State}}
+\newcommand*{\Storeable}{\mathit{Storeable}}
+\newcommand*{\Timestamp}{{\mathbb N}} %{\mathit{Time}}
+\newcommand*{\Traces}{\mathit{Traces}}
+\newcommand*{\Boolean}{\mathit{Boolean}}
 
-\newcommand{\Label}{\mathit{Label}}
-\newcommand{\Counter}{\mathit{Time}}
-\newcommand{\System}{\mathit{System}}
-
+\newcommand*{\Label}{\mathit{Label}}
+\newcommand*{\Counter}{\mathit{Time}}
+\newcommand*{\System}{\mathit{System}}
