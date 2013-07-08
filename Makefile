@@ -6,7 +6,7 @@ WGETDVANHORNBIB=curl -o dvanhorn.bib "http://www.citeulike.org/bibtex/user/dvanh
 WGETIANJBIB=curl -o ianj.bib "http://www.citeulike.org/bibtex/user/ianjohnson?fieldmap=posted-at:date-added&do_username_prefix=1&key_type=4&fieldmap=url:x-url&fieldmap=doi:x-doi&fieldmap=address:x-address&fieldmap=isbn:x-isbn&fieldmap=issn:x-issn&fieldmap=month:x-month&fieldmap=comment:comment&fieldmap=booktitle:booktitle&fieldmap=abstract:x-abstract&fieldmap=pages:pages&volume:volume"
 
 default: $(CURRENT).tex
-	rubber -d $(CURRENT).tex
+	rubber ${opts} -v -d $(CURRENT).tex
 
 show: $(CURRENT).pdf
 	xdg-open $(CURRENT).pdf
