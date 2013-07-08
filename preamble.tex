@@ -18,8 +18,19 @@
 \newcommand{\mnames}{N}
 \newcommand{\premons}{P}
 
-\newcommand{\mnode}{u}
+\newcommand{\mconstructor}{c}
+\newcommand{\matom}{a}
+\newcommand{\mdata}{v}
+\newcommand{\mpat}{\mathit{pat}}
+\newcommand{\pmsmq}{q}
+\newcommand{\stackop}{\pm\epsilon}
+\newcommand{\pmsmstate}[1]{\langle #1 \rangle}
+\newcommand{\ary}{\mathit{ary}}
 
+\newcommand{\mbindenv}{\gamma}
+\newcommand{\mbindstack}{\Gamma}
+\newcommand{\mnode}{u}
+\newcommand{\mres}{\mathit{result}}
 \newcommand{\mgraph}{G}
 \newcommand{\maccum}{T_{\mathit{acc}}}
 
@@ -51,11 +62,16 @@
 \newcommand{\toltl}[5]{\llparenthesis #2 \rrparenthesis_{#3,#4}^{#1}(#5)}
 \newcommand{\stacktoltl}[3]{\llparenthesis #2 \rrparenthesis_{#3}^{#1}}
 
+\newcommand{\match}{\mathit{match}}
 \newcommand{\matchcall}{\mathit{mcall}}
 \newcommand{\matchret}{\mathit{mret}}
 \newcommand{\matchv}{\mathit{mv}}
 \newcommand{\restricttoreachable}{{\mathcal R}{\mathcal R}}
 \newcommand{\splitpattern}{\mathit{split}}
+
+\newcommand{\weakif}{\mathit{weak\text{-}if}}
+\newcommand{\nnf}{{\mathcal N}}
+\newcommand{\prefixes}{\mathit{prefixes}}
 
 \newcommand{\labelof}{{\mathcal L}}
 \newcommand{\paths}{\mathit{paths}}
@@ -81,6 +97,7 @@
 \newcommand{\kpost}[2][\ ]{\tuple[#1]{post}{#2}}
 % Syntax
 \newcommand{\sSMon}[4]{\tuple[^{#1,#2}_{#3}]{smon}{#4}}
+\newcommand{\sSTMon}[5]{\tuple[^{#1,#2}_{#3,#4}]{smon}{#5}}
 \newcommand{\sTMon}[4]{\tuple[^{#1,#2}_{#3}]{tmon}{#4}}
 \newcommand{\sdefine}[3][\ ]{\tuple[#1]{define}{#2, #3}}
 \newcommand{\sdefinec}[4][\ ]{\tuple[#1]{define/contract}{#2,#3,#4}}
@@ -96,7 +113,11 @@
 \newcommand{\sbind}[1]{{\tt ?} #1}
 \newcommand{\sref}[1]{{\tt \$} #1}
 
+\newcommand{\smay}[1]{{\tt may}(#1)}
+\newcommand{\smust}[1]{{\tt must}(#1)}
+
 \newcommand{\stOr}[2]{#1 \cup #2}
+\newcommand{\stAnd}[2]{#1 \cap #2}
 \newcommand{\stseq}[2]{#1 \cdot #2}
 \newcommand{\stmany}[1]{#1^*}
 \newcommand{\stcall}[3]{{\tt call}(#1, {\tt ?}#2)\ #3}
@@ -139,6 +160,8 @@
 
 % Notation
 \newcommand{\many}[1]{\overline{#1}}
+\newcommand{\combinef}[2]{#1 \mathrel{\triangleleft} #2}
+\newcommand{\combinefalone}{\triangleleft}
 
 \newcommand{\LTLProp}{\mathit{Prop}_\mathit{LTL}}
 \newcommand{\ltlprop}{\varphi}
@@ -152,6 +175,8 @@
 \newcommand{\ltlactions}{\mathbb{A}}
 \newcommand{\ltlatom}{p}
 \newcommand{\ltlAP}{\mathit{AP}}
+
+\newcommand{\mfail}{\mathbf{fail}}
 
 % Spaces
 \newcommand{\Prog}{\mathit{Program}}
@@ -170,8 +195,13 @@
 \newcommand{\Graph}{\mathit{Graph}}
 
 \newcommand{\TConEnvStack}{\mathit{Following}}
+\newcommand{\BindEnv}{\mathit{BEnv}}
 
 \newcommand{\Name}{\mathit{Name}}
 
 \newcommand{\Timeline}{\mathit{Timeline}}
 \newcommand{\Frame}{\mathit{Frame}}
+
+\newcommand{\Pattern}{\mathit{Pattern}}
+\newcommand{\Qualified}{\mathit{Data}}
+\newcommand{\MatchResult}{\mathit{Result}}

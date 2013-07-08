@@ -95,13 +95,17 @@ mod TConPMSM is
   pr INT .
   inc PMSM-Data .
   pr LIST{WCNamePat} .
+  pr SET{Machine} .
+  pr SET{MachineTop} .
 
-  sorts MachineTop Machine MachineDo MakeMachine .
+  sorts MachineDo MakeMachine .
   vars m0 m1 m m' : Machine .
   var n : NamePat .
   vars pat pat' : Pattern .
   var E : Event .
   var mt mt0 mt1 : MachineTop .
+  var mts : Set{MachineTop} .
+  var ms : Set{Machine} .
   vars d d' d0 d1 : MachineDo .
   vars mkm1 mkm : MakeMachine .
   vars δ δ' δ0 δ1 : BindEnv .
@@ -120,7 +124,8 @@ mod TConPMSM is
 
   op machine-null : -> MachineDo [ctor] .
   op machine-sigma-star : -> MachineDo [ctor] .
-  op machine-union : Machine Machine -> MachineDo [ctor] .
+  op machine-union : Set{Machine} -> MachineDo [ctor] .
+  op machine-and : Set{Machine} -> MachineDo [ctor] .
   op machine-seq : Machine MakeMachine -> MachineDo [ctor] .
   op machine-dseq : Pattern TContract -> MachineDo [ctor] .
   op machine-complement : Machine -> MachineDo [ctor] .
@@ -132,7 +137,7 @@ mod TConPMSM is
   op star-machine : MachineTop -> MachineTop .
   op seq-machine : MachineTop MakeMachine -> MachineTop .
   op complement-machine : MachineTop -> MachineTop .
-  op union-machine : MachineTop MachineTop -> MachineTop .
+  op union-machine : Set{MachineTop} -> MachineTop .
 
   op mk-star : MachineTop -> MakeMachine [ctor] .
   op thunk : MachineTop -> MakeMachine [ctor] .
@@ -146,7 +151,7 @@ mod TConPMSM is
   eq TCon->Machine(tev(E), δ) = accepting(bmachine(machine-match(event->pattern(E)), δ)) .
   eq TCon->Machine(!ev(E), δ) = accepting(bmachine(machine-nonmatch(event->pattern(E)), δ)) .
   eq TCon->Machine(ddd, δ) = sigma-star-machine .
-  eq TCon->Machine(T ∪ T', δ) = union-machine(TCon->Machine(T, δ), TCon->Machine(T', δ)) .
+  eq TCon->Machine(T ∪ T', δ) = union-machine((TCon->Machine(T, δ), TCon->Machine(T', δ))) .
   eq TCon->Machine(T · T', δ) = seq-machine(TCon->Machine(T, δ), thunk(TCon->Machine(T', δ))) .
   eq TCon->Machine(¬ T, δ) = complement-machine(TCon->Machine(T, δ)) .
   eq TCon->Machine(kl T, δ) = star-machine(TCon->Machine(T, δ)) .
@@ -176,12 +181,16 @@ mod TConPMSM is
   eq top->machine(accepting(m)) = m .
   eq top->machine(nonaccepting(m)) = m .
 
-  eq union-machine(nonaccepting(machine(machine-null)), mt1) = mt1 . *** m0 is null machine
-  eq union-machine(mt0, nonaccepting(machine(machine-null))) = mt0 . *** m1 is null machine
-  eq union-machine(accepting(machine(machine-null)), mt1) = machine->accepting(mt1) . *** m0 ε machine
-  eq union-machine(mt0, accepting(machine(machine-null))) = machine->accepting(mt0) . *** m1 ε machine
-  eq union-machine(nonaccepting(m0), nonaccepting(m1)) = nonaccepting(machine(machine-union(m0, m1))) .
-  eq union-machine(mt0, mt1) = accepting(machine(machine-union(top->machine(mt0), top->machine(mt1)))) [owise] .
+  op topset->set : Set{MachineTop} -> Set{Machine} .
+  eq topset->set(empty) = empty .
+  eq topset->set((mt, mts)) = top->machine(mt), topset->set(mts) .
+
+  eq union-machine(empty) = null-machine .
+  eq union-machine(mt) = mt .
+  eq union-machine((nonaccepting(machine(machine-null)), mts)) = union-machine(mts) . *** m0 is null machine
+  eq union-machine((accepting(machine(machine-null)), mts)) = machine->accepting(union-machine(mts)) .
+  eq union-machine((accepting(m), mts)) = accepting(machine(machine-union((m, topset->set(union-machine(mts)))))) .
+  eq union-machine((nonaccepting(m), mts)) = nonaccepting(machine(machine-union((m, topset->set(union-machine(mts)))))) [owise] .
 
   eq complement-machine(accepting(m)) = nonaccepting(machine(machine-complement(m))) .
   eq complement-machine(nonaccepting(m)) = accepting(machine(machine-complement(m))) .
@@ -193,7 +202,7 @@ mod TConPMSM is
   eq seq-machine(accepting(machine(machine-null)), mkm1) = make-machine(mkm1) .
   eq seq-machine(nonaccepting(machine(machine-null)), mkm1) = null-machine .
   eq seq-machine(accepting(m), mkm1) =
-     union-machine(nonaccepting(machine(machine-seq(m, mkm1))), make-machine(mkm1)) .
+     union-machine((nonaccepting(machine(machine-seq(m, mkm1))), make-machine(mkm1))) .
   eq seq-machine(nonaccepting(m), mkm1) = nonaccepting(machine(machine-seq(m, mkm1))) .
 
   eq star-machine(nonaccepting(machine(machine-null))) = null-machine .
@@ -203,9 +212,12 @@ mod TConPMSM is
   eq step(accepting(m), pat) = do-machine(m, pat) .
   eq step(nonaccepting(m), pat) = do-machine(m, pat) .
 
+  op do-machines : Set{Machine} Pattern -> Set{MachineTop} .
+  eq do-machines(empty, pat) = empty .
+  eq do-machines((m, ms), pat) = do-machine(m, pat), do-machines(ms, pat) .
+
   eq do-machine(machine(machine-null), pat) = null-machine .
-  eq do-machine(machine(machine-union(m0, m1)), pat) =
-     union-machine(do-machine(m0, pat), do-machine(m1, pat)) .
+  eq do-machine(machine(machine-union(ms)), pat) = union-machine(do-machines(ms, pat)) .
   eq do-machine(machine(machine-seq(m, mkm)), pat) = seq-machine(do-machine(m, pat), mkm) .
   eq do-machine(machine(machine-complement(m)), pat) = complement-machine(do-machine(m, pat)) .
   eq do-machine(machine(machine-sigma-star), pat) = sigma-star-machine . *** Consume and continue
@@ -215,7 +227,7 @@ mod TConPMSM is
       if Must δ' := matchpat(pat, pat', δ) .
   ceq do-machine(bmachine(machine-match(pat), δ), pat') = null-machine
       if Never := matchpat(pat, pat', δ) .
-  ceq do-machine(bmachine(machine-match(pat), δ), pat') = union-machine(null-machine, epsilon-machine)
+  ceq do-machine(bmachine(machine-match(pat), δ), pat') = union-machine((null-machine, epsilon-machine))
       if May δ' := matchpat(pat, pat', δ) .
 
   *** ! A
@@ -223,7 +235,7 @@ mod TConPMSM is
       if Must δ' := nonmatchpat(pat, pat', δ) .
   ceq do-machine(bmachine(machine-nonmatch(pat), δ), pat') = null-machine
       if Never := nonmatchpat(pat, pat', δ) .
-  ceq do-machine(bmachine(machine-nonmatch(pat), δ), pat') = union-machine(null-machine, epsilon-machine)
+  ceq do-machine(bmachine(machine-nonmatch(pat), δ), pat') = union-machine((null-machine, epsilon-machine))
       if May δ' := nonmatchpat(pat, pat', δ) .
 
   *** Dependent sequencing
@@ -231,6 +243,6 @@ mod TConPMSM is
       if Never := matchpat(pat, pat', δ) .
   ceq do-machine(bmachine(machine-dseq(pat, T), δ), pat') = TCon->Machine(T, δ')
       if Must δ' := matchpat(pat, pat', δ) .
-  ceq do-machine(bmachine(machine-dseq(pat, T), δ), pat') = union-machine(TCon->Machine(T, δ'), null-machine)
+  ceq do-machine(bmachine(machine-dseq(pat, T), δ), pat') = union-machine((TCon->Machine(T, δ'), null-machine))
       if May δ' := matchpat(pat, pat', δ) .
 endm

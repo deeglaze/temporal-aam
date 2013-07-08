@@ -2,7 +2,7 @@
 fmod ToDefine is
   pr STRING .
   pr INT .
-  sorts VAR Addr Label MLabel ΛMLabel Timeline ΛTimeline .
+  sorts VAR Addr Label MLabel ΛMLabel Timeline ΛTimeline MachineTop Machine .
   op ΛLab : -> ΛMLabel [ctor] .
   op ΛTime : -> ΛTimeline [ctor] .
   ops ConsA ConsD : Addr -> Addr [ctor] .
@@ -43,6 +43,10 @@ view State from TRIV to ToDefine is sort Elt to State . endv
 view Point from TRIV to ToDefine is sort Elt to Point . endv
 view StateStamp from TRIV to ToDefine is sort Elt to StateStamp . endv
 
+
+view Machine from TRIV to ToDefine is sort Elt to Machine . endv
+view MachineTop from TRIV to ToDefine is sort Elt to MachineTop . endv
+
 view WCNamePat from TRIV to ToDefine is sort Elt to WCNamePat . endv
 view AllPat from TRIV to ToDefine is sort Elt to AllPat . endv
 view εrule from TRIV to ToDefine is sort Elt to εrule . endv
@@ -60,6 +64,11 @@ endv
 fmod Bindings is
   pr ToDefine .
   pr LIST{Binding} * (sort List{Binding} to Bindings) .
+endfm
+
+fmod Monitors is
+  pr ToDefine .
+  pr MAP{Addr, MachineTop} * (sort Map{Addr, MachineTop} to Monitors) .
 endfm
 
 fmod OPTION{X :: TRIV} is

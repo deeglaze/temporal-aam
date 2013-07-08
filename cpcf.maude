@@ -67,11 +67,11 @@ mod CESK is
     *** Only keep the heap so we can apply the delta as a standalone step.
   *** VAR is the inner-most named function we're in the context of.
   op wd : Point Heap KHeap HeapDelta KHeapDelta -> State [ctor] .
-  op Eval : LCTerm Env Kont ΛMLabel ΛTimeline -> Point [ctor] .
-  op Continue : Kont AVal ΛMLabel ΛTimeline -> Point [ctor] .
-  op Check : SContract Env Value Bool Label MLabel MLabel Timeline Kont ΛMLabel ΛTimeline -> Point [ctor] .
+  op Eval : LCTerm Env Kont ΛMLabel ΛTimeline Monitors -> Point [ctor] .
+  op Continue : Kont AVal ΛMLabel ΛTimeline Monitors -> Point [ctor] .
+  op Check : SContract Env Value Bool Label MLabel MLabel Timeline Kont ΛMLabel ΛTimeline Monitors -> Point [ctor] .
 ***Check(R', ρ', v', v+, βu', βc', η', rtk(v, βΛ, ηΛ) k+ ak, βΛ, ηΛ)
-  op Apply : Label Value List{AVal} Kont ΛMLabel ΛTimeline -> Point [ctor] .
+  op Apply : Label Value List{AVal} Kont ΛMLabel ΛTimeline Monitors -> Point [ctor] .
   op Blame : ΛMLabel -> State [ctor] .
   op Fail : -> State [ctor] .
 

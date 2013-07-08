@@ -1,7 +1,7 @@
 \documentclass[preprint,onecolumn,9pt]{sigplanconf} %{onecol}
 \usepackage{alltt,mathpartir,multicol}
 \usepackage{amsmath,amsthm,natbib}
-\usepackage{amssymb}
+\usepackage{amssymb,tikz}
 \usepackage{stmaryrd}
 \usepackage{url}
 \usepackage{graphicx,color}
@@ -178,7 +178,13 @@ Our techniques should smoothly integrate with theirs when considering partial pr
 
 \begin{figure}
   \begin{align*}
-    \mscon \in \SContract &::= \sflat(\mexp) \alt \sarr{\mtoplevelname}{\mscon}{\mscon} \alt \sconsc{\mscon}{\mscon}
+    \mscon \in \SContract &::= \sflat{\mexp} \alt \sarr{\mtoplevelname}{\mscon}{\mscon} \alt \sconsc{\mscon}{\mscon}
+\\
+    \mexp \in \Expr &::= \sTMon{\mmlab_u}{\mmlab_c}{\mmlab_o}{\mscon, \mtcon, \mexp}
+                    \alt \sSMon{\mmlab_u}{\mmlab_c}{\mmlab_o}{\mscon, \mexp}
+\\ &
+                    \alt \sSTMon{\mmlab_u}{\mmlab_c}{\mmlab_o}{\mtimeline}{\mscon, \mexp}
+                    \alt \ldots
   \end{align*}
   \caption{Syntax of structural contracts with labels}
   \label{fig:scontract-syntax}
@@ -191,10 +197,11 @@ Our techniques should smoothly integrate with theirs when considering partial pr
  \alt \stseq{\mtcon}{\mtcon}
  \alt \stnot{\mtcon}
  \alt \stOr{\mtcon}{\mtcon}
+ \alt \stAnd{\mtcon}{\mtcon}
  \alt \stmany{\mtcon}
  \alt \sddd \\
-&\alt \stcall{\mname}{\mname}{\mtcon}
- \alt \stret{\mname}{\mname}{\mtcon} \\
+&\alt \stcall{\mvar}{\mname}{\mtcon}
+ \alt \stret{\mvar}{\mname}{\mtcon} \\
 \mevent \in \Event &::= \scallev{\mvar}{\mvpat} \alt \sretev{\mvar}{\mvpat} \\
 \mvpat \in \VPat &::= \mconstant \alt \mvar \alt \swc \\
 \mname \in \Name &\text{ an infinite set} \\
@@ -443,7 +450,7 @@ Note that the first temporal clause in each contract is \emph{not} negated; this
 %%
 
 %%
-Now that we have a clear view of the behavior of temporal contracts, we nail down a formal semantics that we use to prove the soundness of our later model-checking approach to verification.
+Now that we have a clear view of the behavior of temporal contracts, we nail down a formal semantics that we use to prove the correctness of our monitoring system.
 %
 The semantics we present is in the style of Felleisen's reduction semantics~\citep{ianjohnson:Felleisen:2009:SEP:1795772}, which can be systematically transformed into an abstract machine in the form presented in~\citet{dvanhorn:VanHorn2010Abstracting}.
 %
@@ -453,7 +460,7 @@ See \autoref{sec:technical} for now.
 %%
 
 %%
-As noted in \autoref{sec:sort}, temporal contracts are associated with structural contracts that name function components within them.
+As noted in \autoref{sec:sort}, temporal contracts are associated with structural contracts that label function components within them.
 %
 For simple exposition, we will consider tuples as the main organizational tool for contracting the interactions between multiple functions.
 %
@@ -461,18 +468,23 @@ Since we consider monitor constructions as a more basic notion of equality, we a
 %
 Thus, as values flow through contract boundaries, they are considered on different timelines.
 %
-Disney et. al formalized their semantics in terms of a nondeterministic machine that defined its interactions on all event streams, and thus their machine was on a single ``timeline.''
+\citeauthor{ianjohnson:dfm:icfp2011} formalized their semantics in terms of a nondeterministic machine that defined its interactions on all event streams, and thus their machine was on a single ``timeline.''
 %
-The semantics of temporal contracts that we propose uses pointer-equality of monitors for comparisons of non-primitive data, which is why we consider our account to be more operational.
+The semantics of temporal contracts that we propose uses pointer-equality of monitors for comparisons of non-primitive data.
 %
-Our semantics that makes interaction between temporal contract monitors explicit, so we can verify whole programs.
+Our semantics makes interaction between temporal contract monitors explicit, so we can verify whole programs.
 %%
 
 %%
-We denote temporal contracts as sets of event traces that satisfy the contract, all parameterized by which timeline the on which the events occur.
+We denote temporal contracts as sets of event traces that satisfy the contract, all parameterized by which timeline the events affect.
 %
 The semantics is close to \citeauthor{ianjohnson:dfm:icfp2011}'s definition, and given in \autoref{fig:tcontract-denotation}.
 %
+We made the express design choice to require a function contract monitor wrapping for named values to consider their calls or returns as events.
+%
+The reason for this is that control should flow back to the timeline considered in order for an event to affect that timeline.
+%
+It is easy enough to amend the structural contracts to reflect the fact that a binding is considered a function in the temporal contract.
 \begin{figure}
   \begin{align*}
    \denotetcon{\mevent}{\mtimeline}{\menv} &=
@@ -482,10 +494,15 @@ The semantics is close to \citeauthor{ianjohnson:dfm:icfp2011}'s definition, and
    \setbuild{\mtrace_0 \cdot \mtrace_1}{\mtrace_0 \in \denotetcon{\mtcon_0}{\mtimeline}{\menv}, \mtrace_1 \in \denotetcon{\mtcon_1}{\mtimeline}{\menv}}
 \\   
    \denotetcon{\stnot{\mtcon}}{\mtimeline}{\menv} &=
-   \Traces^\mtimeline \setminus \denotetcon{\mtcon}{\mtimeline}{\menv}
+    \setbuild{\mtrace}{\mtrace \in \Traces^\mtimeline, \\
+                      &\phantom{= \{ \mtrace : } \forall \mtrace' \in \denotetcon{\mtcon}{\mtimeline}{\menv}. \mtrace' \text{ is not a prefix of } \mtrace}
+%   \Traces^\mtimeline \setminus \denotetcon{\mtcon}{\mtimeline}{\menv} % DISCONTINUOUS!
 \\
    \denotetcon{\stOr{\mtcon_0}{\mtcon_1}}{\mtimeline}{\menv} &=
    \denotetcon{\mtcon_0}{\mtimeline}{\menv} \cup \denotetcon{\mtcon_1}{\mtimeline}{\menv}
+\\
+   \denotetcon{\stAnd{\mtcon_0}{\mtcon_1}}{\mtimeline}{\menv} &=
+   \denotetcon{\mtcon_0}{\mtimeline}{\menv} \cap \denotetcon{\mtcon_1}{\mtimeline}{\menv}
 \\
    \denotetcon{\stmany{\mtcon}}{\mtimeline}{\menv} &=
    \setbuild{\mtrace^i}{i \le \omega, \mtrace \in \denotetcon{\mtcon}{\mtimeline}{\menv}}
@@ -506,227 +523,201 @@ The semantics is close to \citeauthor{ianjohnson:dfm:icfp2011}'s definition, and
    \denotetcon{\stret{\mtoplevelname}{\mname'}{\mtcon}}{\mtimeline}{\menv} &=
    \setbuild{\aptopret{\mtoplevelname}{\mval}{\mtimeline}\cdot \mtrace}{\mtrace \in \denotetcon{\mtcon}{\mtimeline}{\menv[\mname' \mapsto \mval]}}
   \end{align*}
+  The denotation is (implicitly) composed with prefix closure at the top level to allow the progression of execution.
+  \begin{align*}
+    \prefixes(\Pi) &= \setbuild{\mtrace}{\exists \mtrace' \in \Pi. \mtrace \text{ is a prefix of } \mtrace'}
+  \end{align*}
   \caption{Denotation of Temporal Contracts}
   \label{fig:tcontract-denotation}
 \end{figure}
-\section{Approximation of Temporal Contracts into LTL}
-%%
 
-%%
-We choose linear temporal logic as our target due to linear behavior of temporal contract monitoring.
+Negation differs from what one might expect due to the prefix closure at the top level.
 %
-The syntax of core LTL is in \autoref{fig:ltl-syntax}, but we use some definable constructs for brevity.
-%
-\begin{figure}
-  \begin{align*}
-    \ltlprop \in \LTLProp &::= \ltlTrue \alt \ltlatom \alt \ltlor{\ltlprop}{\ltlprop} \alt \ltlnot{\ltlprop} \alt \ltlnext{\ltlprop} \alt \ltluntil{\ltlprop}{\ltlprop}
-\\
-    \ltlatom \in \ltlAP & \text{ a finite set of atomic propositions}
-  \end{align*}
-  \caption{Syntax of LTL}
-  \label{fig:ltl-syntax}
-\end{figure}
-LTL only has a finite set of atomic proposisitions for states, so there is no hope for a fully precise account for the binding across states.
-%
-We instead have to enumerate the concrete propositions on instantiations of the bindings.
-%
-Binding implicitly requires equality, so we must treat (possible) references conservatively.
-%
-We can use our control-flow analysis to limit how many instantiations we need to do.
-%
-The temporal concatenation operator cannot be translated structurally since bindings in the left contract can have references in the right contract.
-%
-Thus, our translation function takes the contract to translate, the result of the flow analysis, an accumulator for temporal contracts that ``happen next,'' and an environment of bindings.
-%%
-
-%%
-The atomic propositions we use for checking the temporal contracts are much like the events defined in the temporal contract grammar, except we have additional information about which timeline they appear on.
-%%
-
-\begin{align*}
-  \denoteevent{\scallev{\mtoplevelname}{\mvpat}}{\menv}{\mtimeline} &=
-    % XXX: names are shared across module boundaries
-    \setbuild{\aptopcall{\mtoplevelname}{\mval}{\mtimeline'}}
-             {\mval \in \denotevpat{\mvpat}{\menv}}
-    \\ &\cup
-    \setbuild{\apvcall{\blclos{\mtoplevelname}{\mmlab_u}{\mmlab_c}{\mlab}{\mscon_D}{\mscon_R}{\menv'}{\mtimeline}{\maddr}}{\mval'}{\mtimeline'}}
-             {\mval' \in \denotevpat{\mvpat}{\menv}}
-\\
-  \denoteevent{\scallev{\mname}{\mvpat}}{\menv}{\mtimeline} &=
-    \setbuild{\apvcall{\menv(\mname)}{\mval'}{\mtimeline'}}
-            {\mval' \in \denotevpat{\mvpat}{\menv}}
-\\
-  \denoteevent{\sretev{\mtoplevelname}{\mvpat}}{\menv}{\mtimeline} &=
-    % XXX: names are shared across module boundaries
-    \setbuild{\aptopret{\mtoplevelname}{\mval}{\mtimeline'}}
-             {\mval \in \denotevpat{\mvpat}{\menv}}
-    \\ &\cup
-    \setbuild{\apvret{\blclos{\mtoplevelname}{\mmlab_u}{\mmlab_c}{\mlab}{\mscon_D}{\mscon_R}{\menv'}{\mtimeline}{\maddr}}{\mval'}{\mtimeline'}}
-             {\mval' \in \denotevpat{\mvpat}{\menv}}
-\\
-  \denoteevent{\sretev{\mname}{\mvpat}}{\menv}{\mtimeline} &=
-    \setbuild{\apvret{\menv(\mname)}{\mval'}{\mtimeline'}}
-            {\mval' \in \denotevpat{\mvpat}{\menv}}
-%%
-\\[2pt]
-%%
-  \denotevpat{\mname}{\menv} &= \setof{\menv(\mname)}
-\\
-  \denotevpat{\mconstant}{\menv} &= \setof{\mconstant}
-\\
-  \denotevpat{\swc}{\menv} &= \Value
-\end{align*}
-
-All states that match the atomic propositions are appropriately labeled: \\
-$
-\begin{array}{l}
- \labelof(\co{\spush{\kmcall{\mmlab_u}{\mmlab_c}{\mlab}{\mscon_R, \mtimeline, \menv, \mtoplevelname, \maddr}}{\mkaddr}, \mval, \msto}{\msmlab}{\mstimeline})
-  =\\
- \quad \mtcon \cup \setbuild{\apneg{\mevent}}{\mevent \in (\ltlactions \setminus \mtcon)}
- \\ \text{where } \mtcon = \setbuild{\aptopcall{\mtoplevelname}{\mval'}{\mtimeline},\\
-                                     \phantom{\text{where } \mtcon = \{}\apvcall{\blclos{\mtoplevelname}{\mmlab_?}{\mmlab_c}{\mlab}{\mscon_?}{\mscon_R}{\menv}{\mtimeline}{\maddr}}{\mval'}{\mtimeline}}
-                                       {\mval' \sqsupseteq \mval}
-\\
- \labelof(\co{\spush{\krt{\mmlab',\mtimeline'}}{\mkaddr}, \mval, \msto}{\mtoplevelname}{\mstimeline}) =\\
- \quad \mtcon \cup \setbuild{\apneg{\mevent}}{\mevent \in (\ltlactions \setminus \mtcon)}
- \\ \text{where } \mtcon = \setbuild{\aptopret{?}{\mval'}{\mstimeline},
-                                        \apvret{?}{\mval'}{\mstimeline}}
-                                       {\mval' \sqsupseteq \mval}
-\end{array}$
-\\
-This familiar definition matches the semantics of temporal contracts closely, allowing a smooth and easy proof of soundness.
-
-The translation of temporal constracts to LTL propositions is in figure \autoref{fig:translation} with type
-\begin{align*}
-{\scriptsize \toltl{\_}{\_}{\_}{\_}{\_}} &{\scriptsize : \Timeline \times \TContract \times \Graph \times \Env \times \TConEnvStack}\\ & {\scriptsize \to \LTLProp}
-\end{align*}
-%
-where $\TConEnvStack$ is a stack of temporal contract, environment pairs that keep track of which temporal contracts must follow the current temporal contract:
-%
+Say we defined negation to be
 \begin{equation*}
-  \TConEnvStack = (\TContract \times \Env)^*
+  \denotetcon{\stnot{\mtcon}}{\mtimeline}{\menv} = \Traces^\mtimeline \setminus \denotetcon{\mtcon}{\mtimeline}{\menv}\text.
 \end{equation*}
+In this case, $\mevent\mevent' \in \denotetcon{\stnot{\mevent}}{\mtimeline}{\menv}$, and because of prefix closure, $\mevent \in \denotetcon{\stnot{\mevent}}{\mtimeline}{\menv}$!
 %
-Because LTL lacks a modality for ``a trace matching $\psi$ follows a trace matching $\phi$,'' and is instead more closely tied to individual states, we have to carry a stack of contracts that must follow one after another.
-%
-This lack of expressivity led to our restriction of the Kleene star operator to single events rather than general temporal contracts.
-%
-The graph we use is a finite abstraction of the programming language semantics for the program in question.
-%
-It is implicitly rooted at the entry-point of the program.
+We changed negation to mean that the trace cannot ever \emph{begin} with a trace satisfying the contract, since we want to error early when specified protocols aren't followed correctly.
 %%
 
 %%
+Each temporal contract monitor redex evaluation creates a new timeline --- a new slice of program events that must adhere to permissible events that the denotation of the temporal contract defines.
+%
+Say $\mtimeline$ is the timeline for a contract $\mtcon$ on an expression $\mexp$.
+%
+We say $\mexp$ satisfies its temporal contract if its event trace filtered by the timeline ($\denote{\mexp}_\mtimeline$) is in the denotation of the temporal contract for that timeline ($\denotetcon{\mtcon}{\mtimeline}{\menv}$).
+%
+For this to be a contract system and not just a notion of correctness, however, we need some machinery to monitor the evolution of the event trace and check to see that it meets our specification.
+%
+The contracts could be interpreted with some simple combinators, but there is no guarantee that the space of combinators is finite, which is important for our analysis.
+%
+We introduce a simple generalization of finite state machines (FSMs) that is not necessarily finite-state in order to match against events and bind values for later equality checking: pattern-matching state machines.
+
+\section{Pattern-matching state machines}
+%%
+
+%%
+An important aspect of contract systems is that we don't have full knowledge of the program's future.
+%
+We don't have a full list of values that will be constructed, nor is it necessary to have this full list.
+%
+Thus, we separate out the control states that govern the progression through satisfying a temporal contract from the bindings of names to values we encounter along the way.
+%
+Values will come from events constructors, and are allowed to be unbounded.
+%
+Instead of matching against atomic symbols to transition like an FSM, we allow for pattern matching against constructed data, to bind subdata to variables for later equality checking.
+%
+Scoping bindings comes from a bounded stack of binding enviroments we may use.
+%
+
+To do this, we consider a machine state to be a tuple of a control state and a binding environment stack, and transitions may push, pop, modify and read the top of the stack while pattern matching on input (using the top of the stack for equality checks with bindings).
+%
+Additionally, since we plan to later abstract our semantics (and values), we need a weaker, tunable notion of equality (e.g., is 1 equal to $\mathbf{Int}$? We must be conservative and consider both valid).
+%
+The atomic symbols therefore come equipped with a may/must/never equality-checking function.
+%
+A PMSM is thus a tuple $(Q, F, q_0, \Sigma, \simeq, \mathit{ary}, \delta)$ where
+\begin{align*}
+  \Sigma &\text{ a set of atoms} \\
+  \simeq : \Sigma \times \Sigma \to \setof{\top, \bot, ?} &\text{ weak equality function}\\
+  Q &\text{ a finite set of control states} \\
+  C &\text{ a finite set of constructors} \\
+  F \subseteq Q &\text{ final/accepting states} \\
+  q_0 \in Q &\text{ initial state} \\
+  \ary : C \to \Nat&\text{ the arity of constructors} \\
+  \delta \subseteq Q \times \setof{+, -, \epsilon} \times \Pattern \times Q & \text{ transition relation}\\[2pt]
+\end{align*}
+The pattern language consists of binding patterns, equality with reference patterns, wildcard and equality with a constant atom.
+%
+The syntax and semantics of matching patterns is in \autoref{fig:pattern-syntax}; notice that we do not change the binding environment for anti-matching ($\!$) patterns.
+%
+Additionally, $\combinefalone$ on $\mbindenv$s is a right-biased finite function combination; we don't allow non-linear patterns (though it would be an easy extension) so the bias doesn't matter.
+%
 \begin{figure}
   \begin{align*}
-   \toltl{\mtimeline}{\mevent}{\mgraph}{\menv}{\mtestack} &=
-     \ltland{\denoteevent{\mevent}{\menv}{\mtimeline}}
-            {\ltlnext{\stacktoltl{\mtimeline}{\mtestack}{\mgraph}}}
-    \\
-    \toltl{\mtimeline}{\snonevent{\mevent}}{\mgraph}{\menv}{\mtestack} &=
-      \ltland{\apneg{\denoteevent{\snonevent{\mevent}}{\menv}{\mtimeline}}}
-             {\ltlnext{\stacktoltl{\mtimeline}{\mtestack}{\mgraph}}}
-    \\
-    \toltl{\mtimeline}{\stnot{\mtcon}}{\mgraph}{\menv}{\mtestack} &=
-      \ltlnot{\toltl{\mtimeline}{\mtcon}{\mgraph}{\menv}{\mtestack}}
-    \\
-    \toltl{\mtimeline}{\stOr{\mtcon_0}{\mtcon_1}}{\mgraph}{\menv}{\mtestack} &=
-      \ltlor{\toltl{\mtimeline}{\mtcon_0}{\mgraph}{\menv}{\mtestack}}
-            {\toltl{\mtimeline}{\mtcon_1}{\mgraph}{\menv}{\mtestack}}
-    \\
-    \toltl{\mtimeline}{\stseq{\mtcon_0}{\mtcon_1}}{\mgraph}{\menv}{\mtestack} &=
-      \toltl{\mtimeline}{\mtcon_0}{\mgraph}{\menv}{\cons{(\mtcon_1,\menv)}{\mtestack}}
-    \\
-    \toltl{\mtimeline}{\stmany{\mtconNoB}}{\mgraph}{\menv}{\mtestack} &=
-      \ltlW{\toltl{\mtimeline}{\mtconNoB}{\mgraph}{\menv}{\emptytestack}}{\stacktoltl{\mtimeline}{\mtestack}{\mgraph}}
-    \\
-    \toltl{\mtimeline}{\stcall{\mname}{\mname'}{\mtcon}}{\mgraph}{\menv}{\mtestack} &=
-      \bigwedge\limits_{(\ltlprop,\menv') \in \matchcall(\mname,\mname',\menv,\mgraph)}{
-        \mkern-60mu\ltland{\ltlprop}{\ltlnext{\stacktoltl{\mtimeline}{\cons{(\mtcon,\menv')}{\mtestack}}{\mgraph}}}}
-    \\
-    \toltl{\mtimeline}{\stret{\mname}{\mname'}{\mtcon}}{\mgraph}{\menv}{\mtestack} &=
-      \bigwedge\limits_{(\ltlprop,\menv') \in \matchret(\mname,\mname',\menv,\mgraph)}{
-        \mkern-60mu\ltland{\ltlprop}{\ltlnext{\stacktoltl{\mtimeline}{\cons{(\mtcon,\menv')}{\mtestack}}{\mgraph}}}}
-    \\
-      \toltl{\mtimeline}{\sddd}{\mgraph}{\menv}{\mtestack} &= \stacktoltl{\mtimeline}{\mtestack}{\mgraph}
-%%
+    \mpat \in \Pattern &::= \mconstructor(\mvpat, \ldots_{\ary(\mconstructor)}) \alt \snonevent{\mconstructor(\mvpat, \ldots_{\ary(\mconstructor)})}
+\\
+    \mdata \in \Qualified &::= \mconstructor(\matom, \ldots_{\ary(\mconstructor)})
+\\
+    \mvpat \in \VPat &::= \swc \alt \sref{\mname} \alt \sbind{\mname} \alt \matom
+      \quad\text{ where } \matom \in \Sigma
+\\
+    \mbindenv \in \BindEnv &= \mname \to \Sigma
+\\
+    \MatchResult &::= \mfail \alt \smay{\mbindenv} \alt \smust{\mbindenv}
+\\
+    \match &: \Pattern \times \Qualified \times \BindEnv \to \MatchResult
+\\
+    \match(\mconstructor(\mvpat \ldots), \mconstructor(\matom \ldots), \mbindenv) &=
+      \bigsqcup\limits_i{\matchv(\mvpat_i, \matom_i, \mbindenv)}
+\\
+    \match(\snonevent{\mconstructor(\mvpat \ldots)}, \mdata, \mbindenv) &=
+      \left\{\begin{array}{ll}
+               \smust{\mbindenv} & \text{if } \mfail = \mres \\
+               \smay{\mbindenv} & \text{if } \smay{\mbindenv'} = \mres \\
+               \mfail & \text{ if} \smust{\mbindenv'} = \mres \\
+             \end{array}\right.
+    \\ \text{where }& \mres = \match(\mconstructor(\mvpat \ldots), \mdata, \mbindenv)
+\\
+    \match(\mpat, \mdata, \mbindenv) &= \mfail \text{ otherwise}
 \\[2pt]
-%%
-    {\scriptsize \stacktoltl{\_}{\_}{\_} : \Timeline \times \TConEnvStack \times \Graph \to \LTLProp} \span\omit
+    \matchv(\swc, \matom, \mbindenv) &= \mbindenv
 \\
-    \stacktoltl{\mtimeline}{\emptytestack}{\mgraph} &= \ltlTrue
+    \matchv(\sref{\mname}, \matom, \mbindenv) &= \weakif(\mbindenv, \matom \simeq \mbindenv(\mname))
 \\
-    \stacktoltl{\mtimeline}{\cons{(\mtcon,\menv)}{\mtestack}}{\mgraph} &=
-      \toltl{\mtimeline}{\mtcon}{\mgraph}{\menv}{\mtestack}
+    \matchv(\sbind{\mname}, \matom, \mbindenv) &= \smust{\mbindenv[\mname \mapsto \matom]}
+\\
+    \matchv(\matom, \matom', \mbindenv) &= \weakif(\mbindenv, \matom \simeq \matom')
+\\
+    \weakif(\mbindenv, \top) &= \smust{\mbindenv}
+\\
+    \weakif(\mbindenv, ?) &= \smay{\mbindenv}
+\\
+    \weakif(\mbindenv, \bot) &= \mfail
+\\[2pt]
+    \sqcup\span \text{ the symmetric closure of the following rules}
+\\
+    \mfail \sqcup \mbindenv &= \mfail 
+\\
+    \smay{\mbindenv} \sqcup \smay{\mbindenv'} &= \smay{\combinef{\mbindenv}{\mbindenv'}}
+\\
+    \smay{\mbindenv} \sqcup \smust{\mbindenv'} &= \smay{\combinef{\mbindenv}{\mbindenv'}}
+\\
+    \smust{\mbindenv} \sqcup \smust{\mbindenv'} &= \smust{\combinef{\mbindenv}{\mbindenv'}}
   \end{align*}
-  
-  \caption{Translation of temporal contracts to LTL}
-\label{fig:translation}
+  \caption{Pattern syntax and semantics}
+  \label{fig:pattern-syntax}
+\end{figure}
+
+The machine is input-driven, and a path through the machine is defined in \autoref{fig:pmsm-semantics}.
+%
+We will associate each temporal contract monitor with a state machine we generate from the temporal contract, where the data fed to the machine are call and return events that pass through the structural monitors associated with the timeline.
+
+\begin{figure}
+  \begin{mathpar}
+    \infer{(\pmsmq, \mpat, \stackop, \pmsmq') \in \delta \\
+      \ensuremath{
+           \begin{array}{l }
+             \smust{\mbindenv'} = \match(\mpat, \mdata, \mbindenv) \text{ or} \\
+             \smay{\mbindenv'}  = \match(\mpat, \mdata, \mbindenv)
+           \end{array}}
+}{\pmsmstate{\pmsmq, \mbindenv \mbindstack} \overset{\mdata}{\to}
+                     \pmsmstate{\pmsmq', \denote{\stackop}(\mbindenv', \mbindenv \mbindstack)}}
+  \end{mathpar}
+  where
+  \begin{align*}
+    \denote{+}(\mbindenv, \mbindenv' \mbindstack) &= \mbindenv \mbindenv' \mbindstack
+\\
+    \denote{\epsilon}(\mbindenv, \mbindenv' \mbindstack) &= \mbindenv \mbindstack
+\\
+    \denote{-}(\mbindenv, \mbindenv' \mbindstack) &= \mbindstack
+  \end{align*}
+  \caption{PMSM semantics}
+  \label{fig:pmsm-semantics}
+\end{figure}
+
+\subsection{Compiling temporal contracts to PMSMs}
+%
+The compilation process of temporal contract to PMSM is very similar to that of regular expression to NFA.
+%
+Negation is still annoying to deal with, so we remove tough negations by converting temporal contracts into a negative normal form before we start the translation.
+%
+\begin{figure}
+  \begin{align*}
+    \nnf(\stnot{\stseq{\mtcon_0}{\mtcon_1}}) &=
+      \stOr{\nnf(\stnot{\mtcon_0})}{\stseq{\nnf(\mtcon_0)}{\nnf(\stnot{\mtcon_1})}}
+\\
+    \nnf(\stnot{\stnot{\mtcon}}) &= \nnf(\mtcon)
+\\
+    \nnf(\stnot{\stOr{\mtcon_0}{\mtcon_1}}) &= \stAnd{\nnf(\stnot{\mtcon_0})}{\nnf(\stnot{\mtcon_1})}
+\\
+    \nnf(\stnot{\stAnd{\mtcon_0}{\mtcon_1}}) &= \stOr{\nnf(\stnot{\mtcon_0})}{\nnf(\stnot{\mtcon_1})}
+\\
+    \nnf(\stnot{\mevent}) &= \stseq{\snonevent{\mevent}}{\sddd}
+\\
+    \nnf(\stnot{\snonevent{\mevent}}) &= \stseq{\mevent}{\sddd}
+\\
+    \nnf(\stnot{\stmany{\mtcon}}) &= \nnf(\stnot{\mtcon})
+\\
+    \nnf(\stnot{\stcall{\mvar}{\mname}{\mtcon}}) &= \stOr{\stseq{\snonevent{\scallev{\mvar}{\swc}}}{\sddd}}
+                                                         {\stcall{\mvar}{\mname}{\nnf(\stnot{\mtcon})}}
+\\
+    \nnf(\stnot{\stret{\mvar}{\mname}{\mtcon}}) &= \stOr{\stseq{\snonevent{\sretev{\mvar}{\swc}}}{\sddd}}
+                                                        {\stret{\mvar}{\mname}{\nnf(\stnot{\mtcon})}}
+  \end{align*}
+  Otherwise structurally distribute $\nnf$.
+  \caption{Temporal contract NNF translation}
+  \label{fig:nnf}
 \end{figure}
 %%
-
-%%
-All points in the abstract state space that match the binding call/return forms will contribute their bindings to the environment for interpreting the rest of the contract.
-%
-Since CFA abstracts bindings, we can't always be certain we have exact equality when looking up bindings, too.
-%%
-
-\begin{align*}
-  \matchcall_\mtimeline(\mtoplevelname, \mname', \mgraph, \menv) &=
-    \setbuild{(\ltlprop, \menv[\mname' \mapsto \mval])}
-             {\mnode \in \mgraph\\
-               &\wedge \ltlprop:=\aptopcall{\mtoplevelname}{\mval}{\mtimeline} \in \labelof(\mnode)}
-\\
-  \matchcall_\mtimeline(\mname, \mname', \mgraph, \menv) &=
-    \setbuild{(\ltlprop, \menv[\mname' \mapsto \mval])}
-             {\mnode \in \mgraph\\
-               &\wedge \ltlprop:=\apvcall{\menv(\mname)}{\mval}{\mtimeline} \in \labelof(\mnode)}
-%
-\\[2pt]
-  \matchret_\mtimeline(\mtoplevelname, \mname', \mgraph, \menv) &=
-    \setbuild{(\ltlprop, \menv[\mname' \mapsto \mval])}
-             {\mnode \in \mgraph\\
-               &\wedge \ltlprop:=\aptopret{\mtoplevelname}{\mval}{\mtimeline} \in \labelof(\mnode)}
-\\
-  \matchret_\mtimeline(\mname, \mname', \mgraph, \menv) &=
-    \setbuild{(\ltlprop, \menv[\mname' \mapsto \mval])}
-             {\mnode \in \mgraph\\
-               &\wedge \ltlprop:=\apvret{\menv(\mname)}{\mval}{\mtimeline} \in \labelof(\mnode)}
-\end{align*}
-
-Denotations of program actions restricted to a particular timeline:
-\begin{align*}
-  \denote{\mexp}_\mtimeline &= \filter(\mathit{AP}_\mtimeline, \traces(\mexp)) \\
-  \mathit{AP}_\mtimeline(\mstate) &= \setbuild{\ltlprop}{\ltlprop \in \labelof(\mstate), \ltlprop \text{ matches }\\
-                               &\qquad\aptopcall{\_}{\_}{\mtimeline} \vee \apvcall{\_}{\_}{\mtimeline} \vee \aptopret{\_}{\_}{\mtimeline} \vee \apvret{\_}{\_}{\mtimeline}} \\
-  \traces(\mexp) &= \gfp{{\mathcal F}} \\
-  \text{where } {\mathcal F}(S) &= S \cup \setof{\inject(\mexp)} \cup \setbuild{\mtrace \mstate \mstate'}{\mtrace \mstate \in S, \mstate \machstep \mstate'}
-\end{align*}
-
-Paths through a graph are defined as the greatest fixed point of these two rules:
-\begin{mathpar}
-  \inferrule{ }{\inject(e) \in \paths(\mgraph)}\quad
-  \inferrule{\mtrace\mstate \in \paths(\mgraph) \\
-             (\mstate, \mstate') \in \mgraph.E}
-            {\mtrace\mstate\mstate' \in \paths(\mgraph)}
-\end{mathpar}
-
 \begin{theorem}
-  If $\alpha(\denote{\mexp}_\mtimeline) \sqsubseteq \filter(\mathit{AP}_{\matimeline}, \paths(\mgraph))$,
-     $\alpha(\menv) \sqsubseteq \maenv$,
-     $\alpha(\mtimeline) \sqsubseteq \matimeline$, and
-     $\alpha(\overline{(\mtcon_\mtestack, \menv_\mtestack)}) \sqsubseteq \mtestack$
-  then
-  $\alpha(\denote{\mexp}_\mtimeline \cap \denotetcon{\mtcon}{\mtimeline}{\bot}) \sqsubseteq \denote{\toltl{\matimeline}{\mtcon}{\mgraph}{\maenv}{\mtestack}}$
+  $\denotetcon{\mtcon}{\mtimeline}{\menv} = \denotetcon{\nnf(\mtcon)}{\mtimeline}{\menv}$
 \end{theorem}
-
-\section{Design for a reflective model checker}
-%%
-
-%%
-Ya... if we actually do this.
-%%
-
+\begin{proof}
+  By induction on $\mtcon$.
+\end{proof}
 %%
 \section{Evaluation}
 %%
