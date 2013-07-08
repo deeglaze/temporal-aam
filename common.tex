@@ -1,8 +1,13 @@
 \usepackage{centernot}
 \usepackage{suffix}
+\usepackage{mathtools}
 
 \newcommand*{\nequiv}{\centernot\equiv}
 \newcommand\ie{\emph{i}.\emph{e}.}
+
+\DeclarePairedDelimiter\floor{\lfloor}{\rfloor}%
+\let\angle\undefined
+\DeclarePairedDelimiter\angle{\langle}{\rangle}%
 
 \newcommand*{\superscript}[1]{\ensuremath{^{#1}}}
 \newcommand*{\subscript}[1]{\ensuremath{_{#1}}}

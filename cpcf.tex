@@ -443,8 +443,6 @@ Now that we have a clear view of the behavior of temporal contracts, we nail dow
 %
 The semantics we present is in the style of Felleisen's reduction semantics~\citep{ianjohnson:Felleisen:2009:SEP:1795772}, which can be systematically transformed into an abstract machine in the form presented in~\citet{dvanhorn:VanHorn2010Abstracting}.
 %
-{\bf TODO (Alex):} Reduction semantics that stores calling function in context.
-%
 See \autoref{sec:technical} for now.
 %%
 
@@ -828,6 +826,7 @@ Since we run CFA before appealing to the model checker, the former is feasible, 
 \\
 \msto \in \Store &= \Addr \parto \wp(\Storeable) \\
 \Storeable &= \Value + \TContract \\
+\mstate \in \State &= \angle{\mctx{\mmlab}, \msto, \mTMons} \quad\text{machine state} \\
 \sOwn{\mexp}{\mmlab} = \sown{ \ldots \sown{\mexp}{\mmlab} \ldots }{\mmlab}
 &\quad\text{where $\forall$ labels $k$, terms $\mexp^\prime$: $\mexp \neq \sown{\mexp^\prime}{k}$}
 \end{align*}
@@ -841,7 +840,9 @@ Since we run CFA before appealing to the model checker, the former is feasible, 
 \begin{figure*}
   \centering
     $\begin{array}{@{}l @{\ }c@{\ } l@{}}
-      \mctx{\mmlab}[\ldots], \msto, \mTMons &\machstep& \mctx{\mmlab^\prime}[\ldots], \msto^\prime, \mTMons
+      \mstate \angle{\mctx{\mmlab}[\ldots], \msto, \mTMons}
+      &\machstep&
+      \mstate^\prime \angle{\mctx{\mmlab^\prime}[\ldots], \msto^\prime, \mTMons}
       \\ \hline
       \sif{ \sOwn{\strue}{\mmlab} }{\mexp_1}{\mexp_2}
       &\machstep&

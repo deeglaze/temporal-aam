@@ -1,6 +1,5 @@
 \input{common}
 \usepackage{textcomp,wasysym, stmaryrd}
-\usepackage{mathtools}
 
 % Metavariables
 \newcommand*{\mconstructor}{c}
@@ -115,7 +114,6 @@
 \WithSuffix\newcommand\schk*[5]{\tuple*[^{#1}_{#2}]{chk}{#3}{#4, #5}}
 \DeclarePairedDelimiter\own{\lvert}{\rvert}%
 \DeclarePairedDelimiter\Own{\lVert}{\rVert}%
-\DeclarePairedDelimiter\floor{\lfloor}{\rfloor}%
 \newcommand*{\sown}[2]{\own{#1}^{#2}}
 \newcommand*{\sOwn}[2]{\Own{#1}^{#2}}
 \WithSuffix\newcommand\sown*[2]{\floor{#1}^{\overline{#2}}}
@@ -125,7 +123,7 @@
 \newcommand*{\sdefinec}[4][\ ]{\tuple[#1]{define/contract}{#2,#3,#4}}
 \newcommand*{\sunit}{{\tt '()}}
 \newcommand*{\semptyp}{{\tt null?}}
-\newcommand*{\sconsc}[2]{\langle #1, #2 \rangle}
+\newcommand*{\sconsc}[2]{\angle{#1, #2}}
 \newcommand*{\scons}{\tt cons}
 \newcommand*{\scar}{{\tt car}}
 \newcommand*{\scdr}{{\tt cdr}}
@@ -174,8 +172,7 @@
 \newcommand*{\vcons}[2]{\tuple{\scons}{#1, #2}}
 \newcommand*{\vconst}[3]{\tuple{\scons}{#1, #2}_{#3}}
 \newcommand*{\vMon}[2][\ ]{\tuple[#1]{mon}{#2}}
-\newcommand*{\blclos}[9]{#1 :_{#4} #5^{#3} \underset{#7,#8}{\dashrightarrow} #6^{#2} \langle #9 \rangle}
-\newcommand*{\bclos}[8]{#1 : #2^{#3} \overset{#4}{\underset{#5}{\dashrightarrow}} #6^{#7} \langle #8 \rangle}
+\newcommand*{\bclos}[8]{#1 : #2^{#3} \overset{#4}{\underset{#5}{\dashrightarrow}} #6^{#7} \angle{#8}}
 
 % Notation
 \newcommand*{\many}[1]{\overline{#1}}
