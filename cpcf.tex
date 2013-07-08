@@ -729,7 +729,7 @@ Shit works.
 \section{Everything Technical}\label{sec:technical}
 
 %%
-Syntax:
+\begin{figure}
 \begin{align*}
 \mexp \in \Expr &::=
       \svar{\mvar}
@@ -744,11 +744,13 @@ Syntax:
 &\alt \strue \alt \sfalse \alt \vee \alt \wedge \alt \ldots \\
 &\alt \sunit \alt \scons \alt \scar \alt \scdr \alt \ldots \\
 \mvar \in \Var &\quad\text{ an infinite set} \\
-\beta \in \ModuleLabel &\quad\text{ an infinite set} \\
-\mmlab,\mname &::= \beta \alt \toplevel \quad\text{where $\toplevel$ is the top-level} \\
+\mmlab,\mname \in \ModuleLabel \alt \toplevel &\quad\text{ an infinite set, where $\toplevel$ is the top-level} \\
 \mcontract \in \Contract &= \SContract \times \TContract \\
-\mscon \in \SContract &::= \sflat{\mexp} \alt \sarr{\mname}{\mscon}{\mscon} \alt \sconsc{\mscon}{\mscon} \\
+\mscon \in \SContract &::= \sflat{\mexp} \alt \sarr{\mname}{\mscon}{\mscon} \alt \sconsc{\mscon}{\mscon}
 \end{align*}
+\caption{Syntax}
+\label{fig:syntax}
+\end{figure}
 %%
 
 %%
@@ -766,7 +768,7 @@ Since we run CFA before appealing to the model checker, the former is feasible, 
 %%
 
 %%
-Value space:
+\begin{figure}
 \begin{align*}
   \mexp &::= \ldots
    \alt \sblame{\mmlab}{\mmlab}
@@ -787,12 +789,15 @@ Value space:
   \mscon &::= \ldots
    \alt \sown*{\sflat{\mexp}}{\mmlab}
 \end{align*}
+\caption{Value space}
+\label{fig:values}
+\end{figure}
 %%
 
 %%
-State space:
+\begin{figure}
 \begin{align*}
-\mctx{\mmlab} &::=
+\mctx{\mmlab} \in \ECtx &::=
       \sapp{\mctx{\mmlab}}{\mexp}
  \alt \sapp{\mval}{\mctx{\mmlab}}
  \alt \sif{\mctx{\mmlab}}{\mexp}{\mexp}
@@ -813,7 +818,7 @@ State space:
  \alt \sif{\mctx{\mmlab_\bot}}{\mexp}{\mexp}
  \alt \mlctx{\mmlab_\bot}
 \\
-\mlctx{\mmlab} &::=
+\mlctx{\mmlab} \in \LCtx &::=
       \sunit
  \alt \mval
  \alt \vcons{\mlactx{\mmlab}}{\mctx{\mmlab}}
@@ -824,8 +829,11 @@ State space:
 \msto \in \Store &= \Addr \parto \wp(\Storeable) \\
 \Storeable &= \Value + \TContract \\
 \sOwn{\mexp}{\mmlab} = \sown{ \ldots \sown{\mexp}{\mmlab} \ldots }{\mmlab}
-&\text{where $\forall$ labels $k$, terms $\mexp^\prime$: $\mexp \neq \sown{\mexp^\prime}{k}$}
+&\quad\text{where $\forall$ labels $k$, terms $\mexp^\prime$: $\mexp \neq \sown{\mexp^\prime}{k}$}
 \end{align*}
+\caption{Evaluation contexts}
+\label{fig:ctx}
+\end{figure}
 
 % TODO:
 % * Should addresses be owned? Does this imply stores need to be owned...?
