@@ -181,7 +181,7 @@ Our techniques should smoothly integrate with theirs when considering partial pr
     \mscon \in \SContract &::= \sflat{\mexp} \alt \sarr{\mtoplevelname}{\mscon}{\mscon} \alt \sconsc{\mscon}{\mscon}
 \\
     \mexp \in \Expr &::= \sTMon{\mmlab_u}{\mmlab_c}{\mmlab_o}{\mscon, \mtcon, \mexp}
-                    \alt \sSMon{\mmlab_u}{\mmlab_c}{\mmlab_o}{\mscon, \mexp}
+                    \alt \sSMon{\mmlab_u}{\mmlab_c}{\mmlab_o}{\mscon}{\mexp}
 \\ &
                     \alt \sSTMon{\mmlab_u}{\mmlab_c}{\mmlab_o}{\mtimeline}{\mscon, \mexp}
                     \alt \ldots
