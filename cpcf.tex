@@ -195,10 +195,9 @@ Our techniques should smoothly integrate with theirs when considering partial pr
 &\alt \stcall{\mvar}{\mname}{\mtcon}
  \alt \stret{\mvar}{\mname}{\mtcon} \\
 \mevent \in \Event &::= \scallev{\mvar}{\mvpat} \alt \sretev{\mvar}{\mvpat} \\
-\mvpat \in \VPat &::= \mconstant \alt \mvar \alt \swc \\
-\mname \in \Name &\text{ an infinite set} \\
-\mtoplevelname \in \Label&\text{ an infinite set} \\
-\mvar &::= \mname \alt \mtoplevelname
+\mvpat \in \VPat &::= \mconstant \alt \mvar \alt \mname \alt \swc \\
+\mvar \in \Var &\quad\text{an infinite set} \\
+\mname \in \Label &\quad\text{an infinite set}
   \end{align*}
   \caption{Syntax of temporal contracts}
   \label{fig:tcontract-syntax}
@@ -738,7 +737,7 @@ and implementation of temporal contracts.
 &\alt \strue \alt \sfalse \alt \vee \alt \wedge \alt \ldots \\
 &\alt \sunit \alt \scons \alt \scar \alt \scdr \alt \ldots \\
 \mvar \in \Var &\quad\text{ an infinite set} \\
-\mmlab,\mname \in \ModuleLabel \alt \toplevel &\quad\text{ an infinite set, where $\toplevel$ is the top-level}
+\mmlab,\mname \in \Label \alt \toplevel &\quad\text{ an infinite set, where $\toplevel$ is the top-level}
 \end{align*}
 \caption{Syntax}
 \label{fig:syntax}
