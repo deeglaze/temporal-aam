@@ -174,10 +174,8 @@ Our techniques should smoothly integrate with theirs when considering partial pr
   \begin{align*}
     \mscon \in \SContract &::= \sflat{\mexp} \alt \sarr{\mtoplevelname}{\mscon}{\mscon} \alt \sconsc{\mscon}{\mscon}
 \\
-    \mexp \in \Expr &::= \sTMon{\mmlab_u}{\mmlab_c}{\mmlab_o}{\mscon, \mtcon, \mexp}
-                    \alt \sSMon{\mmlab_u}{\mmlab_c}{\mmlab_o}{\mscon}{\mexp}
-\\ &
-                    \alt \sSMon*{\mmlab_u}{\mmlab_c}{\mmlab_o}{\mtimeline}{\mscon, \mexp}
+    \mexp \in \Expr &::= \sTMon{\mmlab_u}{\mmlab_c}{\mmlab_o}{\mscon}{\mtcon}{\mexp}
+                    \alt \sSMon{\mmlab_u}{\mmlab_c}{\mmlab_o}{\mtimeline}{\mscon}{\mexp}
                     \alt \ldots
   \end{align*}
   \caption{Syntax of structural contracts with labels}
@@ -733,16 +731,14 @@ and implementation of temporal contracts.
  \alt \sapp{\mexp}{\mexp}
  \alt \slam{\mvar}{\mexp}
  \alt \sif{\mexp}{\mexp}{\mexp} \\
-&\alt \sSMon{\mmlab}{\mmlab}{\mlab}{\mscon}{\mexp}
- \alt \sTMon{\mmlab}{\mmlab}{\mlab}{\mcontract}{\mexp} \\
+&\alt \sSMon{\mmlab}{\mmlab}{\mlab}{\mtimeline}{\mscon}{\mexp}
+ \alt \sTMon{\mmlab}{\mmlab}{\mlab}{\mscon}{\mtcon}{\mexp} \\
 \mconstant \in \Constant &=
  -1 \alt 0 \alt 1 \alt \ldots \alt + \alt - \alt \ldots \\
 &\alt \strue \alt \sfalse \alt \vee \alt \wedge \alt \ldots \\
 &\alt \sunit \alt \scons \alt \scar \alt \scdr \alt \ldots \\
 \mvar \in \Var &\quad\text{ an infinite set} \\
-\mmlab,\mname \in \ModuleLabel \alt \toplevel &\quad\text{ an infinite set, where $\toplevel$ is the top-level} \\
-\mcontract \in \Contract &= \SContract \times \TContract \\
-\mscon \in \SContract &::= \sflat{\mexp} \alt \sarr{\mname}{\mscon}{\mscon} \alt \sconsc{\mscon}{\mscon}
+\mmlab,\mname \in \ModuleLabel \alt \toplevel &\quad\text{ an infinite set, where $\toplevel$ is the top-level}
 \end{align*}
 \caption{Syntax}
 \label{fig:syntax}
@@ -780,11 +776,12 @@ Since we run CFA before appealing to the model checker, the former is feasible, 
    \alt \sown{\mval}{\mmlab}
   \\
   \maddr \in \Addr &\text{ an infinite set} \\
-  \mstimeline \in \Timeline^{\toplevel} &::= \maddr \alt \toplevel \\
-  \mnames &\in \wp(\Var) %TODO: Do we still need this?
+  \mstimeline \in \Timeline &::= \maddr \alt \toplevel
   \\
   \mscon &::= \ldots
    \alt \sown*{\sflat{\mexp}}{\mmlab}
+  \\
+  \sown*{\sflat{\mexp}}{\mmlab} &\quad\text{denotes the set of responsible parties $\overline{\mmlab}$}
 \end{align*}
 \caption{Value space}
 \label{fig:values}
@@ -799,10 +796,10 @@ Since we run CFA before appealing to the model checker, the former is feasible, 
  \alt \sapp{\mval}{\mctx{\mmlab}}
  \alt \sif{\mctx{\mmlab}}{\mexp}{\mexp}
  \alt \mlctx{\mmlab} \\
-&\alt \sSMon*{\ell}{k}{j}{\mtimeline}{\mcontract}{\mctx*}
- \alt \sSMon*{\ell^\prime}{k}{j}{\mtimeline}{\mcontract}{\mctx{\ell}} \\
-&\alt \sTMon{\ell}{k}{j}{\mscon}{\mctx*}
- \alt \sTMon{\ell^\prime}{k}{j}{\mscon}{\mctx{\ell}} \\
+&\alt \sSMon{\ell}{k}{j}{\mtimeline}{\mscon}{\mctx*}
+ \alt \sSMon{\ell^\prime}{k}{j}{\mtimeline}{\mscon}{\mctx{\ell}} \\
+&\alt \sTMon{\ell}{k}{j}{\mscon}{\mtcon}{\mctx*}
+ \alt \sTMon{\ell^\prime}{k}{j}{\mscon}{\mtcon}{\mctx{\ell}} \\
 &\alt \schk*{k}{\ell}{\mtimeline}{\mctx*}{\mval}
  \alt \schk*{k}{\ell^\prime}{\mtimeline}{\mctx{\ell}}{\mval} \\
 &\alt \sret{\ell}{\mtimeline}{\mctx*}
@@ -864,25 +861,25 @@ $\begin{array}{@{}l @{\ }c@{\ } l@{}}
 &\machstep&
 \sown{ \sapp{\{ \sown{\mval}{\mmlab}/\mvar \}}{\mexp} }{\mmlab}
 \\ % Temporal monitor
-\sTMon{k}{\mmlab}{j}{\mscon \times \mtcon}{\mval}
+\sTMon{k}{\mmlab}{j}{\mscon}{\mtcon}{\mval}
 &\machstep&
-\sSMon*{k}{\mmlab}{j}{\mtimeline}{\mscon}{\mval} \\
+\sSMon{k}{\mmlab}{j}{\mtimeline}{\mscon}{\mval} \\
 &&\text{where } \mTMons^\prime = \mTMons[\mtimeline \mapsto \compile{\mtcon}] \\
-&&\phantom{\text{where }} \mtimeline = alloc(\msto) \\
+&&\phantom{\text{where }} \mtimeline = \salloc{\mstate} \\
 &&\text{given } \mmlab = \toplevel
 \\ % Flat monitor
-\sSMon*{k}{\mmlab}{j}{\mtimeline}{ \sown*{\sflat{\mexp}}{\mmlab^{\prime\prime}} }{ \sOwn{\mconstant}{\mmlab^{\prime\prime}} }
+\sSMon{k}{\mmlab}{j}{\mtimeline}{ \sown*{\sflat{\mexp}}{\mmlab^{\prime\prime}} }{ \sOwn{\mconstant}{\mmlab^{\prime\prime}} }
 &\machstep&
 \schk*{k}{j}{\mtimeline}{ \sapp{\mexp}{\mconstant} }{\mconstant}
 \\ % Cons monitor
-\sSMon*{k}{\mmlab}{j}{\mtimeline}{ \sconsc{\mscon_A}{\mscon_D} }{ \sOwn{\vcons{\maddr_A}{\maddr_D}}{\mmlab} }
+\sSMon{k}{\mmlab}{j}{\mtimeline}{ \sconsc{\mscon_A}{\mscon_D} }{ \sOwn{\vcons{\maddr_A}{\maddr_D}}{\mmlab} }
 &\machstep&
-\sown{\vcons{ \sSMon*{k}{\mmlab}{j}{\mtimeline}{\mscon_A}{\maddr_A} }{ \sSMon*{k}{\mmlab}{j}{\mtimeline}{\mscon_D}{\maddr_D} }}{\mmlab}
+\sown{\vcons{ \sSMon{k}{\mmlab}{j}{\mtimeline}{\mscon_A}{\maddr_A} }{ \sSMon{k}{\mmlab}{j}{\mtimeline}{\mscon_D}{\maddr_D} }}{\mmlab}
 \\ % Arrow monitor
-\sSMon*{k}{\mmlab}{j}{\mtimeline}{ \sarr{\mname}{\mscon_D}{\mscon_R} }{\mval}
+\sSMon{k}{\mmlab}{j}{\mtimeline}{ \sarr{\mname}{\mscon_D}{\mscon_R} }{\mval}
 &\machstep&
 \sown{\bclos{\mname}{\mscon_D}{k}{j}{\mtimeline}{\mscon_R}{\mmlab}{\maddr}}{\mmlab} \\
-&&\text{where } \maddr = alloc(\mstate) \\
+&&\text{where } \maddr = \salloc{\mstate} \\
 &&\text{given } \mval = \slam{\mvar}{\mexp}
 \\ % Arrow monitor fail
 \ditto

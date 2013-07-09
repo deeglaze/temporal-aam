@@ -20,7 +20,6 @@
 \newcommand*{\mcontract}{C}
 \newcommand*{\mscon}{S}
 \newcommand*{\mtcon}{T}
-\newcommand*{\mtconNoB}{{\mathcal A}}
 \newcommand*{\mname}{n}
 \newcommand*{\mtoplevelname}{\ell}
 \newcommand*{\mevent}{A}
@@ -88,9 +87,8 @@
 \newcommand*{\smay}[1]{{\tt may}(#1)}
 \newcommand*{\smust}[1]{{\tt must}(#1)}
 
-\newcommand*{\sSMon}[5]{\tuple[^{#1,#2}_{#3}]{smon}{#4,\, #5}}
-\WithSuffix\newcommand\sSMon*[6]{\tuple*[^{#1,#2}_{#3}]{smon}{#4}{#5,\, #6}}
-\newcommand*{\sTMon}[5]{\tuple[^{#1,#2}_{#3}]{tmon}{#4,\, #5}}
+\newcommand*{\sSMon}[6]{\tuple*[^{#1,#2}_{#3}]{smon}{#4}{#5,\, #6}}
+\newcommand*{\sTMon}[6]{\tuple[^{#1,#2}_{#3}]{tmon}{#4,\,#5,\,#6}}
 \newcommand*{\schk}[4]{\tuple[^{#1}_{#2}]{chk}{#3,\, #4}}
 \WithSuffix\newcommand\schk*[5]{\tuple*[^{#1}_{#2}]{chk}{#3}{#4,\, #5}}
 \DeclarePairedDelimiter\own{\lvert}{\rvert}%
@@ -133,7 +131,8 @@
 \newcommand*{\swc}{\_} 
 
 \DeclarePairedDelimiter\compile{\llfloor}{\rrfloor}
-\newcommand*{\sstep}[3]{\tuple{\delta{}step}{#1,\,#2,\,#3}}
+\newcommand*{\salloc}[1]{\mathit{\delta{}alloc}(#1)}
+\newcommand*{\sstep}[3]{\mathit{\delta{}step}(#1,\,#2,\,#3)}
 
 \newcommand*{\denote}[1]{[\![ #1 ]\!]}
 \newcommand*{\denotetcon}[3]{[\![ #1 ]\!]^{#2}_{#3}}
