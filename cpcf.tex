@@ -523,15 +523,21 @@ It is easy enough to amend the structural contracts to reflect the fact that a b
     \denoteevent{\scallev{\mtoplevelname}{\mvpat}}{\mtimeline}{\menv} &=
       \setbuild{\apvcall{\mval}{\mathit{ppat}(\mvpat, \menv)}}{\labelis{\mval}{\mtoplevelname} \text{ and } \timelineis{\mval}{\mtimeline}}
 \\
+    \denoteevent{\swrapev{\mtoplevelname}{\mvpat}}{\mtimeline}{\menv} &=
+      \setbuild{\apwrapev{\mtoplevelname}{\mval}}{\labelis{\mval}{\mtoplevelname} \text{ and } \timelineis{\mval}{\mtimeline}}
+    \\\text{where } \mval &= \mathit{ppat}(\mvpat, \menv)
+\\
    \mathit{ppat}(\swc, \menv) &= \swc
 \\
    \mathit{ppat}(\mvar, \menv) &= \menv(\mvar)
 \\
    \mathit{ppat}(\mtoplevelname, \menv) &= \bclos{\mtoplevelname}{\swc}{\swc}{\swc}{\swc}{\swc}{\swc}{\swc}
+\\
+   \mathit{ppat}(\mconstant, \menv) &= \mconstant
   \end{align*}
   where $\timelineis{\bclos{\swc}{\swc}{\swc}{\swc}{\mtimeline}{\swc}{\swc}{\swc}}{\mtimeline}$ \\
   and $\labelis{\bclos{\mtoplevelname}{\swc}{\swc}{\swc}{\mtimeline}{\swc}{\swc}{\swc}}{\mtoplevelname}$ \\
-  (Return events are similar)
+  (Return events are similar to calls)
   \caption{Denotation of events}
   \label{fig:event-denotation}
 \end{figure}
@@ -574,10 +580,10 @@ Values will come from events constructors, and are allowed to be unbounded.
 %
 Instead of matching against atomic symbols to transition like an FSM, we allow for pattern matching against constructed data, to bind subdata to variables for later equality checking.
 %
-Scoping bindings comes from a bounded stack of binding enviroments we may use.
+Scoping bindings comes from simply $\alpha$-converting the contract to always use unique binders.
 %
 
-To do this, we consider a machine state to be a tuple of a control state and a binding environment stack, and transitions may push, pop, modify and read the top of the stack while pattern matching on input (using the top of the stack for equality checks with bindings).
+To do this, we consider a machine state to be a tuple of a control state and a binding environment, and transitions may change/use the environment when pattern matching on input.
 %
 Additionally, since we plan to later abstract our semantics (and values), we need a weaker, tunable notion of equality (e.g., is 1 equal to $\mathbf{Int}$? We must be conservative and consider both valid).
 %
@@ -592,7 +598,7 @@ A PMSM is thus a tuple $(Q, F, q_0, \Sigma, \simeq, \ary, \delta)$ where
   F \subseteq Q &\text{ final/accepting states} \\
   q_0 \in Q &\text{ initial state} \\
   \ary : C \to \Nat&\text{ the arity of constructors} \\
-  \delta \subseteq Q \times \setof{+, -, \epsilon} \times \Pattern \times Q & \text{ transition relation}\\[2pt]
+  \delta \subseteq Q \times \Pattern \times Q & \text{ transition relation}\\[2pt]
 \end{align*}
 The pattern language consists of binding patterns, equality with reference patterns, wildcard and equality with a constant atom.
 %
@@ -625,7 +631,7 @@ We lift $\simeq$ over constructors ($\simeq^\top$) by folding $\wedge$ over the 
       \left\{\begin{array}{ll}
                \smust{\mbindenv} & \text{if } \mfail = \mres \\
                \smay{\mbindenv} & \text{if } \smay{\mbindenv'} = \mres \\
-               \mfail & \text{ if} \smust{\mbindenv'} = \mres \\
+               \mfail & \text{if } \smust{\mbindenv'} = \mres \\
              \end{array}\right.
     \\ \text{where }& \mres = \match(\mconstructor(\mpat \ldots), \mdata, \mbindenv)
 \\
@@ -662,26 +668,18 @@ We lift $\simeq$ over constructors ($\simeq^\top$) by folding $\wedge$ over the 
 The machine is input-driven, and a path through the machine is defined in \autoref{fig:pmsm-semantics}.
 %
 We will associate each temporal contract monitor with a state machine we generate from the temporal contract, where the data fed to the machine are call and return events that pass through the structural monitors associated with the timeline.
-
+%
 \begin{figure}
   \begin{mathpar}
-    \infer{(\pmsmq, \mpat, \stackop, \pmsmq') \in \delta \\
+    \infer{(\pmsmq, \mpat, \pmsmq') \in \delta \\
       \ensuremath{
-           \begin{array}{l }
+           \begin{array}{l}
              \smust{\mbindenv'} = \match(\mpat, \mdata, \mbindenv) \text{ or} \\
              \smay{\mbindenv'}  = \match(\mpat, \mdata, \mbindenv)
            \end{array}}
-}{\pmsmstate{\pmsmq, \mbindenv \mbindstack} \overset{\mdata}{\to}
-                     \pmsmstate{\pmsmq', \denote{\stackop}(\mbindenv', \mbindenv \mbindstack)}}
+}{\pmsmstate{\pmsmq, \mbindenv} \overset{\mdata}{\to}
+                     \pmsmstate{\pmsmq', \mbindenv'}}
   \end{mathpar}
-  where
-  \begin{align*}
-    \denote{+}(\mbindenv, \mbindenv' \mbindstack) &= \mbindenv \mbindenv' \mbindstack
-\\
-    \denote{\epsilon}(\mbindenv, \mbindenv' \mbindstack) &= \mbindenv \mbindstack
-\\
-    \denote{-}(\mbindenv, \mbindenv' \mbindstack) &= \mbindstack
-  \end{align*}
   \caption{PMSM semantics}
   \label{fig:pmsm-semantics}
 \end{figure}
@@ -724,7 +722,7 @@ Negation is still annoying to deal with, so we remove tough negations by convert
   $\denotetcon{\mtcon}{\mtimeline}{\menv} = \denotetcon{\nnf(\mtcon)}{\mtimeline}{\menv}$
 \end{theorem}
 \begin{proof}
-  \textbf{TODO (Ian)}
+  By induction on the $\nnf$'s recursion scheme.
 \end{proof}
 
 The translation easily follows if we temporarily allow $\epsilon$ transitions that we later remove (that is, the $\Pattern$ component of $\delta$ may also be an $\epsilon$).
@@ -745,38 +743,28 @@ The translation easily follows if we temporarily allow $\epsilon$ transitions th
    \ary(\apwrapalone) &= 2 \\
    \ary(\bclos{\swc}{\swc}{\swc}{\swc}{\swc}{\swc}{\swc}{\swc}) &= 8 \\
 \\
-    \epshelp : \TContract \times \wp(\State) \times \Timeline \times \State \times \Nat \times \mathit{Transition} \to\span\omit\\
-             \phantom{:} \mathit{Transition} \times \wp(\State) \times \State \times \Nat\span\omit
+\begin{array}{l}
+    \epshelp : \TContract \times \wp(\State) \times \Timeline \times \State \times \Nat \times \mathit{Transition} \\ \phantom{\epshelp :}\to \mathit{Transition} \times \wp(\State) \times \State \times \Nat
+\end{array}\span\omit
 \end{align*}
 and
 \begin{align*}
 \begin{array}{l}
   \epshelp(\scallev{\mvar}{\mvpat'}, F, \mtimeline, \pmsmqcur, k, \delta) = \\
            (\delta
-            \cup \left\{\begin{array}{l}
-                        (\pmsmqcur,
+            \cup \setof{(\pmsmqcur,
                          \epsilon,
                          \apvcall{\sref(\mvar)}{\mathit{ppat}(\mvpat)},
-                         \pmsmq_k),\\
-                        (\pmsmqcur,
-                         \epsilon,
-                         \apvcall{\bclos{\swc}{\swc}{\swc}{\swc}{\mtimeline}{\swc}{\swc}{\sref{\mvar}}}{\mathit{ppat}(\mvpat)}{\swc},
-                         \pmsmq_k)
-                        \end{array}\right\}, \\
+                         \pmsmq_k)}, \\
             \ F\cup \setof{\pmsmq_k}, \pmsmq_k, k+1)
 \\
+%
   \epshelp(\scallev{\mtoplevelname}{\mvpat'}, F, \mtimeline, \pmsmqcur, k, \delta) = \\
            (\delta
-            \cup \left\{\begin{array}{l}
-                        (\pmsmqcur,
+            \cup \setof{(\pmsmqcur,
                          \epsilon,
-                         \apvcall{\bclos{\mtoplevelname}{\swc}{\swc}{\swc}{\mtimeline}{\swc}{\swc}{\swc}}{\mathit{ppat}(\mvpat)}{\mtimeline},
-                         \pmsmq_k),\\
-                        (\pmsmqcur,
-                         \epsilon,
-                         \apvcall{\bclos{\mtoplevelname}{\swc}{\swc}{\swc}{\mtimeline}{\swc}{\swc}{\swc}}{\mathit{ppat}(\mvpat)}{\swc},
-                         \pmsmq_k)
-                        \end{array}\right\}, \\
+                         \apvcall{\bclos{\mtoplevelname}{\swc}{\swc}{\swc}{\mtimeline}{\swc}{\swc}{\swc}}{\mathit{ppat}(\mvpat)},
+                         \pmsmq_k)}, \\
             \ F\cup \setof{\pmsmq_k}, \pmsmq_k, k+1)
 \\
 \begin{array}{ll}
@@ -789,9 +777,52 @@ and
 \end{array}
 \end{array}
 \end{align*}
+Return events are similarly translated.
+
+
+% %
+%   \epshelp(\stwrap{\mtoplevelname}{\mname}{\mtcon}, F, \mtimeline, \pmsmqcur, k, \delta) = \\
+% \begin{array}{l}
+%    (\delta'' \cup \setof{(\pmsmqlast, -, \epsilon, \pmsmq_{k'})}, F' \cup \setof{\pmsmq_{k'}}, \pmsmq_{k'}, k' + 1) \\
+%    \text{where } \delta' = \delta \cup \setof{(\pmsmqcur, +, \apwrapev{\mtoplevelname}{\sbind{\mname}}{\mtimeline}, \pmsmq_{k+1})} \\
+%    \phantom{\text{where } } (\delta'', F', \pmsmqlast, k') = \epshelp(\mtcon, F \cup \setof{\pmsmqcur}, \mtimeline, \pmsmq_k, k+1, \delta')
+
+The translation for or is similar to constructing the union of NFAs.
+%
+We simply thread through a source of freshness for constructing new states.
+%
+\begin{align*}
+  \begin{array}{l}
+  \epshelp(\stOr{\mtcon_0}{\mtcon_1}, F, \mtimeline, \pmsmqcur, k, \delta) = \\
+  \begin{array}{l}
+    (\delta''' \cup
+    \left\{\begin{array}{l}
+        (\pmsmqlast^0, \epsilon, \epsilon, \pmsmq_{k''}), \\
+        (\pmsmqlast^1, \epsilon, \epsilon, \pmsmq_{k''})
+      \end{array}\right\}, \\
+    \ F'' \cup \setof{\pmsmq_{k''}}, \pmsmq_{k''}, k''+ 1)
+    \\
+  %
+    \text{where } \delta' = \delta \cup \left\{
+      \begin{array}{l}
+        (\pmsmqcur, \epsilon, \epsilon, \pmsmq_k),\\
+        (\pmsmqcur, \epsilon, \epsilon, \pmsmq_{k+1})
+      \end{array}\right\}
+    \\
+    \phantom{\text{where }} (\delta'', F', \pmsmqlast^0, k') = \epshelp(\delta', F \cup \setof{\pmsmq_k, \pmsmq_{k+1}}, \mtimeline, \pmsmq_k, k+2, \delta') \\
+    \phantom{\text{where }} (\delta''', F'', \pmsmqlast^1, k'') = \epshelp(\delta'', F', \mtimeline, \pmsmq_{k+1}, k', \delta'')
+  \end{array}
+\end{align*}
+
+Intersection is again like NFAs, where we create the cartesian-product state space.
+%
+\begin{align*}
+  \epshelp(\stAnd{\mtcon_0}{\mtcon_1}, F, \mtimeline, \pmsmqcur, k, \delta) = \\
+  (\delta, ???)
+\end{align*}
 %
 \begin{lemma}
-  $\mtrace \in \denotetcon{\mtcon}{\mtimeline}{\bot}$ iff $\mtrace$ accepted by $\translateeps(\mtcon, \mtimeline)$ and $\wf(\mtrace)$.
+  $\mtrace \in \denotetcon{\mtcon}{\mtimeline}{\menv}$ iff $\wf(\mtrace)$ and $\exists \pmsmq \in F, \menv'$. $\pmsmstate{\pmsmq_0, \mbindenv} \overset{\mtrace}{\to} \pmsmstate{\pmsmq, \menv'}$ where $(Q, F, \pmsmq_0, \Sigma, \simeq, \ary, \delta) = \translateeps(\mtcon, \mtimeline)$
 \end{lemma}
 \begin{proof}
   \textbf{TODO (Ian)}
