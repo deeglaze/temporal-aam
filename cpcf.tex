@@ -174,10 +174,8 @@ Our techniques should smoothly integrate with theirs when considering partial pr
   \begin{align*}
     \mscon \in \SContract &::= \sflat{\mexp} \alt \sarr{\mtoplevelname}{\mscon}{\mscon} \alt \sconsc{\mscon}{\mscon}
 \\
-    \mexp \in \Expr &::= \sTMon{\mmlab_u}{\mmlab_c}{\mmlab_o}{\mscon, \mtcon, \mexp}
-                    \alt \sSMon{\mmlab_u}{\mmlab_c}{\mmlab_o}{\mscon}{\mexp}
-\\ &
-                    \alt \sSMon*{\mmlab_u}{\mmlab_c}{\mmlab_o}{\mtimeline}{\mscon, \mexp}
+    \mexp \in \Expr &::= \sTMon{\mmlab_u}{\mmlab_c}{\mmlab_o}{\mscon}{\mtcon}{\mexp}
+                    \alt \sSMon{\mmlab_u}{\mmlab_c}{\mmlab_o}{\mtimeline}{\mscon}{\mexp}
                     \alt \ldots
 \\
 \mtoplevelname \in \Label&\text{ an infinite set} \\
@@ -196,13 +194,12 @@ Our techniques should smoothly integrate with theirs when considering partial pr
  \alt \stAnd{\mtcon}{\mtcon}
  \alt \stmany{\mtcon}
  \alt \sddd \\
-&\alt \stcall{\mvar}{\mname}{\mtcon}
- \alt \stret{\mvar}{\mname}{\mtcon}
- \alt \stwrap{\mtoplevelname}{\mname}{\mtcon} \\
-\mevent \in \Event &::= \scallev{\mvar}{\mvpat} \alt \sretev{\mvar}{\mvpat} \\
-\mvpat \in \VPat &::= \mconstant \alt \mvar \alt \swc \\
-\mname \in \Name &\text{ an infinite set} \\
-\mvar &::= \mname \alt \mtoplevelname
+&\alt \stcall{\mname}{\mvar}{\mtcon}
+ \alt \stret{\mname}{\mvar}{\mtcon}
+\mevent \in \Event &::= \scallev{\mname}{\mvpat} \alt \sretev{\mname}{\mvpat} \\
+\mvpat \in \VPat &::= \mconstant \alt \mname \alt \swc \\
+\mvar \in \Var &\quad\text{an infinite set} \\
+\mname \in \Name &::= \mvar \alt \mtoplevelname
   \end{align*}
   \caption{Syntax of temporal contracts}
   \label{fig:tcontract-syntax}
@@ -216,21 +213,21 @@ The syntax is presented in \autoref{fig:tcontract-syntax}.
 %%
 
 %%
-Temporal contracts ($\mtcon$) include events ($\mevent$) (for $\mevent$ction), negated events ($\snonevent{\mevent}$), concatenation ($\stseq{\mtcon}{\mtcon}$) (often represented using juxtaposition), negated contracts ($\stnot{\mtcon}$), Kleene closure of events ($\stmany{\mtcon}$), union ($\stOr{\mtcon}{\mtcon}$), the universal temporal contract ($\sddd$), and higher-order binding events ($\stcall{\mname}{\mname}$ and $\stret{\mname}{\mname}$).
+Temporal contracts ($\mtcon$) include events ($\mevent$) (for $\mevent$ction), negated events ($\snonevent{\mevent}$), concatenation ($\stseq{\mtcon}{\mtcon}$) (often represented using juxtaposition), negated contracts ($\stnot{\mtcon}$), Kleene closure of events ($\stmany{\mtcon}$), union ($\stOr{\mtcon}{\mtcon}$), the universal temporal contract ($\sddd$), and higher-order binding events ($\stcall{\mvar}{\mname}$ and $\stret{\mvar}{\mname}$).
 %
 The difference between $\snonevent{\mevent}$ and $\stnot{\mtcon}$ is that the first must be an event and force time to step forward once, whereas the second may match arbitrarily many events.
 %%
 
 %%
-Events themselves are expressed as patterns denoting calls ($\scallev{\mvar}{\mvpat}$) or returns ($\sretev{\mvar}{\mvpat}$), with respect to a particular function $\mvar$ and with its argument or result matching a pattern $\mvpat$.
+Events themselves are expressed as patterns denoting calls ($\scallev{\mname}{\mvpat}$) or returns ($\sretev{\mname}{\mvpat}$), with respect to a particular function $\mname$ and with its argument or result matching a pattern $\mvpat$.
 %
-If $\mvar$ is a label, we simply check that the monitor wrapping the function has the same label (attached via the structural contract).
+If $\mname$ is a label, we simply check that the monitor wrapping the function has the same label (attached via the structural contract).
 %
-However, if $\mvar$ is a name, then we consult a binding environment that the monitoring system builds as we pass binding events to determine if the function is a wrapped closure around the pointer bound by a wrap event.
+However, if $\mname$ is a variable, then we consult a binding environment that the monitoring system builds as we pass binding events to determine if the function is a wrapped closure around the pointer bound by a wrap event.
 %
-The distinction between names (bound by temporal contract) and labels (bound by structural contract) is what separates our semantics from \citeauthor{ianjohnson:dfm:icfp2011}'s.
+The distinction between variables (bound by temporal contract) and labels (bound by structural contract) is what separates our semantics from \citeauthor{ianjohnson:dfm:icfp2011}'s.
 %
-Patterns can match constants ($\mconstant$), bound names ($\mname$), labeled functions ($\mtoplevelname$), or simply anything ($\swc$).
+Patterns can match constants ($\mconstant$), bound variables ($\mname$), labeled functions ($\mtoplevelname$), or simply anything ($\swc$).
 %%
 
 %%
@@ -265,7 +262,7 @@ We leave call/return matching to future work, as it is not necessary to verify t
  $\begin{array}{ @{~}r@{} l @{}l }
   \text{where}\quad
   &\stnot{(&\sddd~ \call{sort}~ \stmany{\snonevent{\ret{sort}}}~ \call{sort})} \\
-  \text{and}\quad
+  \cap\quad
   &\stnot{(&\sddd~ \scallev{sort}{?cmp}~ \sddd~ \ret{sort} \sddd~ \call{cmp})}
  \end{array}$
  \caption{Sort example}
@@ -275,9 +272,9 @@ We leave call/return matching to future work, as it is not necessary to verify t
 %%
 In \autoref{fig:sort} we show the contract for a hypothetical $sort$ function which takes two arguments: a comparator and a list (of positive numbers).
 %
-The notation ``$name\ :\ Domain\ \to\ Range$'' describes a function contract where the argument satisfies the $Domain$ contract and the result satisfies the $Range$ contract.
+The notation ``$\mathit{name}\ :\ Domain\ \to\ Range$'' describes a function contract where the argument satisfies the $Domain$ contract and the result satisfies the $Range$ contract.
 %
-The ``$name\ :$'' prefix denotes the name of the function, for use in the temporal aspect of the contract.
+The ``$\mathit{name}\ :$'' prefix denotes the name of the function, for use in the temporal aspect of the contract.
 %%
 
 %%
@@ -497,19 +494,15 @@ It is easy enough to amend the structural contracts to reflect the fact that a b
    \denotetcon{\sddd}{\mtimeline}{\menv} &=
    \Traces^\mtimeline
 \\
-   \denotetcon{\stcall{\mvar}{\mname'}{\mtcon}}{\mtimeline}{\menv} &=
+   \denotetcon{\stcall{\mname}{\mvar}{\mtcon}}{\mtimeline}{\menv} &=
    \setbuild{\mtrace \cdot \mtrace'}
-            {\mtrace \in \denoteevent{\scallev{\mvar}{\mval}}{\mtimeline}{\menv}, 
-             \mtrace' \in \denotetcon{\mtcon}{\mtimeline}{\menv[\mname' \mapsto \mval]}}
+            {\mtrace \in \denoteevent{\scallev{\mname}{\mval}}{\mtimeline}{\menv}, 
+             \mtrace' \in \denotetcon{\mtcon}{\mtimeline}{\menv[\mvar \mapsto \mval]}}
 \\
-   \denotetcon{\stret{\mvar}{\mname'}{\mtcon}}{\mtimeline}{\menv} &=
+   \denotetcon{\stret{\mname}{\mvar}{\mtcon}}{\mtimeline}{\menv} &=
    \setbuild{\mtrace\cdot \mtrace'}
-            {\mtrace \in \denoteevent{\sretev{\mvar}{\mval}}{\mtimeline}{\menv},
-             \mtrace' \in \denotetcon{\mtcon}{\mtimeline}{\menv[\mname' \mapsto \mval]}}
-\\
-   \denotetcon{\stwrap{\mtoplevelname}{\mname}{\mtcon}}{\mtimeline}{\menv} &=
-   \setbuild{\apwrapev{\mtoplevelname}{\mval} \cdot \mtrace}
-            {\mtrace \in \denotetcon{\mtcon}{\mtimeline}{\menv[\mname' \mapsto \mval]}}
+            {\mtrace \in \denoteevent{\sretev{\mname}{\mval}}{\mtimeline}{\menv},
+             \mtrace' \in \denotetcon{\mtcon}{\mtimeline}{\menv[\mvar' \mapsto \mval]}}
   \end{align*}
   The denotation is (implicitly) composed with prefix closure at the top level to allow the progression of execution.
   \begin{align*}
@@ -521,9 +514,9 @@ It is easy enough to amend the structural contracts to reflect the fact that a b
 
 \begin{figure}
   \begin{align*}
-    \denoteevent{\scallev{\mname}{\mvpat}}{\mtimeline}{\menv} &= \\
+    \denoteevent{\scallev{\mvar}{\mvpat}}{\mtimeline}{\menv} &= \\
     &\left\{\begin{array}{ll}
-           \setof{\apvcall{\menv(\mname)}{\mathit{ppat}(\mvpat, \menv)}} &\text{ if } \timelineis{\menv(\mname)}{\mtimeline} \\
+           \setof{\apvcall{\menv(\mvar)}{\mathit{ppat}(\mvpat, \menv)}} &\text{ if } \timelineis{\menv(\mvar)}{\mtimeline} \\
            \emptyset & \text{ otherwise}
            \end{array}\right.
 \\
@@ -532,7 +525,7 @@ It is easy enough to amend the structural contracts to reflect the fact that a b
 \\
    \mathit{ppat}(\swc, \menv) &= \swc
 \\
-   \mathit{ppat}(\mname, \menv) &= \menv(\mname)
+   \mathit{ppat}(\mvar, \menv) &= \menv(\mvar)
 \\
    \mathit{ppat}(\mtoplevelname, \menv) &= \bclos{\mtoplevelname}{\swc}{\swc}{\swc}{\swc}{\swc}{\swc}{\swc}
   \end{align*}
@@ -612,12 +605,12 @@ We lift $\simeq$ over constructors ($\simeq^\top$) by folding $\wedge$ over the 
 \begin{figure}
   \begin{align*}
     \mpat \in \Pattern &::= \mconstructor(\mpat, \ldots_{\ary(\mconstructor)}) \alt \snonevent{\mconstructor(\mpat, \ldots_{\ary(\mconstructor)})} \\
-     & \alt \swc \alt \sref{\mname} \alt \sbind{\mname} \alt \matom
+     & \alt \swc \alt \sref{\mvar} \alt \sbind{\mvar} \alt \matom
       \quad\text{ where } \matom \in \Sigma \alt
 \\
     \mdata \in \Qualified &::= \mconstructor(\mdata, \ldots_{\ary(\mconstructor)}) \alt \matom
 \\
-    \mbindenv \in \BindEnv &= \mname \to \Qualified
+    \mbindenv \in \BindEnv &= \Var \to \Qualified
 \\
     \MatchResult &::= \mfail \alt \smay{\mbindenv} \alt \smust{\mbindenv}
 \\
@@ -638,9 +631,9 @@ We lift $\simeq$ over constructors ($\simeq^\top$) by folding $\wedge$ over the 
 \\
     \match(\swc, \mdata, \mbindenv) &= \smust{\mbindenv}
 \\
-    \match(\sref{\mname}, \mdata, \mbindenv) &= \weakif(\mbindenv, \mdata \simeq^\top \mbindenv(\mname))
+    \match(\sref{\mvar}, \mdata, \mbindenv) &= \weakif(\mbindenv, \mdata \simeq^\top \mbindenv(\mvar))
 \\
-    \match(\sbind{\mname}, \mdata, \mbindenv) &= \smust{\mbindenv[\mname \mapsto \mdata]}
+    \match(\sbind{\mvar}, \mdata, \mbindenv) &= \smust{\mbindenv[\mvar \mapsto \mdata]}
 \\
     \match(\matom, \matom', \mbindenv) &= \weakif(\mbindenv, \matom \simeq \matom')
 \\
@@ -716,11 +709,11 @@ Negation is still annoying to deal with, so we remove tough negations by convert
 \\
     \nnf(\stnot{\stmany{\mtcon}}) &= \nnf(\stnot{\mtcon})
 \\
-    \nnf(\stnot{\stcall{\mvar}{\mname}{\mtcon}}) &= \stOr{\stseq{\snonevent{\scallev{\mvar}{\swc}}}{\sddd}}
-                                                         {\stcall{\mvar}{\mname}{\nnf(\stnot{\mtcon})}}
+    \nnf(\stnot{\stcall{\mname}{\mvar}{\mtcon}}) &= \stOr{\stseq{\snonevent{\scallev{\mname}{\swc}}}{\sddd}}
+                                                         {\stcall{\mname}{\mvar}{\nnf(\stnot{\mtcon})}}
 \\
-    \nnf(\stnot{\stret{\mvar}{\mname}{\mtcon}}) &= \stOr{\stseq{\snonevent{\sretev{\mvar}{\swc}}}{\sddd}}
-                                                        {\stret{\mvar}{\mname}{\nnf(\stnot{\mtcon})}}
+    \nnf(\stnot{\stret{\mname}{\mvar}{\mtcon}}) &= \stOr{\stseq{\snonevent{\sretev{\mname}{\swc}}}{\sddd}}
+                                                        {\stret{\mname}{\mvar}{\nnf(\stnot{\mtcon})}}
   \end{align*}
   Otherwise structurally distribute $\nnf$.
   \caption{Temporal contract NNF translation}
@@ -758,16 +751,16 @@ The translation easily follows if we temporarily allow $\epsilon$ transitions th
 and
 \begin{align*}
 \begin{array}{l}
-  \epshelp(\scallev{\mname}{\mvpat'}, F, \mtimeline, \pmsmqcur, k, \delta) = \\
+  \epshelp(\scallev{\mvar}{\mvpat'}, F, \mtimeline, \pmsmqcur, k, \delta) = \\
            (\delta
             \cup \left\{\begin{array}{l}
                         (\pmsmqcur,
                          \epsilon,
-                         \apvcall{\sref(\mname)}{\mathit{ppat}(\mvpat)},
+                         \apvcall{\sref(\mvar)}{\mathit{ppat}(\mvpat)},
                          \pmsmq_k),\\
                         (\pmsmqcur,
                          \epsilon,
-                         \apvcall{\bclos{\swc}{\swc}{\swc}{\swc}{\mtimeline}{\swc}{\swc}{\sref{\mname}}}{\mathit{ppat}(\mvpat)}{\swc},
+                         \apvcall{\bclos{\swc}{\swc}{\swc}{\swc}{\mtimeline}{\swc}{\swc}{\sref{\mvar}}}{\mathit{ppat}(\mvpat)}{\swc},
                          \pmsmq_k)
                         \end{array}\right\}, \\
             \ F\cup \setof{\pmsmq_k}, \pmsmq_k, k+1)
@@ -786,16 +779,10 @@ and
                         \end{array}\right\}, \\
             \ F\cup \setof{\pmsmq_k}, \pmsmq_k, k+1)
 \\
-  \epshelp(\stwrap{\mtoplevelname}{\mname}{\mtcon}, F, \mtimeline, \pmsmqcur, k, \delta) = \\
-\begin{array}{l}
-   (\delta'' \cup \setof{(\pmsmqlast, -, \epsilon, \pmsmq_{k'})}, F' \cup \setof{\pmsmq_{k'}}, \pmsmq_{k'}, k' + 1) \\
-   \text{where } \delta' = \delta \cup \setof{(\pmsmqcur, +, \apwrapev{\mtoplevelname}{\sbind{\mname}}{\mtimeline}, \pmsmq_{k+1})} \\
-   \phantom{\text{where } } (\delta'', F', \pmsmqlast, k') = \epshelp(\mtcon, F \cup \setof{\pmsmqcur}, \mtimeline, \pmsmq_k, k+1, \delta')
-\end{array} \\
 \begin{array}{ll}
   \mathit{ppat}(\swc, \mtimeline) &= \swc
 \\
-  \mathit{ppat}(\mname, \mtimeline) &= \sref{\mname}
+  \mathit{ppat}(\mvar, \mtimeline) &= \sref{\mvar}
 \\
   \mathit{ppat}(\mtoplevelname, \mtimeline) &= \bclos{\mtoplevelname}{\mscon_D}{k}{j}{\mtimeline}{\mscon_R}{\mmlab}{\maddr} \\
   \mathit{ppat}(\mconstant, \mtimeline) &= \bclos{\mtoplevelname}{\mscon_D}{k}{j}{\mtimeline}{\mscon_R}{\mmlab}{\maddr}
@@ -843,16 +830,14 @@ and implementation of temporal contracts.
  \alt \sapp{\mexp}{\mexp}
  \alt \slam{\mvar}{\mexp}
  \alt \sif{\mexp}{\mexp}{\mexp} \\
-&\alt \sSMon{\mmlab}{\mmlab}{\mlab}{\mscon}{\mexp}
- \alt \sTMon{\mmlab}{\mmlab}{\mlab}{\mcontract}{\mexp} \\
+&\alt \sSMon{\mmlab}{\mmlab}{\mlab}{\mtimeline}{\mscon}{\mexp}
+ \alt \sTMon{\mmlab}{\mmlab}{\mlab}{\mscon}{\mtcon}{\mexp} \\
 \mconstant \in \Constant &=
  -1 \alt 0 \alt 1 \alt \ldots \alt + \alt - \alt \ldots \\
 &\alt \strue \alt \sfalse \alt \vee \alt \wedge \alt \ldots \\
 &\alt \sunit \alt \scons \alt \scar \alt \scdr \alt \ldots \\
 \mvar \in \Var &\quad\text{ an infinite set} \\
-\mmlab,\mname \in \ModuleLabel \alt \toplevel &\quad\text{ an infinite set, where $\toplevel$ is the top-level} \\
-\mcontract \in \Contract &= \SContract \times \TContract \\
-\mscon \in \SContract &::= \sflat{\mexp} \alt \sarr{\mname}{\mscon}{\mscon} \alt \sconsc{\mscon}{\mscon}
+\mmlab \in \Label \alt \toplevel &\quad\text{ an infinite set, where $\toplevel$ is the top-level}
 \end{align*}
 \caption{Syntax}
 \label{fig:syntax}
@@ -876,25 +861,29 @@ Since we run CFA before appealing to the model checker, the former is feasible, 
 %%
 \begin{figure}
 \begin{align*}
-  \mexp &::= \ldots
-   \alt \sblame{\mmlab}{\mmlab}
-   \alt \schk{\mmlab}{\mmlab}{\mexp}{\mval}
-   \alt \sret{\mmlab}{\mtimeline}{\mexp}
-   \alt \sown{\mexp}{\mmlab}
-  \\
-  \mval \in \Value &::=
-        \mconstant
-   \alt \vcons{\maddr}{\maddr}  
-   \alt \maddr \\
-&  \alt \bclos{\mname}{\mscon}{\mmlab}{\mmlab}{\mtimeline}{\mscon}{\mmlab}{\maddr}
-   \alt \sown{\mval}{\mmlab}
-  \\
-  \maddr \in \Addr &\text{ an infinite set} \\
-  \mstimeline \in \Timeline^{\toplevel} &::= \maddr \alt \toplevel \\
-  \mnames &\in \wp(\Var) %TODO: Do we still need this?
-  \\
-  \mscon &::= \ldots
-   \alt \sown*{\sflat{\mexp}}{\mmlab}
+\mexp &::= \ldots
+\alt \sblame{\mmlab}{\mmlab}
+\alt \schk{\mmlab}{\mmlab}{\mexp}{\mval}
+\alt \sret{\mmlab}{\mtimeline}{\mexp}
+\alt \sown{\mexp}{\mmlab}
+\\
+\mval \in \Value &::=
+    \mconstant
+\alt \vcons{\mval}{\mval}  
+\alt \maddr \\
+&  \alt \bclos{\mtoplevelname}{\mscon}{\mmlab}{\mmlab}{\mtimeline}{\mscon}{\mmlab}{\maddr}
+\alt \sown{\mval}{\mmlab}
+\\
+\maddr \in \Addr &\quad\text{an infinite set} \\
+\mstimeline \in \Timeline &::= \maddr \alt \toplevel
+\\
+\mscon &::= \ldots
+\alt \sown*{\sflat{\mexp}}{\mmlab}
+\\
+\sOwn{\mexp}{\mmlab} = \sown{ \ldots \sown{\mexp}{\mmlab} \ldots }{\mmlab}
+&\quad\text{where $\forall$ labels $k$ and terms $\mexp^\prime$, $\mexp \neq \sown{\mexp^\prime}{k}$}
+\\
+\sown*{\sflat{\mexp}}{\mmlab} &\quad\text{denotes the set of responsible parties $\overline{\mmlab}$}
 \end{align*}
 \caption{Value space}
 \label{fig:values}
@@ -907,14 +896,17 @@ Since we run CFA before appealing to the model checker, the former is feasible, 
 \mctx{\mmlab} \in \ECtx &::=
       \sapp{\mctx{\mmlab}}{\mexp}
  \alt \sapp{\mval}{\mctx{\mmlab}}
- \alt \sif{\mctx{\mmlab}}{\mexp}{\mexp}
- \alt \mlctx{\mmlab} \\
-&\alt \sSMon*{\ell}{k}{j}{\mtimeline}{\mcontract}{\mctx*}
- \alt \sSMon*{\ell^\prime}{k}{j}{\mtimeline}{\mcontract}{\mctx{\ell}} \\
-&\alt \sTMon{\ell}{k}{j}{\mscon}{\mctx*}
- \alt \sTMon{\ell^\prime}{k}{j}{\mscon}{\mctx{\ell}} \\
+ \alt \sif{\mctx{\mmlab}}{\mexp}{\mexp} \\
+&\alt \vcons{\mctx{\mmlab}}{\mexp}
+ \alt \vcons{\mval}{\mctx{\mmlab}} \\
+&\alt \sSMon{\ell}{k}{j}{\mtimeline}{\mscon}{\mctx*}
+ \alt \sSMon{\ell^\prime}{k}{j}{\mtimeline}{\mscon}{\mctx{\ell}} \\
+&\alt \sTMon{\ell}{k}{j}{\mscon}{\mtcon}{\mctx*}
+ \alt \sTMon{\ell^\prime}{k}{j}{\mscon}{\mtcon}{\mctx{\ell}} \\
 &\alt \schk*{k}{\ell}{\mtimeline}{\mctx*}{\mval}
  \alt \schk*{k}{\ell^\prime}{\mtimeline}{\mctx{\ell}}{\mval} \\
+&\alt \scall{\ell}{\mtimeline}{\mctx*}
+ \alt \scall{\ell^\prime}{\mtimeline}{\mctx{\ell}} \\
 &\alt \sret{\ell}{\mtimeline}{\mctx*}
  \alt \sret{\ell^\prime}{\mtimeline}{\mctx{\ell}} \\
 &\alt \sown{\mctx*}{\ell}
@@ -924,28 +916,18 @@ Since we run CFA before appealing to the model checker, the former is feasible, 
       \hole
  \alt \sapp{\mctx*}{\mexp}
  \alt \sapp{\mval}{\mctx*}
- \alt \sif{\mctx*}{\mexp}{\mexp}
- \alt \mlctx{\mmlab} \\
-&\alt \sret{\mmlab}{\mtimeline}{\mctx*} \\
+ \alt \sif{\mctx*}{\mexp}{\mexp} \\
+&\alt \vcons{\mctx*}{\mexp}
+ \alt \vcons{\mval}{\mctx*} \\
+&\alt \scall{\mmlab}{\mtimeline}{\mctx*}
+ \alt \sret{\mmlab}{\mtimeline}{\mctx*} \\
 \ECtx* &\subset \ECtx^\mmlab
-\\
-\mlctx{\mmlab} \in \LCtx &::=
-      \sunit
- \alt \mval
- \alt \vcons{\mlactx}{\mctx{\mmlab}}
- \\
-\mlactx &::=
- \hole \alt \maddr
 \\
 \mstate \in \State &= \angle{\mctx{\mmlab}, \msto, \mTMons} \quad\text{machine state}
 \\
-\msto \in \Store &= \Addr \parto \wp(\Storeable) \\
-\Storeable &= \Value + \TContract
+\msto \in \Store &= \Addr \parto \wp(\Value)
 \\
-\mTMons \in \TMons &= \Timeline \parto \mathit{PMSM}
-\\
-\sOwn{\mexp}{\mmlab} = \sown{ \ldots \sown{\mexp}{\mmlab} \ldots }{\mmlab}
-&\quad\text{where $\forall$ labels $k$, terms $\mexp^\prime$: $\mexp \neq \sown{\mexp^\prime}{k}$}
+\mTMons \in \TMons &= \Timeline \parto \wp{\PMSM}
 \end{align*}
 \caption{Evaluation contexts}
 \label{fig:ctx}
@@ -974,28 +956,31 @@ $\begin{array}{@{}l @{\ }c@{\ } l@{}}
 &\machstep&
 \sown{ \sapp{\{ \sown{\mval}{\mmlab}/\mvar \}}{\mexp} }{\mmlab}
 \\ % Temporal monitor
-\sTMon{k}{\mmlab}{j}{\mscon \times \mtcon}{\mval}
+\sTMon{k}{\mmlab}{j}{\mscon}{\mtcon}{\mval}
 &\machstep&
- \\ % TODO 
+\sSMon{k}{\mmlab}{j}{\mtimeline}{\mscon}{\mval} \\
+&&\text{where } \mTMons^\prime = \mTMons[\mtimeline \mapsto \compile{\mtcon}] \\
+&&\phantom{\text{where }} \mtimeline = \salloc{\mstate} \\
 &&\text{given } \mmlab = \toplevel
 \\ % Flat monitor
-\sSMon*{k}{\mmlab}{j}{\mtimeline}{ \sown*{\sflat{\mexp}}{\mmlab^{\prime\prime}} }{ \sOwn{\mconstant}{\mmlab^{\prime\prime}} }
+\sSMon{k}{\mmlab}{j}{\mtimeline}{ \sown*{\sflat{\mexp}}{\mmlab^{\prime\prime}} }{ \sOwn{\mconstant}{\mmlab^{\prime\prime}} }
 &\machstep&
 \schk*{k}{j}{\mtimeline}{ \sapp{\mexp}{\mconstant} }{\mconstant}
 \\ % Cons monitor
-\sSMon*{k}{\mmlab}{j}{\mtimeline}{ \sconsc{\mscon_A}{\mscon_D} }{ \sOwn{\vcons{\maddr_A}{\maddr_D}}{\mmlab} }
+\sSMon{k}{\mmlab}{j}{\mtimeline}{ \sconsc{\mscon_A}{\mscon_D} }{ \sOwn{\vcons{\maddr_A}{\maddr_D}}{\mmlab} }
 &\machstep&
-\sown{\vcons{ \sSMon*{k}{\mmlab}{j}{\mtimeline}{\mscon_A}{\maddr_A} }{ \sSMon*{k}{\mmlab}{j}{\mtimeline}{\mscon_D}{\maddr_D} }}{\mmlab}
+\sown{\vcons{ \sSMon{k}{\mmlab}{j}{\mtimeline}{\mscon_A}{\maddr_A} }{ \sSMon{k}{\mmlab}{j}{\mtimeline}{\mscon_D}{\maddr_D} }}{\mmlab}
 \\ % Arrow monitor
-\sSMon*{k}{\mmlab}{j}{\mtimeline}{ \sarr{\mname}{\mscon_D}{\mscon_R} }{\mval}
+\sSMon{k}{\mmlab}{j}{\mtimeline}{ \sarr{\mtoplevelname}{\mscon_D}{\mscon_R} }{\mval}
 &\machstep&
-\sown{\bclos{\mname}{\mscon_D}{k}{j}{\mtimeline}{\mscon_R}{\mmlab}{\maddr}}{\mmlab} \\
-&&\text{where } \maddr = alloc(\mstate) \\
+\sown{\bclos{\mtoplevelname}{\mscon_D}{k}{j}{\mtimeline}{\mscon_R}{\mmlab}{\maddr}}{\mmlab} \\
+&&\text{where } \maddr = \salloc{\mstate} \\
+&&\phantom{\text{where }} \msto^\prime = \msto[\maddr \mapsto \mval] \\
 &&\text{given } \mval = \slam{\mvar}{\mexp}
 \\ % Arrow monitor fail
 \ditto
 &\machstep&
-\sblame{k}{j} \quad\text{given } \mval \neq \slam{\mvar}{\mexp}
+\sblame{k}{j} \qquad\text{given } \mval \neq \slam{\mvar}{\mexp}
 \\ % Check true
 \schk{k}{j}{ \sOwn{\strue}{j} }{\mval}
 &\machstep&
@@ -1005,31 +990,41 @@ $\begin{array}{@{}l @{\ }c@{\ } l@{}}
 &\machstep&
 \sblame{k}{j}
 \\ % Blessed application
-\sapp{ \sOwn{\bclos{\mname}{\mscon_D}{k}{j}{\mtimeline}{\mscon_R}{\mmlab^{\prime\prime}}{\maddr}}{\mmlab} }{ \sOwn{\mval}{\mmlab} }
+\sapp{ \sOwn{\bclos{\mtoplevelname}{\mscon_D}{k}{j}{\mtimeline}{\mscon_R}{\mmlab^{\prime\prime}}{\maddr}}{\mmlab} }{ \sOwn{\mval}{\mmlab} }
 &\machstep&
 %TODO: Should the timeline be different?
-\sret{\mname}{\mtimeline}{ \sapp{\mval_\lambda}{\mval} } \\
+\mexp_{ret} \\
 %TODO: Do we even need to explicitly deref here?
-&&\text{where } \mval_\lambda = \msto(\maddr) \\
-&&\phantom{\text{where }} \mTMons^\prime = \sstep{\mTMons}{\mtimeline}{\scallev{\mname}{\mval}} \\
-&&\text{given $\mTMons(\mtimeline)$ accepts $\scallev{\mname}{\mval}$}
-\\ % Blessed application fail
+&&\text{where } \mexp_{ret} =
+\sret{\mtoplevelname}{\mtimeline}{ \sSMon{k}{\mmlab^{\prime\prime}}{j}{\mtimeline}{\mscon_R}{\mexp_{call}} } \\
+&&\phantom{\text{where }} \mexp_{call} =
+\scall{\mtoplevelname}{\mtimeline}{ \sapp{\mval_\lambda}{\sSMon{\mmlab^{\prime\prime}}{k}{j}{\mtimeline}{\mscon_D}{\mval}} } \\
+&&\phantom{\text{where }} \mval_\lambda = \slam{\mvar}{\mexp} = \msto(\maddr)
+\\ % Call
+\scall{\mtoplevelname}{\mtimeline}{\sOwn{\mval}{\mmlab}}
+&\machstep&
+\mval
+\qquad\text{where } \mTMons^\prime = \sstep{\mTMons}{\mtimeline}{\scallev{\mtoplevelname}{\mval}}
+\\ % Call fail
 \ditto
 &\machstep&
-\sblame{\mmlab}{j} \quad\text{given $\mTMons(\mtimeline)$ does not accept $\scallev{\mname}{\mval}$}
+\sblame{\mmlab}{j}
+\qquad\text{given } \bot = \sstep{\mTMons}{\mtimeline}{\scallev{\mtoplevelname}{\mval}}
 \\ % Return
-\sret{\mname}{\mtimeline}{ \sOwn{\mval}{\mmlab} }
+\sret{\mtoplevelname}{\mtimeline}{ \sOwn{\mval}{\mmlab} }
 &\machstep&
-\mval \\
-&&\text{where } \mTMons^\prime = \sstep{\mTMons}{\mtimeline}{\sretev{\mname}{\mval}} \\
-&&\text{given $\mTMons(\mtimeline)$ accepts $\sretev{\mname}{\mval}$}
+\mval
+\qquad\text{where } \mTMons^\prime = \sstep{\mTMons}{\mtimeline}{\sretev{\mtoplevelname}{\mval}}
 \\ % Return fail
 \ditto
 &\machstep&
-\sblame{\mname}{\j}
-\quad\text{given $\mTMons(\mtimeline)$ does not accept $\sretev{\mname}{\mval}$}
+\sblame{\mtoplevelname}{\j}
+\qquad\text{given } \bot = \sstep{\mTMons}{\mtimeline}{\sretev{\mtoplevelname}{\mval}}
 \\ % Dereference
-\maddr &\machstep& \mval \quad\text{where } \mval = \msto(\maddr)
+\maddr
+&\machstep&
+\mval
+\qquad\text{where } \mval = \msto(\maddr)
 \\ \hline % Blame
 \mctx{\mmlab}[\sblame{k}{j}]
 &\machstep&
