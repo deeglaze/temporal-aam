@@ -334,7 +334,7 @@ The temporal contract states that a user of the file is forbidden from making us
  \end{array}$ \\
  $TCPData =$
  $~ \tcpsyn \mid \tcpack \mid \tcpsynack \mid \tcpfin \mid \tcpstyle{Data}(\_)$
- 
+
  $TCPConnection =~ Record$ \\
  $\begin{array}{ @{\quad~}l@{\ :} @{~}l@{\ \to\ } l }
   send & TCPData & Unit \\
@@ -342,7 +342,7 @@ The temporal contract states that a user of the file is forbidden from making us
   timeout & Duration & Unit \\
   close & Unit & Unit
  \end{array}$ \\
- 
+
  $TCPSendContract =~ TCPConnection$ \\
  $\begin{array}{ @{~}r@{\quad} l @{}l }
   \text{where}
@@ -367,14 +367,14 @@ The temporal contract states that a user of the file is forbidden from making us
   \end{aligned} \\
   &&\ret{timeout}~ \ret{close}
  \end{array}$
- 
+
  $TCPRecvContract =~ TCPConnection$ \\
  $\begin{array}{ @{~}r@{\quad} l @{}l @{}l }
   \text{where}
   &&\rcv{\tcpsyn}~ \notclose \\
   &&\send{\tcpsynack}~ \notclose \\
   &&\rcv{\tcpack}~ \stmany{\notclose} \\
-  
+
   &&\cup
   \begin{aligned}
    &\left(
@@ -392,7 +392,7 @@ The temporal contract states that a user of the file is forbidden from making us
   \end{aligned} \\
   &&\ret{timeout}~ \ret{close}
  \end{array}$
- 
+
  \caption{TCP example}
  \label{fig:tcp}
 \end{figure}
@@ -475,7 +475,7 @@ It is easy enough to amend the structural contracts to reflect the fact that a b
 \\
    \denotetcon{\stseq{\mtcon_0}{\mtcon_1}}{\mtimeline}{\menv} &=
    \setbuild{\mtrace_0 \cdot \mtrace_1}{\mtrace_0 \in \denotetcon{\mtcon_0}{\mtimeline}{\menv}, \mtrace_1 \in \denotetcon{\mtcon_1}{\mtimeline}{\menv}}
-\\   
+\\
    \denotetcon{\stnot{\mtcon}}{\mtimeline}{\menv} &=
     \setbuild{\mtrace}{\mtrace \in \Traces^\mtimeline, \\
                       &\phantom{= \{ \mtrace : } \forall \mtrace' \in \denotetcon{\mtcon}{\mtimeline}{\menv}. \mtrace' \text{ is not a prefix of } \mtrace}
@@ -495,7 +495,7 @@ It is easy enough to amend the structural contracts to reflect the fact that a b
 \\
    \denotetcon{\stcall{\mname}{\mvar}{\mtcon}}{\mtimeline}{\menv} &=
    \setbuild{\mtrace \cdot \mtrace'}
-            {\mtrace \in \denoteevent{\scallev{\mname}{\mval}}{\mtimeline}{\menv}, 
+            {\mtrace \in \denoteevent{\scallev{\mname}{\mval}}{\mtimeline}{\menv},
              \mtrace' \in \denotetcon{\mtcon}{\mtimeline}{\menv[\mvar \mapsto \mval]}}
 \\
    \denotetcon{\stret{\mname}{\mvar}{\mtcon}}{\mtimeline}{\menv} &=
@@ -648,7 +648,7 @@ We lift $\simeq$ over constructors ($\simeq^\top$) by folding $\wedge$ over the 
 \\[2pt]
     \sqcup\span \text{ the symmetric closure of the following rules}
 \\
-    \mfail \sqcup \mbindenv &= \mfail 
+    \mfail \sqcup \mbindenv &= \mfail
 \\
     \smay{\mbindenv} \sqcup \smay{\mbindenv'} &= \smay{\combinef{\mbindenv}{\mbindenv'}}
 \\
@@ -885,7 +885,7 @@ Since we run CFA before appealing to the model checker, the former is feasible, 
 \\
 \mval \in \Value &::=
     \mconstant
-\alt \vcons{\mval}{\mval}  
+\alt \vcons{\mval}{\mval}
 \alt \maddr \\
 &  \alt \bclos{\mtoplevelname}{\mscon}{\mmlab}{\mmlab}{\mtimeline}{\mscon}{\mmlab}{\maddr}
 \alt \sown{\mval}{\mmlab}
