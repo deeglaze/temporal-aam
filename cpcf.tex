@@ -196,6 +196,7 @@ Our techniques should smoothly integrate with theirs when considering partial pr
  \alt \sddd \\
 &\alt \stcall{\mname}{\mvar}{\mtcon}
  \alt \stret{\mname}{\mvar}{\mtcon}
+\\
 \mevent \in \Event &::= \scallev{\mname}{\mvpat} \alt \sretev{\mname}{\mvpat} \\
 \mvpat \in \VPat &::= \mconstant \alt \mname \alt \swc \\
 \mvar \in \Var &\quad\text{an infinite set} \\
@@ -238,8 +239,6 @@ One of their motivating examples (recalled in \autoref{fig:sort} and addressed i
 What this should mean is the particular binding introduced by a call to $sort$ cannot be called after $sort$ returns, \ie, each constructed monitor around given comparators should not be called after $sort$ returns.
 %
 However, the flat use of \emph{labels} instead of bindings causes a second call to an in-spirit-correct $sort$ to fail, since it internally calls the comparator of the same label, but different monitor construction.
-%
-The wrapping process for a first-class function is then also an event, since it produces a new value --- the one that actually emits the call and return events.
 %
 \citeauthor{ianjohnson:dfm:icfp2011}'s implementation also includes call/return matching via a different binding at the call site to eventually use in the matching return.
 %
@@ -523,10 +522,6 @@ It is easy enough to amend the structural contracts to reflect the fact that a b
     \denoteevent{\scallev{\mtoplevelname}{\mvpat}}{\mtimeline}{\menv} &=
       \setbuild{\apvcall{\mval}{\mathit{ppat}(\mvpat, \menv)}}{\labelis{\mval}{\mtoplevelname} \text{ and } \timelineis{\mval}{\mtimeline}}
 \\
-    \denoteevent{\swrapev{\mtoplevelname}{\mvpat}}{\mtimeline}{\menv} &=
-      \setbuild{\apwrapev{\mtoplevelname}{\mval}}{\labelis{\mval}{\mtoplevelname} \text{ and } \timelineis{\mval}{\mtimeline}}
-    \\\text{where } \mval &= \mathit{ppat}(\mvpat, \menv)
-\\
    \mathit{ppat}(\swc, \menv) &= \swc
 \\
    \mathit{ppat}(\mvar, \menv) &= \menv(\mvar)
@@ -740,7 +735,6 @@ The translation easily follows if we temporarily allow $\epsilon$ transitions th
 \\
    \ary(\apvcallalone) &= 2 \\
    \ary(\apvretalone) &= 2 \\
-   \ary(\apwrapalone) &= 2 \\
    \ary(\bclos{\swc}{\swc}{\swc}{\swc}{\swc}{\swc}{\swc}{\swc}) &= 8 \\
 \\
 \begin{array}{l}
@@ -779,14 +773,6 @@ and
 \end{align*}
 Return events are similarly translated.
 
-
-% %
-%   \epshelp(\stwrap{\mtoplevelname}{\mname}{\mtcon}, F, \mtimeline, \pmsmqcur, k, \delta) = \\
-% \begin{array}{l}
-%    (\delta'' \cup \setof{(\pmsmqlast, -, \epsilon, \pmsmq_{k'})}, F' \cup \setof{\pmsmq_{k'}}, \pmsmq_{k'}, k' + 1) \\
-%    \text{where } \delta' = \delta \cup \setof{(\pmsmqcur, +, \apwrapev{\mtoplevelname}{\sbind{\mname}}{\mtimeline}, \pmsmq_{k+1})} \\
-%    \phantom{\text{where } } (\delta'', F', \pmsmqlast, k') = \epshelp(\mtcon, F \cup \setof{\pmsmqcur}, \mtimeline, \pmsmq_k, k+1, \delta')
-
 The translation for or is similar to constructing the union of NFAs.
 %
 We simply thread through a source of freshness for constructing new states.
@@ -794,7 +780,6 @@ We simply thread through a source of freshness for constructing new states.
 \begin{align*}
   \begin{array}{l}
   \epshelp(\stOr{\mtcon_0}{\mtcon_1}, F, \mtimeline, \pmsmqcur, k, \delta) = \\
-  \begin{array}{l}
     (\delta''' \cup
     \left\{\begin{array}{l}
         (\pmsmqlast^0, \epsilon, \epsilon, \pmsmq_{k''}), \\
