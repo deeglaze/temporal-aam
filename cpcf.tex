@@ -866,7 +866,9 @@ $\begin{array}{@{}l @{\ }c@{\ } l@{}}
 \\ % Temporal monitor
 \sTMon{k}{\mmlab}{j}{\mscon \times \mtcon}{\mval}
 &\machstep&
- \\ % TODO 
+\sSMon*{k}{\mmlab}{j}{\mtimeline}{\mscon}{\mval} \\
+&&\text{where } \mTMons^\prime = \mTMons[\mtimeline \mapsto \compile{\mtcon}] \\
+&&\phantom{\text{where }} \mtimeline = alloc(\msto) \\
 &&\text{given } \mmlab = \toplevel
 \\ % Flat monitor
 \sSMon*{k}{\mmlab}{j}{\mtimeline}{ \sown*{\sflat{\mexp}}{\mmlab^{\prime\prime}} }{ \sOwn{\mconstant}{\mmlab^{\prime\prime}} }

@@ -101,7 +101,6 @@
 \newcommand*{\hole}{[\,]}
 \newcommand*{\sblame}[2]{{\tt blame}^{#1}_{#2}}
 \newcommand*{\sret}[3]{\tuple*[^{#1}]{ret}{#2}{#3}}
-\newcommand*{\sstep}[3]{\tuple{\delta{}step}{#1,\,#2,\,#3}}
 
 \newcommand*{\sdefine}[3][\ ]{\tuple[#1]{define}{#2,\, #3}}
 \newcommand*{\sdefinec}[4][\ ]{\tuple[#1]{define/contract}{#2,\,#3,\,#4}}
@@ -132,6 +131,9 @@
 \newcommand*{\scallev}[2]{{\tt call}(#1,\, #2)}
 \newcommand*{\sretev}[2]{{\tt ret}(#1,\, #2)}
 \newcommand*{\swc}{\_} 
+
+\DeclarePairedDelimiter\compile{\llfloor}{\rrfloor}
+\newcommand*{\sstep}[3]{\tuple{\delta{}step}{#1,\,#2,\,#3}}
 
 \newcommand*{\denote}[1]{[\![ #1 ]\!]}
 \newcommand*{\denotetcon}[3]{[\![ #1 ]\!]^{#2}_{#3}}
