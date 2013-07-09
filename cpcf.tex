@@ -193,7 +193,8 @@ Our techniques should smoothly integrate with theirs when considering partial pr
  \alt \stmany{\mtcon}
  \alt \sddd \\
 &\alt \stcall{\mvar}{\mname}{\mtcon}
- \alt \stret{\mvar}{\mname}{\mtcon} \\
+ \alt \stret{\mvar}{\mname}{\mtcon}
+ \\%\alt \stwrap{\mvar}{\mname}{\mtcon} \\
 \mevent \in \Event &::= \scallev{\mvar}{\mvpat} \alt \sretev{\mvar}{\mvpat} \\
 \mvpat \in \VPat &::= \mconstant \alt \mvar \alt \mname \alt \swc \\
 \mvar \in \Var &\quad\text{an infinite set} \\
@@ -256,7 +257,7 @@ We maintain the semantics of labels in order to discuss top-level bindings of a 
  $\begin{array}{ @{~}r@{} l @{}l }
   \text{where}\quad
   &\stnot{(&\sddd~ \call{sort}~ \stmany{\snonevent{\ret{sort}}}~ \call{sort})} \\
-  \text{and}\quad
+  \cap\quad
   &\stnot{(&\sddd~ \scallev{sort}{?cmp}~ \sddd~ \ret{sort} \sddd~ \call{cmp})}
  \end{array}$
  \caption{Sort example}
@@ -493,7 +494,6 @@ It is easy enough to amend the structural contracts to reflect the fact that a b
 \\
    \denotetcon{\stcall{\mtoplevelname}{\mname'}{\mtcon}}{\mtimeline}{\menv} &=
    \setbuild{\aptopcall{\mtoplevelname}{\mval}{\mtimeline}\cdot \mtrace}{\mtrace \in \denotetcon{\mtcon}{\mtimeline}{\menv[\mname' \mapsto \mval]}}
-\\
 \\
    \denotetcon{\stret{\mname}{\mname'}{\mtcon}}{\mtimeline}{\menv} &=
    \setbuild{\apvret{\menv(\mname)}{\mval}{\mtimeline}\cdot \mtrace}{\mtrace \in \denotetcon{\mtcon}{\mtimeline}{\menv[\mname' \mapsto \mval]}}
@@ -761,26 +761,29 @@ Since we run CFA before appealing to the model checker, the former is feasible, 
 %%
 \begin{figure}
 \begin{align*}
-  \mexp &::= \ldots
-   \alt \sblame{\mmlab}{\mmlab}
-   \alt \schk{\mmlab}{\mmlab}{\mexp}{\mval}
-   \alt \sret{\mmlab}{\mtimeline}{\mexp}
-   \alt \sown{\mexp}{\mmlab}
-  \\
-  \mval \in \Value &::=
-        \mconstant
-   \alt \vcons{\maddr}{\maddr}  
-   \alt \maddr \\
+\mexp &::= \ldots
+\alt \sblame{\mmlab}{\mmlab}
+\alt \schk{\mmlab}{\mmlab}{\mexp}{\mval}
+\alt \sret{\mmlab}{\mtimeline}{\mexp}
+\alt \sown{\mexp}{\mmlab}
+\\
+\mval \in \Value &::=
+    \mconstant
+\alt \vcons{\mval}{\mval}  
+\alt \maddr \\
 &  \alt \bclos{\mname}{\mscon}{\mmlab}{\mmlab}{\mtimeline}{\mscon}{\mmlab}{\maddr}
-   \alt \sown{\mval}{\mmlab}
-  \\
-  \maddr \in \Addr &\quad\text{an infinite set} \\
-  \mstimeline \in \Timeline &::= \maddr \alt \toplevel
-  \\
-  \mscon &::= \ldots
-   \alt \sown*{\sflat{\mexp}}{\mmlab}
-  \\
-  \sown*{\sflat{\mexp}}{\mmlab} &\quad\text{denotes the set of responsible parties $\overline{\mmlab}$}
+\alt \sown{\mval}{\mmlab}
+\\
+\maddr \in \Addr &\quad\text{an infinite set} \\
+\mstimeline \in \Timeline &::= \maddr \alt \toplevel
+\\
+\mscon &::= \ldots
+\alt \sown*{\sflat{\mexp}}{\mmlab}
+\\
+\sOwn{\mexp}{\mmlab} = \sown{ \ldots \sown{\mexp}{\mmlab} \ldots }{\mmlab}
+&\quad\text{where $\forall$ labels $k$ and terms $\mexp^\prime$, $\mexp \neq \sown{\mexp^\prime}{k}$}
+\\
+\sown*{\sflat{\mexp}}{\mmlab} &\quad\text{denotes the set of responsible parties $\overline{\mmlab}$}
 \end{align*}
 \caption{Value space}
 \label{fig:values}
@@ -793,14 +796,17 @@ Since we run CFA before appealing to the model checker, the former is feasible, 
 \mctx{\mmlab} \in \ECtx &::=
       \sapp{\mctx{\mmlab}}{\mexp}
  \alt \sapp{\mval}{\mctx{\mmlab}}
- \alt \sif{\mctx{\mmlab}}{\mexp}{\mexp}
- \alt \mlctx{\mmlab} \\
+ \alt \sif{\mctx{\mmlab}}{\mexp}{\mexp} \\
+&\alt \vcons{\mctx{\mmlab}}{\mexp}
+ \alt \vcons{\mval}{\mctx{\mmlab}} \\
 &\alt \sSMon{\ell}{k}{j}{\mtimeline}{\mscon}{\mctx*}
  \alt \sSMon{\ell^\prime}{k}{j}{\mtimeline}{\mscon}{\mctx{\ell}} \\
 &\alt \sTMon{\ell}{k}{j}{\mscon}{\mtcon}{\mctx*}
  \alt \sTMon{\ell^\prime}{k}{j}{\mscon}{\mtcon}{\mctx{\ell}} \\
 &\alt \schk*{k}{\ell}{\mtimeline}{\mctx*}{\mval}
  \alt \schk*{k}{\ell^\prime}{\mtimeline}{\mctx{\ell}}{\mval} \\
+&\alt \scall{\ell}{\mtimeline}{\mctx*}
+ \alt \scall{\ell^\prime}{\mtimeline}{\mctx{\ell}} \\
 &\alt \sret{\ell}{\mtimeline}{\mctx*}
  \alt \sret{\ell^\prime}{\mtimeline}{\mctx{\ell}} \\
 &\alt \sown{\mctx*}{\ell}
@@ -810,28 +816,18 @@ Since we run CFA before appealing to the model checker, the former is feasible, 
       \hole
  \alt \sapp{\mctx*}{\mexp}
  \alt \sapp{\mval}{\mctx*}
- \alt \sif{\mctx*}{\mexp}{\mexp}
- \alt \mlctx{\mmlab} \\
-&\alt \sret{\mmlab}{\mtimeline}{\mctx*} \\
+ \alt \sif{\mctx*}{\mexp}{\mexp} \\
+&\alt \vcons{\mctx*}{\mexp}
+ \alt \vcons{\mval}{\mctx*} \\
+&\alt \scall{\mmlab}{\mtimeline}{\mctx*}
+ \alt \sret{\mmlab}{\mtimeline}{\mctx*} \\
 \ECtx* &\subset \ECtx^\mmlab
-\\
-\mlctx{\mmlab} \in \LCtx &::=
-      \sunit
- \alt \mval
- \alt \vcons{\mlactx}{\mctx{\mmlab}}
- \\
-\mlactx &::=
- \hole \alt \maddr
 \\
 \mstate \in \State &= \angle{\mctx{\mmlab}, \msto, \mTMons} \quad\text{machine state}
 \\
-\msto \in \Store &= \Addr \parto \wp(\Storeable) \\
-\Storeable &= \Value + \TContract
+\msto \in \Store &= \Addr \parto \wp(\Value)
 \\
-\mTMons \in \TMons &= \Timeline \parto \mathit{PMSM}
-\\
-\sOwn{\mexp}{\mmlab} = \sown{ \ldots \sown{\mexp}{\mmlab} \ldots }{\mmlab}
-&\quad\text{where $\forall$ labels $k$, terms $\mexp^\prime$: $\mexp \neq \sown{\mexp^\prime}{k}$}
+\mTMons \in \TMons &= \Timeline \parto \wp{\PMSM}
 \end{align*}
 \caption{Evaluation contexts}
 \label{fig:ctx}
@@ -879,11 +875,12 @@ $\begin{array}{@{}l @{\ }c@{\ } l@{}}
 &\machstep&
 \sown{\bclos{\mname}{\mscon_D}{k}{j}{\mtimeline}{\mscon_R}{\mmlab}{\maddr}}{\mmlab} \\
 &&\text{where } \maddr = \salloc{\mstate} \\
+&&\phantom{\text{where }} \msto^\prime = \msto[\maddr \mapsto \mval] \\
 &&\text{given } \mval = \slam{\mvar}{\mexp}
 \\ % Arrow monitor fail
 \ditto
 &\machstep&
-\sblame{k}{j} \quad\text{given } \mval \neq \slam{\mvar}{\mexp}
+\sblame{k}{j} \qquad\text{given } \mval \neq \slam{\mvar}{\mexp}
 \\ % Check true
 \schk{k}{j}{ \sOwn{\strue}{j} }{\mval}
 &\machstep&
@@ -896,28 +893,38 @@ $\begin{array}{@{}l @{\ }c@{\ } l@{}}
 \sapp{ \sOwn{\bclos{\mname}{\mscon_D}{k}{j}{\mtimeline}{\mscon_R}{\mmlab^{\prime\prime}}{\maddr}}{\mmlab} }{ \sOwn{\mval}{\mmlab} }
 &\machstep&
 %TODO: Should the timeline be different?
-\sret{\mname}{\mtimeline}{ \sapp{\mval_\lambda}{\mval} } \\
+\mexp_{ret} \\
 %TODO: Do we even need to explicitly deref here?
-&&\text{where } \mval_\lambda = \msto(\maddr) \\
-&&\phantom{\text{where }} \mTMons^\prime = \sstep{\mTMons}{\mtimeline}{\scallev{\mname}{\mval}} \\
-&&\text{given $\mTMons(\mtimeline)$ accepts $\scallev{\mname}{\mval}$}
-\\ % Blessed application fail
+&&\text{where } \mexp_{ret} =
+\sret{\mname}{\mtimeline}{ \sSMon{k}{\mmlab^{\prime\prime}}{j}{\mtimeline}{\mscon_R}{\mexp_{call}} } \\
+&&\phantom{\text{where }} \mexp_{call} =
+\scall{\mname}{\mtimeline}{ \sapp{\mval_\lambda}{\sSMon{\mmlab^{\prime\prime}}{k}{j}{\mtimeline}{\mscon_D}{\mval}} } \\
+&&\phantom{\text{where }} \mval_\lambda = \slam{\mvar}{\mexp} = \msto(\maddr)
+\\ % Call
+\scall{\mname}{\mtimeline}{\sOwn{\mval}{\mmlab}}
+&\machstep&
+\mval
+\qquad\text{where } \mTMons^\prime = \sstep{\mTMons}{\mtimeline}{\scallev{\mname}{\mval}}
+\\ % Call fail
 \ditto
 &\machstep&
-\sblame{\mmlab}{j} \quad\text{given $\mTMons(\mtimeline)$ does not accept $\scallev{\mname}{\mval}$}
+\sblame{\mmlab}{j}
+\qquad\text{given } \bot = \sstep{\mTMons}{\mtimeline}{\scallev{\mname}{\mval}}
 \\ % Return
 \sret{\mname}{\mtimeline}{ \sOwn{\mval}{\mmlab} }
 &\machstep&
-\mval \\
-&&\text{where } \mTMons^\prime = \sstep{\mTMons}{\mtimeline}{\sretev{\mname}{\mval}} \\
-&&\text{given $\mTMons(\mtimeline)$ accepts $\sretev{\mname}{\mval}$}
+\mval
+\qquad\text{where } \mTMons^\prime = \sstep{\mTMons}{\mtimeline}{\sretev{\mname}{\mval}}
 \\ % Return fail
 \ditto
 &\machstep&
 \sblame{\mname}{\j}
-\quad\text{given $\mTMons(\mtimeline)$ does not accept $\sretev{\mname}{\mval}$}
+\qquad\text{given } \bot = \sstep{\mTMons}{\mtimeline}{\sretev{\mname}{\mval}}
 \\ % Dereference
-\maddr &\machstep& \mval \quad\text{where } \mval = \msto(\maddr)
+\maddr
+&\machstep&
+\mval
+\qquad\text{where } \mval = \msto(\maddr)
 \\ \hline % Blame
 \mctx{\mmlab}[\sblame{k}{j}]
 &\machstep&
