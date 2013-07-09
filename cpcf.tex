@@ -192,13 +192,13 @@ Our techniques should smoothly integrate with theirs when considering partial pr
  \alt \stAnd{\mtcon}{\mtcon}
  \alt \stmany{\mtcon}
  \alt \sddd \\
-&\alt \stcall{\mvar}{\mname}{\mtcon}
- \alt \stret{\mvar}{\mname}{\mtcon}
- \\%\alt \stwrap{\mvar}{\mname}{\mtcon} \\
-\mevent \in \Event &::= \scallev{\mvar}{\mvpat} \alt \sretev{\mvar}{\mvpat} \\
-\mvpat \in \VPat &::= \mconstant \alt \mvar \alt \mname \alt \swc \\
+&\alt \stcall{\mname}{\mvar}{\mtcon}
+ \alt \stret{\mname}{\mvar}{\mtcon} \\
+\mevent \in \Event &::= \scallev{\mname}{\mvpat} \alt \sretev{\mname}{\mvpat} \\
+\mvpat \in \VPat &::= \mconstant \alt \mvar \alt \swc \\
+\mname &::= \mvar \alt \mmlab \\
 \mvar \in \Var &\quad\text{an infinite set} \\
-\mname \in \Label &\quad\text{an infinite set}
+\mmlab \in \Label &\quad\text{an infinite set}
   \end{align*}
   \caption{Syntax of temporal contracts}
   \label{fig:tcontract-syntax}
@@ -737,7 +737,7 @@ and implementation of temporal contracts.
 &\alt \strue \alt \sfalse \alt \vee \alt \wedge \alt \ldots \\
 &\alt \sunit \alt \scons \alt \scar \alt \scdr \alt \ldots \\
 \mvar \in \Var &\quad\text{ an infinite set} \\
-\mmlab,\mname \in \Label \alt \toplevel &\quad\text{ an infinite set, where $\toplevel$ is the top-level}
+\mmlab \in \Label \alt \toplevel &\quad\text{ an infinite set, where $\toplevel$ is the top-level}
 \end{align*}
 \caption{Syntax}
 \label{fig:syntax}
@@ -768,10 +768,9 @@ Since we run CFA before appealing to the model checker, the former is feasible, 
 \alt \sown{\mexp}{\mmlab}
 \\
 \mval \in \Value &::=
-    \mconstant
-\alt \vcons{\mval}{\mval}  
-\alt \maddr \\
-&  \alt \bclos{\mname}{\mscon}{\mmlab}{\mmlab}{\mtimeline}{\mscon}{\mmlab}{\maddr}
+     \mconstant
+\alt \vcons{\mval}{\mval}
+\alt \bclos{\mmlab}{\mscon}{\mmlab}{\mmlab}{\mtimeline}{\mscon}{\mmlab}{\maddr}
 \alt \sown{\mval}{\mmlab}
 \\
 \maddr \in \Addr &\quad\text{an infinite set} \\
@@ -796,7 +795,8 @@ Since we run CFA before appealing to the model checker, the former is feasible, 
 \mctx{\mmlab} \in \ECtx &::=
       \sapp{\mctx{\mmlab}}{\mexp}
  \alt \sapp{\mval}{\mctx{\mmlab}}
- \alt \sif{\mctx{\mmlab}}{\mexp}{\mexp} \\
+ \alt \sif{\mctx{\mmlab}}{\mexp}{\mexp}
+ \alt \maddr \\
 &\alt \vcons{\mctx{\mmlab}}{\mexp}
  \alt \vcons{\mval}{\mctx{\mmlab}} \\
 &\alt \sSMon{\ell}{k}{j}{\mtimeline}{\mscon}{\mctx*}
@@ -842,7 +842,7 @@ $\begin{array}{@{}l @{\ }c@{\ } l@{}}
 \mstate \angle{\mctx{\mmlab}[\ldots], \msto, \mTMons}
 &\machstep&
 %TODO: Can mmlab change?
-\mstate^\prime \angle{\mctx{\mmlab^\prime}[\ldots], \msto^\prime, \mTMons^\prime}
+\mstate^\prime \angle{\mctx{\mmlab}[\ldots], \msto^\prime, \mTMons^\prime}
 \\ \hline % If true
 \sif{ \sOwn{\strue}{\mmlab} }{\mexp_1}{\mexp_2}
 &\machstep&
@@ -863,7 +863,7 @@ $\begin{array}{@{}l @{\ }c@{\ } l@{}}
 &&\phantom{\text{where }} \mtimeline = \salloc{\mstate} \\
 &&\text{given } \mmlab = \toplevel
 \\ % Flat monitor
-\sSMon{k}{\mmlab}{j}{\mtimeline}{ \sown*{\sflat{\mexp}}{\mmlab^{\prime\prime}} }{ \sOwn{\mconstant}{\mmlab^{\prime\prime}} }
+\sSMon{k}{\mmlab}{j}{\mtimeline}{ \sown*{\sflat{\mexp}}{\mmlab^\prime} }{ \sOwn{\mconstant}{\mmlab^\prime} }
 &\machstep&
 \schk*{k}{j}{\mtimeline}{ \sapp{\mexp}{\mconstant} }{\mconstant}
 \\ % Cons monitor
@@ -871,9 +871,9 @@ $\begin{array}{@{}l @{\ }c@{\ } l@{}}
 &\machstep&
 \sown{\vcons{ \sSMon{k}{\mmlab}{j}{\mtimeline}{\mscon_A}{\maddr_A} }{ \sSMon{k}{\mmlab}{j}{\mtimeline}{\mscon_D}{\maddr_D} }}{\mmlab}
 \\ % Arrow monitor
-\sSMon{k}{\mmlab}{j}{\mtimeline}{ \sarr{\mname}{\mscon_D}{\mscon_R} }{\mval}
+\sSMon{k}{\mmlab}{j}{\mtimeline}{ \sarr{\mmlab_\lambda}{\mscon_D}{\mscon_R} }{\mval}
 &\machstep&
-\sown{\bclos{\mname}{\mscon_D}{k}{j}{\mtimeline}{\mscon_R}{\mmlab}{\maddr}}{\mmlab} \\
+\sown{\bclos{\mmlab_\lambda}{\mscon_D}{k}{j}{\mtimeline}{\mscon_R}{\mmlab}{\maddr}}{\mmlab} \\
 &&\text{where } \maddr = \salloc{\mstate} \\
 &&\phantom{\text{where }} \msto^\prime = \msto[\maddr \mapsto \mval] \\
 &&\text{given } \mval = \slam{\mvar}{\mexp}
@@ -890,36 +890,36 @@ $\begin{array}{@{}l @{\ }c@{\ } l@{}}
 &\machstep&
 \sblame{k}{j}
 \\ % Blessed application
-\sapp{ \sOwn{\bclos{\mname}{\mscon_D}{k}{j}{\mtimeline}{\mscon_R}{\mmlab^{\prime\prime}}{\maddr}}{\mmlab} }{ \sOwn{\mval}{\mmlab} }
+\sapp{ \sOwn{\bclos{\mmlab_\lambda}{\mscon_D}{k}{j}{\mtimeline}{\mscon_R}{\mmlab^\prime}{\maddr}}{\mmlab} }{ \sOwn{\mval}{\mmlab} }
 &\machstep&
 %TODO: Should the timeline be different?
 \mexp_{ret} \\
 %TODO: Do we even need to explicitly deref here?
 &&\text{where } \mexp_{ret} =
-\sret{\mname}{\mtimeline}{ \sSMon{k}{\mmlab^{\prime\prime}}{j}{\mtimeline}{\mscon_R}{\mexp_{call}} } \\
+\sret{\mmlab_\lambda}{\mtimeline}{ \sSMon{k}{\mmlab^\prime}{j}{\mtimeline}{\mscon_R}{\mexp_{call}} } \\
 &&\phantom{\text{where }} \mexp_{call} =
-\scall{\mname}{\mtimeline}{ \sapp{\mval_\lambda}{\sSMon{\mmlab^{\prime\prime}}{k}{j}{\mtimeline}{\mscon_D}{\mval}} } \\
+\scall{\mmlab_\lambda}{\mtimeline}{ \sapp{\mval_\lambda}{\sSMon{\mmlab^\prime}{k}{j}{\mtimeline}{\mscon_D}{\mval}} } \\
 &&\phantom{\text{where }} \mval_\lambda = \slam{\mvar}{\mexp} = \msto(\maddr)
 \\ % Call
-\scall{\mname}{\mtimeline}{\sOwn{\mval}{\mmlab}}
+\scall{\mmlab_\lambda}{\mtimeline}{\sOwn{\mval}{\mmlab}}
 &\machstep&
 \mval
-\qquad\text{where } \mTMons^\prime = \sstep{\mTMons}{\mtimeline}{\scallev{\mname}{\mval}}
+\qquad\text{where } \mTMons^\prime = \sstep{\mTMons}{\mtimeline}{\scallev{\mmlab_\lambda}{\mval}}
 \\ % Call fail
 \ditto
 &\machstep&
 \sblame{\mmlab}{j}
-\qquad\text{given } \bot = \sstep{\mTMons}{\mtimeline}{\scallev{\mname}{\mval}}
+\qquad\text{given } \bot = \sstep{\mTMons}{\mtimeline}{\scallev{\mmlab_\lambda}{\mval}}
 \\ % Return
-\sret{\mname}{\mtimeline}{ \sOwn{\mval}{\mmlab} }
+\sret{\mmlab_\lambda}{\mtimeline}{ \sOwn{\mval}{\mmlab} }
 &\machstep&
 \mval
-\qquad\text{where } \mTMons^\prime = \sstep{\mTMons}{\mtimeline}{\sretev{\mname}{\mval}}
+\qquad\text{where } \mTMons^\prime = \sstep{\mTMons}{\mtimeline}{\sretev{\mmlab_\lambda}{\mval}}
 \\ % Return fail
 \ditto
 &\machstep&
-\sblame{\mname}{\j}
-\qquad\text{given } \bot = \sstep{\mTMons}{\mtimeline}{\sretev{\mname}{\mval}}
+\sblame{\mmlab_\lambda}{\j}
+\qquad\text{given } \bot = \sstep{\mTMons}{\mtimeline}{\sretev{\mmlab_\lambda}{\mval}}
 \\ % Dereference
 \maddr
 &\machstep&
