@@ -105,7 +105,7 @@ Our contributions in this paper are as follows:
 \begin{itemize}
  \item{an extension to \citeauthor{ianjohnson:dfm:icfp2011}'s temporal contract semantics;}
  \item{a new automaton model that we use to implement the monitor for this new semantics; and}
- \item{a sound abstraction to computably verify temporal contract adhereance}
+ \item{a sound abstraction to computably verify temporal contract satisfaction}
 \end{itemize}
 %%
 
@@ -179,6 +179,8 @@ Our techniques should smoothly integrate with theirs when considering partial pr
 \\ &
                     \alt \sSMon*{\mmlab_u}{\mmlab_c}{\mmlab_o}{\mtimeline}{\mscon, \mexp}
                     \alt \ldots
+\\
+\mtoplevelname \in \Label&\text{ an infinite set} \\
   \end{align*}
   \caption{Syntax of structural contracts with labels}
   \label{fig:scontract-syntax}
@@ -195,11 +197,11 @@ Our techniques should smoothly integrate with theirs when considering partial pr
  \alt \stmany{\mtcon}
  \alt \sddd \\
 &\alt \stcall{\mvar}{\mname}{\mtcon}
- \alt \stret{\mvar}{\mname}{\mtcon} \\
+ \alt \stret{\mvar}{\mname}{\mtcon}
+ \alt \stwrap{\mtoplevelname}{\mname}{\mtcon} \\
 \mevent \in \Event &::= \scallev{\mvar}{\mvpat} \alt \sretev{\mvar}{\mvpat} \\
 \mvpat \in \VPat &::= \mconstant \alt \mvar \alt \swc \\
 \mname \in \Name &\text{ an infinite set} \\
-\mtoplevelname \in \Label&\text{ an infinite set} \\
 \mvar &::= \mname \alt \mtoplevelname
   \end{align*}
   \caption{Syntax of temporal contracts}
@@ -224,7 +226,7 @@ Events themselves are expressed as patterns denoting calls ($\scallev{\mvar}{\mv
 %
 If $\mvar$ is a label, we simply check that the monitor wrapping the function has the same label (attached via the structural contract).
 %
-However, if $\mvar$ is a name, then we consult a binding environment that the monitoring system builds as we pass binding events to determine if the function is exactly equal to the value bound.
+However, if $\mvar$ is a name, then we consult a binding environment that the monitoring system builds as we pass binding events to determine if the function is a wrapped closure around the pointer bound by a wrap event.
 %
 The distinction between names (bound by temporal contract) and labels (bound by structural contract) is what separates our semantics from \citeauthor{ianjohnson:dfm:icfp2011}'s.
 %
@@ -232,7 +234,7 @@ Patterns can match constants ($\mconstant$), bound names ($\mname$), labeled fun
 %%
 
 %%
-\citeauthor{ianjohnson:dfm:icfp2011}'s semantics for referring to functions is problematic; we give a slightly different account that captures the spirit of their prose describing their system.
+\citeauthor{ianjohnson:dfm:icfp2011}'s semantics for referring to functions is problematic; we give a slightly different account that captures the spirit of their prose describing their system, and indeed mirrors their actual implementation.
 %
 One of their motivating examples (recalled in \autoref{fig:sort} and addressed in \autoref{sec:sort}) was to protect the comparator passed to a sort function from escaping the scope of the call.
 %
@@ -240,7 +242,11 @@ What this should mean is the particular binding introduced by a call to $sort$ c
 %
 However, the flat use of \emph{labels} instead of bindings causes a second call to an in-spirit-correct $sort$ to fail, since it internally calls the comparator of the same label, but different monitor construction.
 %
-We maintain the semantics of labels in order to discuss top-level bindings of a module, but encourage the use of binding for contracting the use of first-class functions.
+The wrapping process for a first-class function is then also an event, since it produces a new value --- the one that actually emits the call and return events.
+%
+\citeauthor{ianjohnson:dfm:icfp2011}'s implementation also includes call/return matching via a different binding at the call site to eventually use in the matching return.
+%
+We leave call/return matching to future work, as it is not necessary to verify the motivating examples.
 %%
 
 %%
@@ -461,7 +467,7 @@ We denote temporal contracts as sets of event traces that satisfy the contract, 
 %
 The semantics is close to \citeauthor{ianjohnson:dfm:icfp2011}'s definition, and given in \autoref{fig:tcontract-denotation}.
 %
-We made the express design choice to require a function contract monitor wrapping for named values to consider their calls or returns as events.
+We made the express design choice to require a function contract monitor wrapping for named values to consider their calls or returns as events --- this choice is reflected in the denotation of events in \autoref{fig:event-denotation}.
 %
 The reason for this is that control should flow back to the timeline considered in order for an event to affect that timeline.
 %
@@ -491,18 +497,19 @@ It is easy enough to amend the structural contracts to reflect the fact that a b
    \denotetcon{\sddd}{\mtimeline}{\menv} &=
    \Traces^\mtimeline
 \\
-   \denotetcon{\stcall{\mname}{\mname'}{\mtcon}}{\mtimeline}{\menv} &=
-   \setbuild{\apvcall{\menv(\mname)}{\mval}{\mtimeline}\cdot \mtrace}{\mtrace \in \denotetcon{\mtcon}{\mtimeline}{\menv[\mname' \mapsto \mval]}}
+   \denotetcon{\stcall{\mvar}{\mname'}{\mtcon}}{\mtimeline}{\menv} &=
+   \setbuild{\mtrace \cdot \mtrace'}
+            {\mtrace \in \denoteevent{\scallev{\mvar}{\mval}}{\mtimeline}{\menv}, 
+             \mtrace' \in \denotetcon{\mtcon}{\mtimeline}{\menv[\mname' \mapsto \mval]}}
 \\
-   \denotetcon{\stcall{\mtoplevelname}{\mname'}{\mtcon}}{\mtimeline}{\menv} &=
-   \setbuild{\aptopcall{\mtoplevelname}{\mval}{\mtimeline}\cdot \mtrace}{\mtrace \in \denotetcon{\mtcon}{\mtimeline}{\menv[\mname' \mapsto \mval]}}
+   \denotetcon{\stret{\mvar}{\mname'}{\mtcon}}{\mtimeline}{\menv} &=
+   \setbuild{\mtrace\cdot \mtrace'}
+            {\mtrace \in \denoteevent{\sretev{\mvar}{\mval}}{\mtimeline}{\menv},
+             \mtrace' \in \denotetcon{\mtcon}{\mtimeline}{\menv[\mname' \mapsto \mval]}}
 \\
-\\
-   \denotetcon{\stret{\mname}{\mname'}{\mtcon}}{\mtimeline}{\menv} &=
-   \setbuild{\apvret{\menv(\mname)}{\mval}{\mtimeline}\cdot \mtrace}{\mtrace \in \denotetcon{\mtcon}{\mtimeline}{\menv[\mname' \mapsto \mval]}}
-\\
-   \denotetcon{\stret{\mtoplevelname}{\mname'}{\mtcon}}{\mtimeline}{\menv} &=
-   \setbuild{\aptopret{\mtoplevelname}{\mval}{\mtimeline}\cdot \mtrace}{\mtrace \in \denotetcon{\mtcon}{\mtimeline}{\menv[\mname' \mapsto \mval]}}
+   \denotetcon{\stwrap{\mtoplevelname}{\mname}{\mtcon}}{\mtimeline}{\menv} &=
+   \setbuild{\apwrapev{\mtoplevelname}{\mval} \cdot \mtrace}
+            {\mtrace \in \denotetcon{\mtcon}{\mtimeline}{\menv[\mname' \mapsto \mval]}}
   \end{align*}
   The denotation is (implicitly) composed with prefix closure at the top level to allow the progression of execution.
   \begin{align*}
@@ -510,6 +517,30 @@ It is easy enough to amend the structural contracts to reflect the fact that a b
   \end{align*}
   \caption{Denotation of Temporal Contracts}
   \label{fig:tcontract-denotation}
+\end{figure}
+
+\begin{figure}
+  \begin{align*}
+    \denoteevent{\scallev{\mname}{\mvpat}}{\mtimeline}{\menv} &= \\
+    &\left\{\begin{array}{ll}
+           \setof{\apvcall{\menv(\mname)}{\mathit{ppat}(\mvpat, \menv)}} &\text{ if } \timelineis{\menv(\mname)}{\mtimeline} \\
+           \emptyset & \text{ otherwise}
+           \end{array}\right.
+\\
+    \denoteevent{\scallev{\mtoplevelname}{\mvpat}}{\mtimeline}{\menv} &=
+      \setbuild{\apvcall{\mval}{\mathit{ppat}(\mvpat, \menv)}}{\labelis{\mval}{\mtoplevelname} \text{ and } \timelineis{\mval}{\mtimeline}}
+\\
+   \mathit{ppat}(\swc, \menv) &= \swc
+\\
+   \mathit{ppat}(\mname, \menv) &= \menv(\mname)
+\\
+   \mathit{ppat}(\mtoplevelname, \menv) &= \bclos{\mtoplevelname}{\swc}{\swc}{\swc}{\swc}{\swc}{\swc}{\swc}
+  \end{align*}
+  where $\timelineis{\bclos{\swc}{\swc}{\swc}{\swc}{\mtimeline}{\swc}{\swc}{\swc}}{\mtimeline}$ \\
+  and $\labelis{\bclos{\mtoplevelname}{\swc}{\swc}{\swc}{\mtimeline}{\swc}{\swc}{\swc}}{\mtoplevelname}$ \\
+  (Return events are similar)
+  \caption{Denotation of events}
+  \label{fig:event-denotation}
 \end{figure}
 
 Negation differs from what one might expect due to the prefix closure at the top level.
@@ -520,7 +551,7 @@ Say we defined negation to be
 \end{equation*}
 In this case, $\mevent\mevent' \in \denotetcon{\stnot{\mevent}}{\mtimeline}{\menv}$, and because of prefix closure, $\mevent \in \denotetcon{\stnot{\mevent}}{\mtimeline}{\menv}$!
 %
-We changed negation to mean that the trace cannot ever \emph{begin} with a trace satisfying the contract, since we want to error early when specified protocols aren't followed correctly.
+Temporal contract monitors should blame the faulty party as soon as the contract has been violated, and thus any trace with a faulty prefix should be rejected.
 %%
 
 %%
@@ -559,7 +590,7 @@ Additionally, since we plan to later abstract our semantics (and values), we nee
 %
 The atomic symbols therefore come equipped with a may/must/never equality-checking function.
 %
-A PMSM is thus a tuple $(Q, F, q_0, \Sigma, \simeq, \mathit{ary}, \delta)$ where
+A PMSM is thus a tuple $(Q, F, q_0, \Sigma, \simeq, \ary, \delta)$ where
 \begin{align*}
   \Sigma &\text{ a set of atoms} \\
   \simeq : \Sigma \times \Sigma \to \setof{\top, \bot, ?} &\text{ weak equality function}\\
@@ -576,41 +607,44 @@ The syntax and semantics of matching patterns is in \autoref{fig:pattern-syntax}
 %
 Additionally, $\combinefalone$ on $\mbindenv$s is a right-biased finite function combination; we don't allow non-linear patterns (though it would be an easy extension) so the bias doesn't matter.
 %
+We lift $\simeq$ over constructors ($\simeq^\top$) by folding $\wedge$ over the data to compare atoms in the leaves.
+%
 \begin{figure}
   \begin{align*}
-    \mpat \in \Pattern &::= \mconstructor(\mvpat, \ldots_{\ary(\mconstructor)}) \alt \snonevent{\mconstructor(\mvpat, \ldots_{\ary(\mconstructor)})}
+    \mpat \in \Pattern &::= \mconstructor(\mpat, \ldots_{\ary(\mconstructor)}) \alt \snonevent{\mconstructor(\mpat, \ldots_{\ary(\mconstructor)})} \\
+     & \alt \swc \alt \sref{\mname} \alt \sbind{\mname} \alt \matom
+      \quad\text{ where } \matom \in \Sigma \alt
 \\
-    \mdata \in \Qualified &::= \mconstructor(\matom, \ldots_{\ary(\mconstructor)})
+    \mdata \in \Qualified &::= \mconstructor(\mdata, \ldots_{\ary(\mconstructor)}) \alt \matom
 \\
-    \mvpat \in \VPat &::= \swc \alt \sref{\mname} \alt \sbind{\mname} \alt \matom
-      \quad\text{ where } \matom \in \Sigma
-\\
-    \mbindenv \in \BindEnv &= \mname \to \Sigma
+    \mbindenv \in \BindEnv &= \mname \to \Qualified
 \\
     \MatchResult &::= \mfail \alt \smay{\mbindenv} \alt \smust{\mbindenv}
 \\
     \match &: \Pattern \times \Qualified \times \BindEnv \to \MatchResult
 \\
-    \match(\mconstructor(\mvpat \ldots), \mconstructor(\matom \ldots), \mbindenv) &=
-      \bigsqcup\limits_i{\matchv(\mvpat_i, \matom_i, \mbindenv)}
+    \match(\swc, \mdata, \mbindenv) &= \smust{\mbindenv}
 \\
-    \match(\snonevent{\mconstructor(\mvpat \ldots)}, \mdata, \mbindenv) &=
+    \match(\mconstructor(\mpat \ldots), \mconstructor(\matom \ldots), \mbindenv) &=
+      \bigsqcup\limits_i{\match(\mpat_i, \matom_i, \mbindenv)}
+\\
+    \match(\snonevent{\mconstructor(\mpat \ldots)}, \mdata, \mbindenv) &=
       \left\{\begin{array}{ll}
                \smust{\mbindenv} & \text{if } \mfail = \mres \\
                \smay{\mbindenv} & \text{if } \smay{\mbindenv'} = \mres \\
                \mfail & \text{ if} \smust{\mbindenv'} = \mres \\
              \end{array}\right.
-    \\ \text{where }& \mres = \match(\mconstructor(\mvpat \ldots), \mdata, \mbindenv)
+    \\ \text{where }& \mres = \match(\mconstructor(\mpat \ldots), \mdata, \mbindenv)
+\\
+    \match(\swc, \mdata, \mbindenv) &= \smust{\mbindenv}
+\\
+    \match(\sref{\mname}, \mdata, \mbindenv) &= \weakif(\mbindenv, \mdata \simeq^\top \mbindenv(\mname))
+\\
+    \match(\sbind{\mname}, \mdata, \mbindenv) &= \smust{\mbindenv[\mname \mapsto \mdata]}
+\\
+    \match(\matom, \matom', \mbindenv) &= \weakif(\mbindenv, \matom \simeq \matom')
 \\
     \match(\mpat, \mdata, \mbindenv) &= \mfail \text{ otherwise}
-\\[2pt]
-    \matchv(\swc, \matom, \mbindenv) &= \mbindenv
-\\
-    \matchv(\sref{\mname}, \matom, \mbindenv) &= \weakif(\mbindenv, \matom \simeq \mbindenv(\mname))
-\\
-    \matchv(\sbind{\mname}, \matom, \mbindenv) &= \smust{\mbindenv[\mname \mapsto \matom]}
-\\
-    \matchv(\matom, \matom', \mbindenv) &= \weakif(\mbindenv, \matom \simeq \matom')
 \\
     \weakif(\mbindenv, \top) &= \smust{\mbindenv}
 \\
@@ -697,7 +731,83 @@ Negation is still annoying to deal with, so we remove tough negations by convert
   $\denotetcon{\mtcon}{\mtimeline}{\menv} = \denotetcon{\nnf(\mtcon)}{\mtimeline}{\menv}$
 \end{theorem}
 \begin{proof}
-  By induction on $\mtcon$.
+  \textbf{TODO (Ian)}
+\end{proof}
+
+The translation easily follows if we temporarily allow $\epsilon$ transitions that we later remove (that is, the $\Pattern$ component of $\delta$ may also be an $\epsilon$).
+%
+\begin{align*}
+ \State &::= q_i \text{ where } i \in \Nat
+\\
+ \translateeps &: \TContract \times \Timeline \to \PMSM
+\\
+ \translateeps(\mtcon, \mtimeline) &= (Q, F, \pmsmq_0, \Value, \lambda x,y . x = y, \ary, \delta) \\
+ \text{where }
+   (\delta, F, \pmsmqlast, k) &= \epshelp(\mtcon, \mtimeline, \pmsmq_0, 1, \emptyset, \setof{\pmsmq_0})
+\\
+   Q &= \setbuild{\pmsmq_i}{0 \le i < k}
+\\
+   \ary(\apvcallalone) &= 2 \\
+   \ary(\apvretalone) &= 2 \\
+   \ary(\apwrapalone) &= 2 \\
+   \ary(\bclos{\swc}{\swc}{\swc}{\swc}{\swc}{\swc}{\swc}{\swc}) &= 8 \\
+\\
+    \epshelp : \TContract \times \wp(\State) \times \Timeline \times \State \times \Nat \times \mathit{Transition} \to\span\omit\\
+             \phantom{:} \mathit{Transition} \times \wp(\State) \times \State \times \Nat\span\omit
+\end{align*}
+and
+\begin{align*}
+\begin{array}{l}
+  \epshelp(\scallev{\mname}{\mvpat'}, F, \mtimeline, \pmsmqcur, k, \delta) = \\
+           (\delta
+            \cup \left\{\begin{array}{l}
+                        (\pmsmqcur,
+                         \epsilon,
+                         \apvcall{\sref(\mname)}{\mathit{ppat}(\mvpat)},
+                         \pmsmq_k),\\
+                        (\pmsmqcur,
+                         \epsilon,
+                         \apvcall{\bclos{\swc}{\swc}{\swc}{\swc}{\mtimeline}{\swc}{\swc}{\sref{\mname}}}{\mathit{ppat}(\mvpat)}{\swc},
+                         \pmsmq_k)
+                        \end{array}\right\}, \\
+            \ F\cup \setof{\pmsmq_k}, \pmsmq_k, k+1)
+\\
+  \epshelp(\scallev{\mtoplevelname}{\mvpat'}, F, \mtimeline, \pmsmqcur, k, \delta) = \\
+           (\delta
+            \cup \left\{\begin{array}{l}
+                        (\pmsmqcur,
+                         \epsilon,
+                         \apvcall{\bclos{\mtoplevelname}{\swc}{\swc}{\swc}{\mtimeline}{\swc}{\swc}{\swc}}{\mathit{ppat}(\mvpat)}{\mtimeline},
+                         \pmsmq_k),\\
+                        (\pmsmqcur,
+                         \epsilon,
+                         \apvcall{\bclos{\mtoplevelname}{\swc}{\swc}{\swc}{\mtimeline}{\swc}{\swc}{\swc}}{\mathit{ppat}(\mvpat)}{\swc},
+                         \pmsmq_k)
+                        \end{array}\right\}, \\
+            \ F\cup \setof{\pmsmq_k}, \pmsmq_k, k+1)
+\\
+  \epshelp(\stwrap{\mtoplevelname}{\mname}{\mtcon}, F, \mtimeline, \pmsmqcur, k, \delta) = \\
+\begin{array}{l}
+   (\delta'' \cup \setof{(\pmsmqlast, -, \epsilon, \pmsmq_{k'})}, F' \cup \setof{\pmsmq_{k'}}, \pmsmq_{k'}, k' + 1) \\
+   \text{where } \delta' = \delta \cup \setof{(\pmsmqcur, +, \apwrapev{\mtoplevelname}{\sbind{\mname}}{\mtimeline}, \pmsmq_{k+1})} \\
+   \phantom{\text{where } } (\delta'', F', \pmsmqlast, k') = \epshelp(\mtcon, F \cup \setof{\pmsmqcur}, \mtimeline, \pmsmq_k, k+1, \delta')
+\end{array} \\
+\begin{array}{ll}
+  \mathit{ppat}(\swc, \mtimeline) &= \swc
+\\
+  \mathit{ppat}(\mname, \mtimeline) &= \sref{\mname}
+\\
+  \mathit{ppat}(\mtoplevelname, \mtimeline) &= \bclos{\mtoplevelname}{\mscon_D}{k}{j}{\mtimeline}{\mscon_R}{\mmlab}{\maddr} \\
+  \mathit{ppat}(\mconstant, \mtimeline) &= \bclos{\mtoplevelname}{\mscon_D}{k}{j}{\mtimeline}{\mscon_R}{\mmlab}{\maddr}
+\end{array}
+\end{array}
+\end{align*}
+%
+\begin{lemma}
+  $\mtrace \in \denotetcon{\mtcon}{\mtimeline}{\bot}$ iff $\mtrace$ accepted by $\translateeps(\mtcon, \mtimeline)$ and $\wf(\mtrace)$.
+\end{lemma}
+\begin{proof}
+  \textbf{TODO (Ian)}
 \end{proof}
 %%
 \section{Evaluation}

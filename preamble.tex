@@ -6,7 +6,10 @@
 \newcommand*{\matom}{a}
 \newcommand*{\mdata}{v}
 \newcommand*{\mpat}{\mathit{pat}}
+\newcommand*{\msubpat}{\mathit{subpat}}
 \newcommand*{\pmsmq}{q}
+\newcommand*{\pmsmqcur}{q_\mathit{cur}}
+\newcommand*{\pmsmqlast}{q_\mathit{last}}
 \newcommand*{\stackop}{\pm\epsilon}
 \newcommand*{\pmsmstate}[1]{\langle #1 \rangle}
 \newcommand*{\ary}{\mathit{ary}}
@@ -73,6 +76,8 @@
 \newcommand*{\nnf}{{\mathcal N}}
 \newcommand*{\prefixes}{\mathit{prefixes}}
 
+\newcommand*{\wf}{\mathit{wf}}
+
 \newcommand*{\matchcall}{\mathit{mcall}}
 \newcommand*{\matchret}{\mathit{mret}}
 \newcommand*{\matchv}{\mathit{mv}}
@@ -80,9 +85,18 @@
 \newcommand*{\splitpattern}{\mathit{split}}
 
 \newcommand*{\match}{\mathit{match}}
+\newcommand*{\submatch}{\mathit{submatch}}
 \newcommand*{\labelof}{{\mathcal L}}
 \newcommand*{\paths}{\mathit{paths}}
 \newcommand*{\traces}{\mathit{traces}}
+
+\newcommand*{\epshelp}{\mathit{translate}}
+\newcommand*{\translateeps}{\mathit{translate}0}
+\newcommand*{\translateclose}{\mathit{translate}1}
+
+\newcommand*{\timelineis}[2]{#1 \mathrel{\mathit{on}} #2}
+\newcommand*{\labelis}[2]{#1 \mathrel{\mathit{labeled}} #2}
+
 
 % Syntax
 \newcommand*{\smay}[1]{{\tt may}(#1)}
@@ -122,6 +136,7 @@
 \newcommand*{\stmany}[1]{#1^*}
 \newcommand*{\stcall}[3]{{\tt call}(#1,\,{\tt ?}#2)\ #3}
 \newcommand*{\stret}[3]{{\tt ret}(#1,\,{\tt ?}#2)\ #3}
+\newcommand*{\stwrap}[3]{{\tt wrap}(#1,\,{\tt ?}#2)\ #3}
 \newcommand*{\stnot}[1]{\neg #1}
 \newcommand*{\sddd}{{\tt ...}}
 \newcommand*{\snonevent}[1]{! #1}
@@ -137,8 +152,12 @@
 \newcommand*{\denotetcon}[3]{[\![ #1 ]\!]^{#2}_{#3}}
 \newcommand*{\denoteevent}[3]{\llparenthesis #1 \rrparenthesis_{#2}^{#3}}
 \newcommand*{\denotevpat}[2]{\llparenthesis #1 \rrparenthesis_{#2}}
-\newcommand*{\aptopcall}[3]{{\tt call}_{#3}^{\toplevel}(#1,\,#2)}
-\newcommand*{\apvcall}[3]{{\tt call}_{#3}(#1,\,#2)}
+\newcommand*{\aptopcall}[2]{{\tt call}^{\toplevel}(#1,\,#2)}
+\newcommand*{\apvcall}[2]{{\tt call}(#1,\,#2)}
+\newcommand*{\apwrapev}[2]{{\tt wrap}(#1,\,#2)}
+\newcommand*{\apvcallalone}{{\tt call}}
+\newcommand*{\apvretalone}{{\tt ret}}
+\newcommand*{\apwrapalone}{{\tt wrap}}
 \newcommand*{\aptopret}[3]{{\tt ret}_{#3}^{\toplevel}(#1,\,#2)}
 \newcommand*{\apvret}[3]{{\tt ret}_{#3}(#1,\,#2)}
 \newcommand*{\apneg}[1]{{\tt not}#1}
@@ -194,6 +213,8 @@
 \newcommand*{\Frame}{\mathit{Frame}}
 
 \newcommand*{\Pattern}{\mathit{Pattern}}
+\newcommand*{\Subpattern}{\mathit{Subpattern}}
 \newcommand*{\Qualified}{\mathit{Data}}
 \newcommand*{\MatchResult}{\mathit{Result}}
 
+\newcommand*{\PMSM}{{\mathcal{PMSM}}}
