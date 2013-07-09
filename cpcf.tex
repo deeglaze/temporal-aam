@@ -183,7 +183,7 @@ Our techniques should smoothly integrate with theirs when considering partial pr
     \mexp \in \Expr &::= \sTMon{\mmlab_u}{\mmlab_c}{\mmlab_o}{\mscon, \mtcon, \mexp}
                     \alt \sSMon{\mmlab_u}{\mmlab_c}{\mmlab_o}{\mscon}{\mexp}
 \\ &
-                    \alt \sSTMon{\mmlab_u}{\mmlab_c}{\mmlab_o}{\mtimeline}{\mscon, \mexp}
+                    \alt \sSMon*{\mmlab_u}{\mmlab_c}{\mmlab_o}{\mtimeline}{\mscon, \mexp}
                     \alt \ldots
   \end{align*}
   \caption{Syntax of structural contracts with labels}
@@ -730,13 +730,13 @@ Shit works.
 \begin{figure}
 \begin{align*}
 \mexp \in \Expr &::=
-      \svar{\mvar}
- \alt \slit{\mconstant}
+      \slit{\mconstant}
+ \alt \svar{\mvar}
  \alt \sapp{\mexp}{\mexp}
  \alt \slam{\mvar}{\mexp}
  \alt \sif{\mexp}{\mexp}{\mexp} \\
-&\alt \sSMon{\mmlab}{\mmlab}{\mlab}{\mcontract}{\mexp}
- \alt \sTMon{\mmlab}{\mmlab}{\mlab}{\mscon}{\mexp} \\
+&\alt \sSMon{\mmlab}{\mmlab}{\mlab}{\mscon}{\mexp}
+ \alt \sTMon{\mmlab}{\mmlab}{\mlab}{\mcontract}{\mexp} \\
 \mconstant \in \Constant &=
  -1 \alt 0 \alt 1 \alt \ldots \alt + \alt - \alt \ldots \\
 &\alt \strue \alt \sfalse \alt \vee \alt \wedge \alt \ldots \\
@@ -771,14 +771,15 @@ Since we run CFA before appealing to the model checker, the former is feasible, 
   \mexp &::= \ldots
    \alt \sblame{\mmlab}{\mmlab}
    \alt \schk{\mmlab}{\mmlab}{\mexp}{\mval}
+   \alt \sret{\mmlab}{\mtimeline}{\mexp}
    \alt \sown{\mexp}{\mmlab}
   \\
-  \mval \in \Value &=
+  \mval \in \Value &::=
         \mconstant
    \alt \vcons{\maddr}{\maddr}  
-   \alt \maddr
-   \alt \sown{\mval}{\mmlab} \\
+   \alt \maddr \\
 &  \alt \bclos{\mname}{\mscon}{\mmlab}{\mmlab}{\mtimeline}{\mscon}{\mmlab}{\maddr}
+   \alt \sown{\mval}{\mmlab}
   \\
   \maddr \in \Addr &\text{ an infinite set} \\
   \mstimeline \in \Timeline^{\toplevel} &::= \maddr \alt \toplevel \\
@@ -800,33 +801,41 @@ Since we run CFA before appealing to the model checker, the former is feasible, 
  \alt \sapp{\mval}{\mctx{\mmlab}}
  \alt \sif{\mctx{\mmlab}}{\mexp}{\mexp}
  \alt \mlctx{\mmlab} \\
-&\alt \sSMon*{\ell}{k}{j}{\mtimeline}{\mcontract}{\mctx{\ell_\bot}}
+&\alt \sSMon*{\ell}{k}{j}{\mtimeline}{\mcontract}{\mctx*}
  \alt \sSMon*{\ell^\prime}{k}{j}{\mtimeline}{\mcontract}{\mctx{\ell}} \\
-&\alt \sTMon{\ell}{k}{j}{\mscon}{\mctx{\ell_\bot}}
+&\alt \sTMon{\ell}{k}{j}{\mscon}{\mctx*}
  \alt \sTMon{\ell^\prime}{k}{j}{\mscon}{\mctx{\ell}} \\
-&\alt \schk*{k}{\ell}{\mtimeline}{\mctx{\ell_\bot}}{\mval}
+&\alt \schk*{k}{\ell}{\mtimeline}{\mctx*}{\mval}
  \alt \schk*{k}{\ell^\prime}{\mtimeline}{\mctx{\ell}}{\mval} \\
-&\alt \sown{\mctx{\ell_\bot}}{\ell}
+&\alt \sret{\ell}{\mtimeline}{\mctx*}
+ \alt \sret{\ell^\prime}{\mtimeline}{\mctx{\ell}} \\
+&\alt \sown{\mctx*}{\ell}
  \alt \sOwn{\mctx{\ell}}{\ell^\prime}
 \\
-\mctx{\mmlab_\bot} &::=
+\mctx* \in \ECtx* &::=
       \hole
- \alt \sapp{\mctx{\mmlab_\bot}}{\mexp}
- \alt \sapp{\mval}{\mctx{\mmlab_\bot}}
- \alt \sif{\mctx{\mmlab_\bot}}{\mexp}{\mexp}
- \alt \mlctx{\mmlab_\bot}
+ \alt \sapp{\mctx*}{\mexp}
+ \alt \sapp{\mval}{\mctx*}
+ \alt \sif{\mctx*}{\mexp}{\mexp}
+ \alt \mlctx{\mmlab} \\
+&\alt \sret{\mmlab}{\mtimeline}{\mctx*} \\
+\ECtx* &\subset \ECtx^\mmlab
 \\
 \mlctx{\mmlab} \in \LCtx &::=
       \sunit
  \alt \mval
- \alt \vcons{\mlactx{\mmlab}}{\mctx{\mmlab}}
+ \alt \vcons{\mlactx}{\mctx{\mmlab}}
  \\
-\mlactx{\mmlab} &::=
+\mlactx &::=
  \hole \alt \maddr
 \\
+\mstate \in \State &= \angle{\mctx{\mmlab}, \msto, \mTMons} \quad\text{machine state}
+\\
 \msto \in \Store &= \Addr \parto \wp(\Storeable) \\
-\Storeable &= \Value + \TContract \\
-\mstate \in \State &= \angle{\mctx{\mmlab}, \msto, \mTMons} \quad\text{machine state} \\
+\Storeable &= \Value + \TContract
+\\
+\mTMons \in \TMons &= \Timeline \parto \mathit{PMSM}
+\\
 \sOwn{\mexp}{\mmlab} = \sown{ \ldots \sown{\mexp}{\mmlab} \ldots }{\mmlab}
 &\quad\text{where $\forall$ labels $k$, terms $\mexp^\prime$: $\mexp \neq \sown{\mexp^\prime}{k}$}
 \end{align*}
@@ -838,61 +847,88 @@ Since we run CFA before appealing to the model checker, the former is feasible, 
 % * Should addresses be owned? Does this imply stores need to be owned...?
 % * Should conses be owned?
 \begin{figure*}
-  \centering
-    $\begin{array}{@{}l @{\ }c@{\ } l@{}}
-      \mstate \angle{\mctx{\mmlab}[\ldots], \msto, \mTMons}
-      &\machstep&
-      \mstate^\prime \angle{\mctx{\mmlab^\prime}[\ldots], \msto^\prime, \mTMons}
-      \\ \hline
-      \sif{ \sOwn{\strue}{\mmlab} }{\mexp_1}{\mexp_2}
-      &\machstep&
-      \mexp_1
-      \\
-      \sif{ \sOwn{\sfalse}{\mmlab} }{\mexp_1}{\mexp_2}
-      &\machstep&
-      \mexp_2
-      \\
-      \sapp{ \sOwn{\slam{\mvar}{\mexp}}{\mmlab} }{ \sOwn{\mval}{\mmlab} }
-      &\machstep&
-      \sown{ \sapp{\{ \sown{\mval}{\mmlab}/\mvar \}}{\mexp} }{\mmlab}
-      \\
-      \sSMon*{k}{\mmlab}{j}{\mtimeline}{ \sown*{\sflat{\mexp}}{\mmlab^{\prime\prime}} }{ \sOwn{\mconstant}{\mmlab^{\prime\prime}} }
-      &\machstep&
-      \schk*{k}{j}{\mtimeline}{ \sapp{\mexp}{\mconstant} }{\mconstant}
-      \\ %TODO: Fix
-      \sSMon*{k}{\mmlab}{j}{\mtimeline}{\sconsc{\mscon_A}{\mscon_D}}{ \vcons{\maddr_A}{\maddr_D} }
-      &\machstep&
-      \vcons{ \sSMon*{k}{\mmlab}{j}{\mtimeline}{\mscon_A}{\maddr_A} }{ \sSMon*{k}{\mmlab}{j}{\mtimeline}{\mscon_D}{\maddr_D} }
-      \\
-      \sSMon*{k}{\mmlab}{j}{\mtimeline}{ \sarr{\mname}{\mscon_D}{\mscon_R} }{\mval}
-      &\machstep&
-      \bclos{\mname}{\mscon_D}{k}{j}{\mtimeline}{\mscon_R}{\mmlab}{\maddr} \\
-      &&\text{where } \maddr = alloc(\mstate)
-      \\
-      \schk{k}{j}{ \sOwn{\strue}{j} }{\mval}
-      &\machstep&
-      \mval
-      \\
-      \schk{k}{j}{ \sOwn{\sfalse}{j} }{\mval}
-      &\machstep&
-      \sblame{k}{j}
-      \\
-      \bclos{\mmlab^\prime}{\mscon_D}{k}{j}{\mtimeline}{\mscon_R}{\mmlab^{\prime\prime}}{\maddr}
-      &\machstep&
-      %TODO: Should the timeline be different?
-      \slam{\mvar}{ \sSMon*{k}{\mmlab^{\prime\prime}}{j}{\mtimeline}{\mscon_R}{%
-      \sapp{\mval}{ \sSMon*{\mmlab^{\prime\prime}}{k}{j}{\mtimeline}{\mscon_D}{\mvar} } } } \\
-      %TODO: Do we even need to explicitly deref here?
-      &&\text{where } \mval = \msto(\maddr)
-      \\
-      \maddr &\machstep& \mval \qquad\text{where } \mval = \msto(\maddr)
-      \\ \hline
-      \mctx{\mmlab}[\sblame{k}{j}]
-      &\machstep&
-      \sblame{k}{j}
-    \end{array}$
-  \caption{Reduction rules (eliding temporal contract checking)}
-  \label{fig:standard}
+\centering
+$\begin{array}{@{}l @{\ }c@{\ } l@{}}
+\mstate \angle{\mctx{\mmlab}[\ldots], \msto, \mTMons}
+&\machstep&
+%TODO: Can mmlab change?
+\mstate^\prime \angle{\mctx{\mmlab^\prime}[\ldots], \msto^\prime, \mTMons^\prime}
+\\ \hline % If true
+\sif{ \sOwn{\strue}{\mmlab} }{\mexp_1}{\mexp_2}
+&\machstep&
+\mexp_1
+\\ % If false
+\sif{ \sOwn{\sfalse}{\mmlab} }{\mexp_1}{\mexp_2}
+&\machstep&
+\mexp_2
+\\ % Apply
+\sapp{ \sOwn{\slam{\mvar}{\mexp}}{\mmlab} }{ \sOwn{\mval}{\mmlab} }
+&\machstep&
+\sown{ \sapp{\{ \sown{\mval}{\mmlab}/\mvar \}}{\mexp} }{\mmlab}
+\\ % Temporal monitor
+\sTMon{k}{\mmlab}{j}{\mscon \times \mtcon}{\mval}
+&\machstep&
+ \\ % TODO 
+&&\text{given } \mmlab = \toplevel
+\\ % Flat monitor
+\sSMon*{k}{\mmlab}{j}{\mtimeline}{ \sown*{\sflat{\mexp}}{\mmlab^{\prime\prime}} }{ \sOwn{\mconstant}{\mmlab^{\prime\prime}} }
+&\machstep&
+\schk*{k}{j}{\mtimeline}{ \sapp{\mexp}{\mconstant} }{\mconstant}
+\\ % Cons monitor
+\sSMon*{k}{\mmlab}{j}{\mtimeline}{ \sconsc{\mscon_A}{\mscon_D} }{ \sOwn{\vcons{\maddr_A}{\maddr_D}}{\mmlab} }
+&\machstep&
+\sown{\vcons{ \sSMon*{k}{\mmlab}{j}{\mtimeline}{\mscon_A}{\maddr_A} }{ \sSMon*{k}{\mmlab}{j}{\mtimeline}{\mscon_D}{\maddr_D} }}{\mmlab}
+\\ % Arrow monitor
+\sSMon*{k}{\mmlab}{j}{\mtimeline}{ \sarr{\mname}{\mscon_D}{\mscon_R} }{\mval}
+&\machstep&
+\sown{\bclos{\mname}{\mscon_D}{k}{j}{\mtimeline}{\mscon_R}{\mmlab}{\maddr}}{\mmlab} \\
+&&\text{where } \maddr = alloc(\mstate) \\
+&&\text{given } \mval = \slam{\mvar}{\mexp}
+\\ % Arrow monitor fail
+\ditto
+&\machstep&
+\sblame{k}{j} \quad\text{given } \mval \neq \slam{\mvar}{\mexp}
+\\ % Check true
+\schk{k}{j}{ \sOwn{\strue}{j} }{\mval}
+&\machstep&
+\mval
+\\ % Check false
+\schk{k}{j}{ \sOwn{\sfalse}{j} }{\mval}
+&\machstep&
+\sblame{k}{j}
+\\ % Blessed application
+\sapp{ \sOwn{\bclos{\mname}{\mscon_D}{k}{j}{\mtimeline}{\mscon_R}{\mmlab^{\prime\prime}}{\maddr}}{\mmlab} }{ \sOwn{\mval}{\mmlab} }
+&\machstep&
+%TODO: Should the timeline be different?
+\sret{\mname}{\mtimeline}{ \sapp{\mval_\lambda}{\mval} } \\
+%TODO: Do we even need to explicitly deref here?
+&&\text{where } \mval_\lambda = \msto(\maddr) \\
+&&\phantom{\text{where }} \mTMons^\prime = \sstep{\mTMons}{\mtimeline}{\scallev{\mname}{\mval}} \\
+&&\text{given $\mTMons(\mtimeline)$ accepts $\scallev{\mname}{\mval}$}
+\\ % Blessed application fail
+\ditto
+&\machstep&
+\sblame{\mmlab}{j} \quad\text{given $\mTMons(\mtimeline)$ does not accept $\scallev{\mname}{\mval}$}
+\\ % Return
+\sret{\mname}{\mtimeline}{ \sOwn{\mval}{\mmlab} }
+&\machstep&
+\mval \\
+&&\text{where } \mTMons^\prime = \sstep{\mTMons}{\mtimeline}{\sretev{\mname}{\mval}} \\
+&&\text{given $\mTMons(\mtimeline)$ accepts $\sretev{\mname}{\mval}$}
+\\ % Return fail
+\ditto
+&\machstep&
+\sblame{\mname}{\j}
+\quad\text{given $\mTMons(\mtimeline)$ does not accept $\sretev{\mname}{\mval}$}
+\\ % Dereference
+\maddr &\machstep& \mval \quad\text{where } \mval = \msto(\maddr)
+\\ \hline % Blame
+\mctx{\mmlab}[\sblame{k}{j}]
+&\machstep&
+\sblame{k}{j}
+\end{array}$
+\caption{Reduction rules (eliding temporal contract checking)}
+\label{fig:standard}
 \end{figure*}
 
 \balance

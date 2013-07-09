@@ -37,8 +37,9 @@
 \newcommand*{\maccum}{T_{\mathit{acc}}}
 
 \newcommand*{\mctx}[1]{\mathit{E}^{#1}}
+\WithSuffix\newcommand\mctx*{\mctx{\toplevel}}
 \newcommand*{\mlctx}[1]{\mathit{L}^{#1}}
-\newcommand*{\mlactx}[1]{\mathit{L}^{#1}_a}
+\newcommand*{\mlactx}{\mathit{L}_a}
 \newcommand*{\mTMons}{\tau}
 \newcommand*{\mtrace}{\pi}
 \newcommand*{\mtimeline}{\eta}
@@ -65,7 +66,7 @@
 \newcommand*{\filter}{\mathit{filter}}
 \newcommand*{\accept}{\mathit{accept}}
 \newcommand*{\convertcons}{\mathit{convert}}
-\newcommand*{\toltl}[5]{\llparenthesis #2 \rrparenthesis_{#3,#4}^{#1}(#5)}
+\newcommand*{\toltl}[5]{\llparenthesis #2 \rrparenthesis_{#3,\,#4}^{#1}(#5)}
 \newcommand*{\stacktoltl}[3]{\llparenthesis #2 \rrparenthesis_{#3}^{#1}}
 
 \newcommand*{\weakif}{\mathit{weak\text{-}if}}
@@ -83,47 +84,30 @@
 \newcommand*{\paths}{\mathit{paths}}
 \newcommand*{\traces}{\mathit{traces}}
 
-
-% States
-\newcommand*{\ev}[4][\ ]{\tuple[#1]{ev}{#2}_{#3,#4}}
-\newcommand*{\co}[4][\ ]{\tuple[#1]{co}{#2}_{#3,#4}}
-\newcommand*{\ap}[4][\ ]{\tuple[#1]{ap}{#2}_{#3,#4}}
-\newcommand*{\ck}[7]{\tuple[^{#1,#2}_{#3,#4}]{ck}{#5}_{#6,#7}}
-\newcommand*{\ans}[1]{\tuple{ans}{#1}}
-\newcommand*{\sblame}[2]{{\tt blame}^{#1}_{#2}}
-
-\newcommand*{\kev}[2][\ ]{\tuple[#1]{arg}{#2}}
-\newcommand*{\krt}[2][\ ]{\tuple[#1]{ret}{#2}}
-\newcommand*{\kmon}[4]{\tuple[^{#1,#2}_{#3}]{mn}{#4}}
-\newcommand*{\kflat}[2][\ ]{\tuple[#1]{flt}{#2}} % evaluating flat contract expression
-\newcommand*{\kcheck}[2][\ ]{\tuple[#1]{chk}{#2}} % checking flat contract
-\newcommand*{\kchkA}[2][\ ]{\tuple[#1]{chkA}{#2}}
-\newcommand*{\kchkD}[2][\ ]{\tuple[#1]{chkD}{#2}}
-\newcommand*{\kmcall}[4]{\tuple[^{#1,#2}_{#3}]{call}{#4}}
-\newcommand*{\kpost}[2][\ ]{\tuple[#1]{post}{#2}}
-
 % Syntax
 \newcommand*{\smay}[1]{{\tt may}(#1)}
 \newcommand*{\smust}[1]{{\tt must}(#1)}
 
-\newcommand*{\sSMon}[5]{\tuple[^{#1,#2}_{#3}]{smon}{#4, #5}}
-\newcommand*{\sSTMon}[5]{\tuple[^{#1,#2}_{#3,#4}]{smon}{#5}}
-\WithSuffix\newcommand\sSMon*[6]{\tuple*[^{#1,#2}_{#3}]{smon}{#4}{#5, #6}}
-\newcommand*{\sTMon}[5]{\tuple[^{#1,#2}_{#3}]{tmon}{#4, #5}}
-\newcommand*{\schk}[4]{\tuple[^{#1}_{#2}]{chk}{#3, #4}}
-\WithSuffix\newcommand\schk*[5]{\tuple*[^{#1}_{#2}]{chk}{#3}{#4, #5}}
+\newcommand*{\sSMon}[5]{\tuple[^{#1,#2}_{#3}]{smon}{#4,\, #5}}
+\WithSuffix\newcommand\sSMon*[6]{\tuple*[^{#1,#2}_{#3}]{smon}{#4}{#5,\, #6}}
+\newcommand*{\sTMon}[5]{\tuple[^{#1,#2}_{#3}]{tmon}{#4,\, #5}}
+\newcommand*{\schk}[4]{\tuple[^{#1}_{#2}]{chk}{#3,\, #4}}
+\WithSuffix\newcommand\schk*[5]{\tuple*[^{#1}_{#2}]{chk}{#3}{#4,\, #5}}
 \DeclarePairedDelimiter\own{\lvert}{\rvert}%
 \DeclarePairedDelimiter\Own{\lVert}{\rVert}%
 \newcommand*{\sown}[2]{\own{#1}^{#2}}
 \newcommand*{\sOwn}[2]{\Own{#1}^{#2}}
 \WithSuffix\newcommand\sown*[2]{\floor{#1}^{\overline{#2}}}
 \newcommand*{\hole}{[\,]}
+\newcommand*{\sblame}[2]{{\tt blame}^{#1}_{#2}}
+\newcommand*{\sret}[3]{\tuple*[^{#1}]{ret}{#2}{#3}}
+\newcommand*{\sstep}[3]{\tuple{\delta{}step}{#1,\,#2,\,#3}}
 
-\newcommand*{\sdefine}[3][\ ]{\tuple[#1]{define}{#2, #3}}
-\newcommand*{\sdefinec}[4][\ ]{\tuple[#1]{define/contract}{#2,#3,#4}}
+\newcommand*{\sdefine}[3][\ ]{\tuple[#1]{define}{#2,\, #3}}
+\newcommand*{\sdefinec}[4][\ ]{\tuple[#1]{define/contract}{#2,\,#3,\,#4}}
 \newcommand*{\sunit}{{\tt '()}}
 \newcommand*{\semptyp}{{\tt null?}}
-\newcommand*{\sconsc}[2]{\angle{#1, #2}}
+\newcommand*{\sconsc}[2]{\angle{#1,\, #2}}
 \newcommand*{\scons}{\tt cons}
 \newcommand*{\scar}{{\tt car}}
 \newcommand*{\scdr}{{\tt cdr}}
@@ -136,8 +120,8 @@
 \newcommand*{\stAnd}[2]{#1 \cap #2}
 \newcommand*{\stseq}[2]{#1 \cdot #2}
 \newcommand*{\stmany}[1]{#1^*}
-\newcommand*{\stcall}[3]{{\tt call}(#1, {\tt ?}#2)\ #3}
-\newcommand*{\stret}[3]{{\tt ret}(#1, {\tt ?}#2)\ #3}
+\newcommand*{\stcall}[3]{{\tt call}(#1,\,{\tt ?}#2)\ #3}
+\newcommand*{\stret}[3]{{\tt ret}(#1,\,{\tt ?}#2)\ #3}
 \newcommand*{\stnot}[1]{\neg #1}
 \newcommand*{\sddd}{{\tt ...}}
 \newcommand*{\snonevent}[1]{! #1}
@@ -145,23 +129,23 @@
 \newcommand*{\sarr}[3]{#1 : #2 \mapsto #3}
 \newcommand*{\sflat}[1]{{\tt flat}(#1)}
 
-\newcommand*{\scallev}[2]{{\tt call}(#1, #2)}
-\newcommand*{\sretev}[2]{{\tt ret}(#1, #2)}
+\newcommand*{\scallev}[2]{{\tt call}(#1,\, #2)}
+\newcommand*{\sretev}[2]{{\tt ret}(#1,\, #2)}
 \newcommand*{\swc}{\_} 
 
 \newcommand*{\denote}[1]{[\![ #1 ]\!]}
 \newcommand*{\denotetcon}[3]{[\![ #1 ]\!]^{#2}_{#3}}
 \newcommand*{\denoteevent}[3]{\llparenthesis #1 \rrparenthesis_{#2}^{#3}}
 \newcommand*{\denotevpat}[2]{\llparenthesis #1 \rrparenthesis_{#2}}
-\newcommand*{\aptopcall}[3]{{\tt call}_{#3}^{\toplevel}(#1,#2)}
-\newcommand*{\apvcall}[3]{{\tt call}_{#3}(#1,#2)}
-\newcommand*{\aptopret}[3]{{\tt ret}_{#3}^{\toplevel}(#1,#2)}
-\newcommand*{\apvret}[3]{{\tt ret}_{#3}(#1,#2)}
+\newcommand*{\aptopcall}[3]{{\tt call}_{#3}^{\toplevel}(#1,\,#2)}
+\newcommand*{\apvcall}[3]{{\tt call}_{#3}(#1,\,#2)}
+\newcommand*{\aptopret}[3]{{\tt ret}_{#3}^{\toplevel}(#1,\,#2)}
+\newcommand*{\apvret}[3]{{\tt ret}_{#3}(#1,\,#2)}
 \newcommand*{\apneg}[1]{{\tt not}#1}
 
 \newcommand*{\spush}[2]{#1 : #2}
 
-\newcommand*{\attach}[2]{\mathit{attach}(#1, #2)}
+\newcommand*{\attach}[2]{\mathit{attach}(#1,\, #2)}
 
 % Values
 \newcommand*{\varr}[3]{#2 \mapsto^{#1} #3}
@@ -169,8 +153,8 @@
 \newcommand*{\sflatconval}[1]{\tuple{mcon}{#1}}
 \newcommand*{\blackhole}{\bullet}
 \newcommand*{\vconsf}[2]{\tuple{consD}{#1}_{#2}}
-\newcommand*{\vcons}[2]{\tuple{\scons}{#1, #2}}
-\newcommand*{\vconst}[3]{\tuple{\scons}{#1, #2}_{#3}}
+\newcommand*{\vcons}[2]{\tuple{\scons}{#1,\, #2}}
+\newcommand*{\vconst}[3]{\tuple{\scons}{#1,\, #2}_{#3}}
 \newcommand*{\vMon}[2][\ ]{\tuple[#1]{mon}{#2}}
 \newcommand*{\bclos}[8]{#1 : #2^{#3} \overset{#4}{\underset{#5}{\dashrightarrow}} #6^{#7} \angle{#8}}
 
@@ -178,19 +162,6 @@
 \newcommand*{\many}[1]{\overline{#1}}
 \newcommand*{\combinef}[2]{#1 \mathrel{\triangleleft} #2}
 \newcommand*{\combinefalone}{\triangleleft}
-
-\newcommand*{\LTLProp}{\mathit{Prop}_\mathit{LTL}}
-\newcommand*{\ltlprop}{\varphi}
-\newcommand*{\ltland}[2]{#1 \wedge #2}
-\newcommand*{\ltluntil}[2]{#1 {\mathbf U} #2}
-\newcommand*{\ltlor}[2]{#1 \vee #2}
-\newcommand*{\ltlnot}[1]{\neg #1}
-\newcommand*{\ltlW}[2]{#1 {\mathcal W} #2}
-\newcommand*{\ltlTrue}{\mathit{True}}
-\newcommand*{\ltlnext}[1]{\Circle{#1}}
-\newcommand*{\ltlactions}{\mathbb{A}}
-\newcommand*{\ltlatom}{p}
-\newcommand*{\ltlAP}{\mathit{AP}}
 
 \newcommand{\mfail}{\mathbf{fail}}
 
@@ -210,7 +181,9 @@
 \newcommand*{\Unit}{\mathit{Unit}}
 \newcommand*{\Graph}{\mathit{Graph}}
 \newcommand*{\ECtx}{\mathit{ExpContext}}
+\WithSuffix\newcommand\ECtx*{\mathit{Simple\mctx{\toplevel}}}
 \newcommand*{\LCtx}{\mathit{ListContext}}
+\newcommand*{\TMons}{\mathit{PMSMStates}}
 
 \newcommand*{\TConEnvStack}{\mathit{Following}}
 \newcommand*{\BindEnv}{\mathit{BEnv}}
