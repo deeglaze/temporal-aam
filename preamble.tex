@@ -6,10 +6,12 @@
 \newcommand*{\matom}{a}
 \newcommand*{\mdata}{v}
 \newcommand*{\mpat}{\mathit{pat}}
+\newcommand*{\mpatset}{\mathit{P}}
 \newcommand*{\msubpat}{\mathit{subpat}}
 \newcommand*{\pmsmq}{q}
-\newcommand*{\pmsmqcur}{q_\mathit{cur}}
-\newcommand*{\pmsmqlast}{q_\mathit{last}}
+\newcommand*{\pmsmqq}{s}
+\newcommand*{\pmsmqcur}{s_\mathit{cur}}
+\newcommand*{\pmsmqlast}{s_\mathit{last}}
 \newcommand*{\stackop}{\pm\epsilon}
 \newcommand*{\pmsmstate}[1]{\langle #1 \rangle}
 \newcommand*{\ary}{\mathit{ary}}
@@ -82,12 +84,14 @@
 \newcommand*{\splitpattern}{\mathit{split}}
 
 \newcommand*{\match}{\mathit{match}}
+\newcommand*{\matchset}{\mathit{matchset}}
 \newcommand*{\submatch}{\mathit{submatch}}
 \newcommand*{\labelof}{{\mathcal L}}
 \newcommand*{\paths}{\mathit{paths}}
 \newcommand*{\traces}{\mathit{traces}}
 
 \newcommand*{\epshelp}{{\mathcal M}_\epsilon}
+\newcommand*{\epsclose}{\epsilon\text{-}\mathit{close}}
 \newcommand*{\translateeps}{\mathit{translate}0}
 \newcommand*{\translateclose}{\mathit{translate}1}
 
@@ -123,6 +127,8 @@
 \newcommand*{\scdr}{{\tt cdr}}
 \newcommand*{\spairp}{{\tt pair?}}
 
+\newcommand*{\pmsmpair}[2]{\langle #1, #2 \rangle}
+
 \newcommand*{\sbind}[1]{{\tt ?} #1}
 \newcommand*{\sref}[1]{{\tt \$} #1}
 
@@ -135,6 +141,7 @@
 \newcommand*{\stret}[3]{\sretev{#1}{{\tt ?}#2}\ #3}
 \newcommand*{\stnot}[1]{\neg #1}
 \newcommand*{\sddd}{{\tt ...}}
+\newcommand*{\stfail}{\bot}
 \newcommand*{\snonevent}[1]{! #1}
 
 \newcommand*{\sarr}[3]{#1 : #2 \mapsto #3}
@@ -181,6 +188,8 @@
 % Notation
 \newcommand*{\many}[1]{\overline{#1}}
 \newcommand*{\combinef}[2]{#1 \mathrel{\triangleleft} #2}
+\newcommand*{\combinepat}[2]{#1 \mathrel{\bowtie} #2}
+\newcommand*{\combinepatalone}{\bowtie}
 \newcommand*{\combinefalone}{\triangleleft}
 
 \newcommand{\mfail}{\mathbf{fail}}
@@ -217,5 +226,3 @@
 \newcommand*{\Subpattern}{\mathit{Subpattern}}
 \newcommand*{\Qualified}{\mathit{Data}}
 \newcommand*{\MatchResult}{\mathit{Result}}
-
-\newcommand*{\PMSM}{{\mathcal{PMSM}}}
