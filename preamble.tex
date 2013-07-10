@@ -107,8 +107,8 @@
 \newcommand*{\sTMon}[6]{\tuple[^{#1,#2}_{#3}]{tmon}{#4,\,#5,\,#6}}
 \newcommand*{\schk}[4]{\tuple[^{#1}_{#2}]{chk}{#3,\, #4}}
 \WithSuffix\newcommand\schk*[5]{\tuple*[^{#1}_{#2}]{chk}{#3}{#4,\, #5}}
-\DeclarePairedDelimiter\own{\lvert}{\rvert}%
-\DeclarePairedDelimiter\Own{\lVert}{\rVert}%
+\DeclarePairedDelimiter\own{\lbag}{\rbag}%
+\DeclarePairedDelimiter\Own{\lbag\mkern-5mu\lbag}{\rbag\mkern-5mu\rbag}%
 \newcommand*{\sown}[2]{\own{#1}^{#2}}
 \newcommand*{\sOwn}[2]{\Own{#1}^{#2}}
 \WithSuffix\newcommand\sown*[2]{\floor{#1}^{\overline{#2}}}

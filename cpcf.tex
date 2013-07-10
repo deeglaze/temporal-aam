@@ -192,6 +192,7 @@ Our techniques should smoothly integrate with theirs when considering partial pr
  \alt \stnot{\mtcon}
  \alt \stOr{\mtcon}{\mtcon}
  \alt \stAnd{\mtcon}{\mtcon}
+<<<<<<< HEAD
  \alt \stmany{\mtcon} \\
 &\alt \sddd \alt \stfail
  \alt \stcall{\mname}{\mvar}{\mtcon}
@@ -201,6 +202,17 @@ Our techniques should smoothly integrate with theirs when considering partial pr
 \mvpat \in \VPat &::= \mconstant \alt \mname \alt \swc \\
 \mvar \in \Var &\quad\text{an infinite set} \\
 \mname \in \Name &::= \mvar \alt \mtoplevelname
+=======
+ \alt \stmany{\mtcon}
+ \alt \sddd \\
+&\alt \stcall{\mname}{\mvar}{\mtcon}
+ \alt \stret{\mname}{\mvar}{\mtcon} \\
+\mevent \in \Event &::= \scallev{\mname}{\mvpat} \alt \sretev{\mname}{\mvpat} \\
+\mvpat \in \VPat &::= \mconstant \alt \mvar \alt \swc \\
+\mname &::= \mvar \alt \mmlab \\
+\mvar \in \Var &\quad\text{an infinite set} \\
+\mmlab \in \Label &\quad\text{an infinite set}
+>>>>>>> 7202c6fa5e683c87a9267bce9541c27bf51b2ff1
   \end{align*}
   \caption{Syntax of temporal contracts}
   \label{fig:tcontract-syntax}
@@ -214,7 +226,7 @@ The syntax is presented in \autoref{fig:tcontract-syntax}.
 %%
 
 %%
-Temporal contracts ($\mtcon$) include events ($\mevent$) (for $\mevent$ction), negated events ($\snonevent{\mevent}$), concatenation ($\stseq{\mtcon}{\mtcon}$) (often represented using juxtaposition), negated contracts ($\stnot{\mtcon}$), Kleene closure of events ($\stmany{\mtcon}$), union ($\stOr{\mtcon}{\mtcon}$), the universal temporal contract ($\sddd$), the empty temporal contract ($\stfail$), and higher-order binding events ($\stcall{\mvar}{\mname}$ and $\stret{\mvar}{\mname}$).
+Temporal contracts ($\mtcon$) include events ($\mevent$) (for $\mevent$ction), negated events ($\snonevent{\mevent}$), concatenation ($\stseq{\mtcon}{\mtcon}$) (often represented using juxtaposition), negated contracts ($\stnot{\mtcon}$), Kleene closure of events ($\stmany{\mtcon}$), union ($\stOr{\mtcon}{\mtcon}$), intersection ($\stAnd{\mtcon}{\mtcon}$), the universal temporal contract ($\sddd$), the empty temporal contract ($\stfail$), and higher-order binding events ($\stcall{\mname}{\mvar}$ and $\stret{\mname}{\mvar}$).
 %
 The difference between $\snonevent{\mevent}$ and $\stnot{\mtcon}$ is that the first must be an event and force time to step forward once, whereas the second may match arbitrarily many events.
 %%
@@ -222,9 +234,9 @@ The difference between $\snonevent{\mevent}$ and $\stnot{\mtcon}$ is that the fi
 %%
 Events themselves are expressed as patterns denoting calls ($\scallev{\mname}{\mvpat}$) or returns ($\sretev{\mname}{\mvpat}$), with respect to a particular function $\mname$ and with its argument or result matching a pattern $\mvpat$.
 %
-If $\mname$ is a label, we simply check that the monitor wrapping the function has the same label (attached via the structural contract).
+If $\mname$ is a label ($\mtoplevelname$), we simply check that the monitor wrapping the function has the same label (attached via the structural contract).
 %
-However, if $\mname$ is a variable, then we consult a binding environment that the monitoring system builds as we pass binding events to determine if the function is a wrapped closure around the pointer bound by a wrap event.
+However, if $\mname$ is a variable ($\mvar$), then we consult a binding environment that the monitoring system builds as we pass binding events to determine if the function is exactly equal to the value bound.
 %
 The distinction between variables (bound by temporal contract) and labels (bound by structural contract) is what separates our semantics from \citeauthor{ianjohnson:dfm:icfp2011}'s.
 %
@@ -234,7 +246,7 @@ Patterns can match constants ($\mconstant$), bound variables ($\mname$), labeled
 %%
 \citeauthor{ianjohnson:dfm:icfp2011}'s semantics for referring to functions is problematic; we give a slightly different account that captures the spirit of their prose describing their system, and indeed mirrors their actual implementation.
 %
-One of their motivating examples (recalled in \autoref{fig:sort} and addressed in \autoref{sec:sort}) was to protect the comparator passed to a sort function from escaping the scope of the call.
+Consider one of their motivating examples (recalled in \autoref{fig:sort} and addressed in \autoref{sec:sort}) was to protect the comparator passed to a sort function from escaping the scope of the call.
 %
 What this should mean is the particular binding introduced by a call to $sort$ cannot be called after $sort$ returns, \ie, each constructed monitor around given comparators should not be called after $sort$ returns.
 %
@@ -260,9 +272,10 @@ We leave call/return matching to future work, as it is not necessary to verify t
  \end{array}$
  $\begin{array}{ @{~}r@{} l @{}l }
   \text{where}\quad
-  &\stnot{(&\sddd~ \call{sort}~ \stmany{\snonevent{\ret{sort}}}~ \call{sort})} \\
+  &\stnot{(&\sddd~ \call{sort}~ \stmany{\snonevent{\ret{sort}}}~ \call{sort}~ \sddd)} \\
   \cap\quad
-  &\stnot{(&\sddd~ \scallev{sort}{?cmp}~ \sddd~ \ret{sort} \sddd~ \call{cmp})}
+  &\stnot{(&\sddd~ \scallev{sort}{?cmp}~ \sddd~ \\
+  &&\ret{sort} \sddd~ \call{cmp}~ \sddd)}
  \end{array}$
  \caption{Sort example}
  \label{fig:sort}
@@ -286,7 +299,7 @@ This is specifying a particular safety property (as evidenced by the negation of
 The second temporal clause specifies a higher-order property; it states that, given a call to $sort$, its associated $cmp$ argument cannot be called after $sort$ returns.
 %%
 
-\subsection{File example}
+\subsection{File example} \label{sec:file}
 
 \begin{figure}
  $FileSystemContract\, =\, open\, :\, String\, \to\, FileContract$ \\
@@ -295,12 +308,8 @@ The second temporal clause specifies a higher-order property; it states that, gi
   read & Unit & String \\
   write & String & Unit \\
   close & Unit & Unit
- \end{array}$
- \begin{flalign*}
-  \text{where}\quad
-  \stnot{(&\sddd~ \ret{close}~ \sddd~ \\
-  &(\stOr{\call{close}}{\stOr{\call{read}}{\call{write}}}))}
- \end{flalign*}
+ \end{array}$ \\
+ $\text{where}\quad \sddd~ \ret{close}$
  \caption{File example}
  \label{fig:file}
 \end{figure}
@@ -312,7 +321,16 @@ A file handle, in turn, is a record of functions which interact with the file: $
 %%
 
 %%
-The temporal contract states that a user of the file is forbidden from making use of the file handle (through the use of its component functions) after the user has $close$d the file.
+The temporal contract is interesting: it is not phrased in terms of a negation, but rather an affirmation.
+%
+Its goal is to state that a user of the file is forbidden from making use of the file handle (through the use of its component functions) after the user has $close$d the file.
+%
+It is phrased such that there is no ``$\sddd$'' at the end of its trace; thus this means that the last reference one can make to such a monitored record is returning from $close$; after that, it cannot be used.
+%
+%TODO: Do we need to define prefix-closure?
+Note that this is not a \emph{liveness property}; this does not mean that a return from $close$ \emph{must} happen, as traces are \emph{prefix-closed}.
+%
+Instead, the property is a \emph{safety property}, though expressed in the affirmative.
 %%
 
 \subsection{TCP example}
@@ -427,11 +445,15 @@ Likewise, a socket on the ``receiving'' end of the TCP connection (having used $
 %
 The contracts are very involved, but they implement a simplified version of the TCP connection lifecycle given in \autoref{fig:tcp-fsm}.
 %
-Note that the temporal clause in each contract is \emph{not} negated; this indicates that it specifies a \emph{liveness property}: that the client uses the socket in a manner consistent with the TCP protocol and can expect the other end to as well.
+Note that the temporal clause in each contract is phrased in the affirmative, as in \autoref{sec:file}; however, unlike that example, this property is indeed a (restricted) kind of \emph{liveness property}.
+%
+It states that the client uses the socket in a manner consistent with the TCP protocol and can expect the other end to as well.
+%
+The key difference between this property and a traditional liveness property is that it speaks of a liveness property with respect to \emph{a particular contract-monitoring} of a $TCPConnection$; prefix-closure is still present at the top level (\autoref{fig:tcontract-denotation}) and thus the protocol noted in the temporal contract may not occur if no $TCPConnection$ is used.
 %%
 
 %%
-\section{Semantics of Temporal Contracts}
+\section{Semantics of Temporal Contracts} \label{sec:temporal-semantics}
 %%
 
 %%
@@ -899,7 +921,24 @@ and implementation of temporal contracts.
 %%
 \section{Everything Technical}\label{sec:technical}
 
+%FIXME: This is from the LTL days...
 %%
+Wrapping monitors around values associates entirely fresh NFA states.
+%
+The names given to bindings are really associated with the bindings.
+%
+We have to give up some precision for decidability --- we use a monovariant allocation scheme for monitor allocation.
+%
+This scheme allows us to lift all textual temporal contracts to the top level and check individually.
+%
+A polyvariant scheme would require either knowing how many abstract bindings are allocated during execution, or an exhaustive enumeration of possible bindings as propositions to check.
+%
+Since we run CFA before appealing to the model checker, the former is feasible, but it distracts from the overall exposition.
+%%
+
+%%
+\subsection{Syntax}
+
 \begin{figure}
 \begin{align*}
 \mexp \in \Expr &::=
@@ -920,36 +959,44 @@ and implementation of temporal contracts.
 \caption{Syntax}
 \label{fig:syntax}
 \end{figure}
+
+%
+\autoref{fig:syntax} presents the core, desugared syntax of our language model.
+%
+Note that the surface syntax is better represented by the pseudocode examples given in \cref{fig:sort,fig:file,fig:tcp}; for example, a user would not be able to use $\mathtt{smon}$ or $\mathtt{tmon}$ in expressions.
+%
+While the syntax is largely conventional, the nature of monitoring and labelling are worth discussion.
+
+%
+A structural monitor $\sSMon{k}{\ell}{j}{\mtimeline}{\mscon}{\mexp}$ is like a traditional monitor \cite{ianjohnson:dthf:complete}: the structural contract is given by $\mscon$ and the contract parties are given by labels: $k$ is the server, $l$ is the client, and $j$ is the contract itself.
+%
+However, our structural monitors additionally feature a timeline ($\mtimeline$), used to temporally reason over values as they flow through contract boundaries (\autoref{sec:temporal-semantics}).
+%
+
+%
+A temporal monitor $\sTMon{k}{\ell}{j}{\mtimeline}{\mscon}{\mtcon}{\mexp}$ has a structural component as well ($\mscon$), but importantly it also considers a temporal contract given by $\mtcon$.
+%
+These kinds of monitors are only introduced at the top level, and thus need not be qualified over a timeline, as it is effectively $\toplevel$.
+%
+At this point we would like to note that our usage of labels differs slightly from existing literature \cite{ianjohnson:dthf:complete}: we have a notion of the ``top level label'', denoted by $\toplevel$; this is similar to \citeauthor{ianjohnson:dthf:complete}'s use of $\ell_0$.
 %%
 
 %%
-Wrapping monitors around values associates entirely fresh NFA states.
-%
-The names given to bindings are really associated with the bindings.
-%
-We have to give up some precision for decidability --- we use a monovariant allocation scheme for monitor allocation.
-%
-This scheme allows us to lift all textual temporal contracts to the top level and check individually.
-%
-A polyvariant scheme would require either knowing how many abstract bindings are allocated during execution, or an exhaustive enumeration of possible bindings as propositions to check.
-%
-Since we run CFA before appealing to the model checker, the former is feasible, but it distracts from the overall exposition.
-%%
+\subsection{Value Space and Evaluation Contexts}
 
-%%
 \begin{figure}
 \begin{align*}
 \mexp &::= \ldots
-\alt \sblame{\mmlab}{\mmlab}
-\alt \schk{\mmlab}{\mmlab}{\mexp}{\mval}
-\alt \sret{\mmlab}{\mtimeline}{\mexp}
-\alt \sown{\mexp}{\mmlab}
+ \alt \sblame{\mmlab}{\mmlab}
+ \alt \schk{\mmlab}{\mmlab}{\mexp}{\mval}
+ \alt \sown{\mexp}{\mmlab} \\
+&\alt \scall{\mmlab}{\mtimeline}{\mexp}
+ \alt \sret{\mmlab}{\mtimeline}{\mexp}
 \\
 \mval \in \Value &::=
-    \mconstant
+     \mconstant
 \alt \vcons{\mval}{\mval}
-\alt \maddr \\
-&  \alt \bclos{\mtoplevelname}{\mscon}{\mmlab}{\mmlab}{\mtimeline}{\mscon}{\mmlab}{\maddr}
+\alt \bclos{\mmlab}{\mscon}{\mmlab}{\mmlab}{\mtimeline}{\mscon}{\mmlab}{\maddr}
 \alt \sown{\mval}{\mmlab}
 \\
 \maddr \in \Addr &\quad\text{an infinite set} \\
@@ -968,13 +1015,48 @@ Since we run CFA before appealing to the model checker, the former is feasible, 
 \end{figure}
 %%
 
+%
+\autoref{fig:values} presents the value space for our language model.
+%
+For evaluation purposes, we extend our definition of expressions ($\mexp$) to include intermediate terms for contract checking.
+%
+$\sblame{\ell}{j}$ denotes a contract failure (of the contract $j$), which is a fatal error which blames $\ell$.
+%
+$\schk{\ell}{j}{\mexp}{\mval}$ denotes an obligation to check the contract of $j$ given by $\mexp$ against the value $\mval$, blaming $\ell$ if the contract is violated.
+%
+$\sown{\mexp}{\mmlab}$ denotes that the $\mexp$ is \emph{owned} \cite{ianjohnson:dthf:complete} by $\mmlab$; this is used to keep track of value migration for the purposes of ensuring \emph{complete monitoring}.
+%
+$\scall{\mmlab}{\mtimeline}{\mexp}$ and $\sret{\mmlab}{\mtimeline}{\mexp}$ denote the production of an event ($\scallev{\mmlab}{\mexp}$ and $\sretev{\mmlab}{\mexp}$, respectively) which may be rejected by the temporal monitors in place.
+%
+We also extend our definition of structural contracts to include ownership of flat contracts ($\sown*{\sflat{\mexp}}{\mmlab}$).
+
+%
+\NB We provide a brief explanation of some notation at the bottom of the figure.
+Of particular note, we use $\sOwn{\mexp}{\mmlab}$ to denote that $\mexp$ may have no ownership annotations, but if it has one then it is $\ell$ for all such annotations.
+%
+
+%
+Values ($\mval$) are conventional except for owned values ($\sown{\mval}{\mmlab}$) and blessed closures ($\bclos{\mmlab}{\mscon}{\mmlab}{\mmlab}{\mtimeline}{\mscon}{\mmlab}{\maddr}$).
+%
+Though we've discussed timelines ($\mtimeline$) extensively, we show here that our representation for them is either as an address ($\maddr$) or the top level ($\toplevel$).
+%
+
+%
+Our evaluation contexts are straightforward (given what we have defined) and ownership-sensitive \cite{ianjohnson:dthf:complete}.
+%
+A machine state ($\mstate$) is composed of the evaluation context ($\mctx{\mmlab}$), store ($\msto$), and store of PMSM states ($\mTMons$).
+%
+The former maps addresses to sets of values and the latter maps timelines to PMSMs.
+%
+
 %%
 \begin{figure}
 \begin{align*}
 \mctx{\mmlab} \in \ECtx &::=
       \sapp{\mctx{\mmlab}}{\mexp}
  \alt \sapp{\mval}{\mctx{\mmlab}}
- \alt \sif{\mctx{\mmlab}}{\mexp}{\mexp} \\
+ \alt \sif{\mctx{\mmlab}}{\mexp}{\mexp}
+ \alt \maddr \\
 &\alt \vcons{\mctx{\mmlab}}{\mexp}
  \alt \vcons{\mval}{\mctx{\mmlab}} \\
 &\alt \sSMon{\ell}{k}{j}{\mtimeline}{\mscon}{\mctx*}
@@ -1005,11 +1087,15 @@ Since we run CFA before appealing to the model checker, the former is feasible, 
 \\
 \msto \in \Store &= \Addr \parto \wp(\Value)
 \\
-\mTMons \in \TMons &= \Timeline \parto \wp{\PMSM}
+\mTMons \in \TMons &= \Timeline \parto \wp(\PMSM)
 \end{align*}
 \caption{Evaluation contexts}
 \label{fig:ctx}
 \end{figure}
+%%
+
+%%
+\subsection{Reduction}
 
 % TODO:
 % * Should addresses be owned? Does this imply stores need to be owned...?
@@ -1020,7 +1106,7 @@ $\begin{array}{@{}l @{\ }c@{\ } l@{}}
 \mstate \angle{\mctx{\mmlab}[\ldots], \msto, \mTMons}
 &\machstep&
 %TODO: Can mmlab change?
-\mstate^\prime \angle{\mctx{\mmlab^\prime}[\ldots], \msto^\prime, \mTMons^\prime}
+\mstate^\prime \angle{\mctx{\mmlab}[\ldots], \msto^\prime, \mTMons^\prime}
 \\ \hline % If true
 \sif{ \sOwn{\strue}{\mmlab} }{\mexp_1}{\mexp_2}
 &\machstep&
@@ -1041,7 +1127,7 @@ $\begin{array}{@{}l @{\ }c@{\ } l@{}}
 &&\phantom{\text{where }} \mtimeline = \salloc{\mstate} \\
 &&\text{given } \mmlab = \toplevel
 \\ % Flat monitor
-\sSMon{k}{\mmlab}{j}{\mtimeline}{ \sown*{\sflat{\mexp}}{\mmlab^{\prime\prime}} }{ \sOwn{\mconstant}{\mmlab^{\prime\prime}} }
+\sSMon{k}{\mmlab}{j}{\mtimeline}{ \sown*{\sflat{\mexp}}{\mmlab^\prime} }{ \sOwn{\mconstant}{\mmlab^\prime} }
 &\machstep&
 \schk*{k}{j}{\mtimeline}{ \sapp{\mexp}{\mconstant} }{\mconstant}
 \\ % Cons monitor
@@ -1049,9 +1135,9 @@ $\begin{array}{@{}l @{\ }c@{\ } l@{}}
 &\machstep&
 \sown{\vcons{ \sSMon{k}{\mmlab}{j}{\mtimeline}{\mscon_A}{\maddr_A} }{ \sSMon{k}{\mmlab}{j}{\mtimeline}{\mscon_D}{\maddr_D} }}{\mmlab}
 \\ % Arrow monitor
-\sSMon{k}{\mmlab}{j}{\mtimeline}{ \sarr{\mtoplevelname}{\mscon_D}{\mscon_R} }{\mval}
+\sSMon{k}{\mmlab}{j}{\mtimeline}{ \sarr{\mmlab_\lambda}{\mscon_D}{\mscon_R} }{\mval}
 &\machstep&
-\sown{\bclos{\mtoplevelname}{\mscon_D}{k}{j}{\mtimeline}{\mscon_R}{\mmlab}{\maddr}}{\mmlab} \\
+\sown{\bclos{\mmlab_\lambda}{\mscon_D}{k}{j}{\mtimeline}{\mscon_R}{\mmlab}{\maddr}}{\mmlab} \\
 &&\text{where } \maddr = \salloc{\mstate} \\
 &&\phantom{\text{where }} \msto^\prime = \msto[\maddr \mapsto \mval] \\
 &&\text{given } \mval = \slam{\mvar}{\mexp}
@@ -1068,36 +1154,36 @@ $\begin{array}{@{}l @{\ }c@{\ } l@{}}
 &\machstep&
 \sblame{k}{j}
 \\ % Blessed application
-\sapp{ \sOwn{\bclos{\mtoplevelname}{\mscon_D}{k}{j}{\mtimeline}{\mscon_R}{\mmlab^{\prime\prime}}{\maddr}}{\mmlab} }{ \sOwn{\mval}{\mmlab} }
+\sapp{ \sOwn{\bclos{\mmlab_\lambda}{\mscon_D}{k}{j}{\mtimeline}{\mscon_R}{\mmlab^\prime}{\maddr}}{\mmlab} }{ \sOwn{\mval}{\mmlab} }
 &\machstep&
 %TODO: Should the timeline be different?
 \mexp_{ret} \\
 %TODO: Do we even need to explicitly deref here?
 &&\text{where } \mexp_{ret} =
-\sret{\mtoplevelname}{\mtimeline}{ \sSMon{k}{\mmlab^{\prime\prime}}{j}{\mtimeline}{\mscon_R}{\mexp_{call}} } \\
+\sret{\mmlab_\lambda}{\mtimeline}{ \sSMon{k}{\mmlab^\prime}{j}{\mtimeline}{\mscon_R}{\mexp_{call}} } \\
 &&\phantom{\text{where }} \mexp_{call} =
-\scall{\mtoplevelname}{\mtimeline}{ \sapp{\mval_\lambda}{\sSMon{\mmlab^{\prime\prime}}{k}{j}{\mtimeline}{\mscon_D}{\mval}} } \\
+\scall{\mmlab_\lambda}{\mtimeline}{ \sapp{\mval_\lambda}{\sSMon{\mmlab^\prime}{k}{j}{\mtimeline}{\mscon_D}{\mval}} } \\
 &&\phantom{\text{where }} \mval_\lambda = \slam{\mvar}{\mexp} = \msto(\maddr)
 \\ % Call
-\scall{\mtoplevelname}{\mtimeline}{\sOwn{\mval}{\mmlab}}
+\scall{\mmlab_\lambda}{\mtimeline}{\sOwn{\mval}{\mmlab}}
 &\machstep&
 \mval
-\qquad\text{where } \mTMons^\prime = \sstep{\mTMons}{\mtimeline}{\scallev{\mtoplevelname}{\mval}}
+\qquad\text{where } \mTMons^\prime = \sstep{\mTMons}{\mtimeline}{\scallev{\mmlab_\lambda}{\mval}}
 \\ % Call fail
 \ditto
 &\machstep&
 \sblame{\mmlab}{j}
-\qquad\text{given } \bot = \sstep{\mTMons}{\mtimeline}{\scallev{\mtoplevelname}{\mval}}
+\qquad\text{given } \bot = \sstep{\mTMons}{\mtimeline}{\scallev{\mmlab_\lambda}{\mval}}
 \\ % Return
-\sret{\mtoplevelname}{\mtimeline}{ \sOwn{\mval}{\mmlab} }
+\sret{\mmlab_\lambda}{\mtimeline}{ \sOwn{\mval}{\mmlab} }
 &\machstep&
 \mval
-\qquad\text{where } \mTMons^\prime = \sstep{\mTMons}{\mtimeline}{\sretev{\mtoplevelname}{\mval}}
+\qquad\text{where } \mTMons^\prime = \sstep{\mTMons}{\mtimeline}{\sretev{\mmlab_\lambda}{\mval}}
 \\ % Return fail
 \ditto
 &\machstep&
-\sblame{\mtoplevelname}{\j}
-\qquad\text{given } \bot = \sstep{\mTMons}{\mtimeline}{\sretev{\mtoplevelname}{\mval}}
+\sblame{\mmlab_\lambda}{\j}
+\qquad\text{given } \bot = \sstep{\mTMons}{\mtimeline}{\sretev{\mmlab_\lambda}{\mval}}
 \\ % Dereference
 \maddr
 &\machstep&
@@ -1108,7 +1194,7 @@ $\begin{array}{@{}l @{\ }c@{\ } l@{}}
 &\machstep&
 \sblame{k}{j}
 \end{array}$
-\caption{Reduction rules (eliding temporal contract checking)}
+\caption{Reduction rules}
 \label{fig:standard}
 \end{figure*}
 
