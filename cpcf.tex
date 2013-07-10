@@ -11,6 +11,7 @@
 \usepackage[english]{babel}
 \usepackage[noabbrev]{cleveref}
 \usepackage[hidelinks]{hyperref}
+\usepackage{placeins}
 
 \newtheorem{theorem}{Theorem}
 \newtheorem{lemma}{Lemma}
@@ -170,6 +171,7 @@ Our techniques should smoothly integrate with theirs when considering partial pr
 \section{Overview of temporal higher-order contracts}
 %%
 
+\FloatBarrier
 \begin{figure}
   \begin{align*}
     \mscon \in \SContract &::= \sflat{\mexp} \alt \sarr{\mtoplevelname}{\mscon}{\mscon} \alt \sconsc{\mscon}{\mscon}
@@ -251,6 +253,7 @@ We leave call/return matching to future work, as it is not necessary to verify t
 \renewcommand*{\arraystretch}{1.2}
 \newcommand*{\call}[1]{\scallev{#1}{\_}}
 \newcommand*{\ret}[1]{\sretev{#1}{\_}}
+\FloatBarrier
 \begin{figure}
  $SortContract = $ \\
  $\begin{array}{ @{\quad}l@{\ } c @{\ }l }
@@ -287,6 +290,12 @@ This is specifying a particular safety property (as evidenced by the negation of
 The second temporal clause specifies a higher-order property; it states that, given a call to $sort$, its associated $cmp$ argument cannot be called after $sort$ returns.
 %%
 
+%%
+Note also that the negated clauses of the temporal contract are prefixed and suffixed by ``$\sddd$''.
+%TODO: Provide decent and intuitive explanation that doesn't require any forward-reference
+%%
+
+%%
 \subsection{File example} \label{sec:file}
 
 \begin{figure}
@@ -301,6 +310,7 @@ The second temporal clause specifies a higher-order property; it states that, gi
  \caption{File example}
  \label{fig:file}
 \end{figure}
+\FloatBarrier
 
 %%
 In \autoref{fig:file} we show the contract for a hypothetical file system, which can be used to open files by giving the $open$ function a filename (a $String$); we are then given a file handle contracted by $FileContract$.
@@ -324,6 +334,7 @@ Instead, the property is a \emph{safety property}, though expressed in the affir
 \subsection{TCP example}
 
 \newcommand*{\tcpstyle}[1]{\texttt{#1}}
+\FloatBarrier
 \begin{figure}
  \newcommand*{\send}[1]{\scallev{send}{#1}}
  \newcommand*{\rcv}[1]{\sretev{recv}{#1}}
@@ -478,6 +489,8 @@ We made the express design choice to require a function contract monitor wrappin
 The reason for this is that control should flow back to the timeline considered in order for an event to affect that timeline.
 %
 It is easy enough to amend the structural contracts to reflect the fact that a binding is considered a function in the temporal contract.
+
+\FloatBarrier
 \begin{figure}
   \begin{align*}
    \denotetcon{\mevent}{\mtimeline}{\menv} &=
@@ -578,8 +591,294 @@ The contracts could be interpreted with some simple combinators, but there is no
 %
 We introduce a simple generalization of finite state machines (FSMs) that is not necessarily finite-state in order to match against events and bind values for later equality checking: pattern-matching state machines.
 
-\section{Pattern-matching state machines}
 %%
+\section{Semantics}\label{sec:technical}
+
+%FIXME: This is from the LTL days...
+%%
+Wrapping monitors around values associates entirely fresh NFA states.
+%
+The names given to bindings are really associated with the bindings.
+%
+We have to give up some precision for decidability --- we use a monovariant allocation scheme for monitor allocation.
+%
+This scheme allows us to lift all textual temporal contracts to the top level and check individually.
+%
+A polyvariant scheme would require either knowing how many abstract bindings are allocated during execution, or an exhaustive enumeration of possible bindings as propositions to check.
+%
+Since we run CFA before appealing to the model checker, the former is feasible, but it distracts from the overall exposition.
+%%
+
+%%
+\subsection{Syntax}
+\FloatBarrier
+
+\begin{figure}
+\begin{align*}
+\mexp \in \Expr &::=
+      \slit{\mconstant}
+ \alt \svar{\mvar}
+ \alt \sapp{\mexp}{\mexp}
+ \alt \slam{\mvar}{\mexp}
+ \alt \sif{\mexp}{\mexp}{\mexp} \\
+&\alt \sSMon{\mmlab}{\mmlab}{\mlab}{\mtimeline}{\mscon}{\mexp}
+ \alt \sTMon{\mmlab}{\mmlab}{\mlab}{\mscon}{\mtcon}{\mexp} \\
+\mconstant \in \Constant &=
+ -1 \alt 0 \alt 1 \alt \ldots \alt + \alt - \alt \ldots \\
+&\alt \strue \alt \sfalse \alt \vee \alt \wedge \alt \ldots \\
+&\alt \sunit \alt \scons \alt \scar \alt \scdr \alt \ldots \\
+\mvar \in \Var &\quad\text{ an infinite set} \\
+\mmlab \in \Label \alt \toplevel &\quad\text{ an infinite set, where $\toplevel$ is the top-level}
+\end{align*}
+\caption{Syntax}
+\label{fig:syntax}
+\end{figure}
+
+%
+\autoref{fig:syntax} presents the core, desugared syntax of our language model.
+%
+Note that the surface syntax is better represented by the pseudocode examples given in \cref{fig:sort,fig:file,fig:tcp}; for example, a user would not be able to use $\mathtt{smon}$ or $\mathtt{tmon}$ in expressions.
+%
+While the syntax is largely conventional, the nature of monitoring and labelling are worth discussion.
+
+%
+A structural monitor $\sSMon{k}{\ell}{j}{\mtimeline}{\mscon}{\mexp}$ is like a traditional monitor \cite{ianjohnson:dthf:complete}: the structural contract is given by $\mscon$ and the contract parties are given by labels: $k$ is the server, $l$ is the client, and $j$ is the contract itself.
+%
+However, our structural monitors additionally feature a timeline ($\mtimeline$), used to temporally reason over values as they flow through contract boundaries (\autoref{sec:temporal-semantics}).
+%
+
+%
+A temporal monitor $\sTMon{k}{\ell}{j}{\mscon}{\mtcon}{\mexp}$ has a structural component as well ($\mscon$), but importantly it also considers a temporal contract given by $\mtcon$.
+%
+These kinds of monitors are only introduced at the top level, and thus need not be qualified over a timeline, as it is effectively $\toplevel$.
+%
+At this point we would like to note that our usage of labels differs slightly from existing literature \cite{ianjohnson:dthf:complete}: we have a notion of the ``top level label'', denoted by $\toplevel$; this is similar to \citeauthor{ianjohnson:dthf:complete}'s use of $\ell_0$.
+%%
+
+%%
+\subsection{Value Space and Evaluation Contexts}
+
+\begin{figure}
+\begin{align*}
+\mexp &::= \ldots
+ \alt \sblame{\mmlab}{\mmlab}
+ \alt \schk{\mmlab}{\mmlab}{\mexp}{\mval}
+ \alt \sown{\mexp}{\mmlab} \\
+&\alt \scall{\mmlab}{\mtimeline}{\mexp}
+ \alt \sret{\mmlab}{\mtimeline}{\mexp}
+\\
+\mval \in \Value &::=
+      \mconstant
+ \alt \vcons{\mval}{\mval}
+ \alt \sown{\mval}{\mmlab}
+ \alt \maddr \\
+&\alt \bclos{\mmlab}{\mscon}{\mmlab}{\mmlab}{\mtimeline}{\mscon}{\mmlab}{\maddr}
+\\
+\maddr \in \Addr &\quad\text{an infinite set} \\
+\mstimeline \in \Timeline &::= \maddr \alt \toplevel
+\\
+\mscon &::= \ldots
+\alt \sown*{\sflat{\mexp}}{\mmlab}
+\\
+\sOwn{\mexp}{\mmlab} = \sown{ \ldots \sown{\mexp}{\mmlab} \ldots }{\mmlab}
+&\quad\text{where $\forall$ labels $k$ and terms $\mexp^\prime$, $\mexp \neq \sown{\mexp^\prime}{k}$}
+\\
+\sown*{\sflat{\mexp}}{\mmlab} &\quad\text{denotes the set of responsible parties $\overline{\mmlab}$}
+\end{align*}
+\caption{Value space}
+\label{fig:values}
+\end{figure}
+%%
+
+%
+\autoref{fig:values} presents the value space for our language model.
+%
+For evaluation purposes, we extend our definition of expressions ($\mexp$) to include intermediate terms for contract checking.
+%
+$\sblame{\ell}{j}$ denotes a contract failure (of the contract $j$), which is a fatal error which blames $\ell$.
+%
+$\schk{\ell}{j}{\mexp}{\mval}$ denotes an obligation to check the contract of $j$ given by $\mexp$ against the value $\mval$, blaming $\ell$ if the contract is violated.
+%
+$\sown{\mexp}{\mmlab}$ denotes that the $\mexp$ is \emph{owned} \cite{ianjohnson:dthf:complete} by $\mmlab$; this is used to keep track of value migration for the purposes of ensuring \emph{complete monitoring}, using the concept of \emph{single ownership}.
+%
+$\scall{\mmlab}{\mtimeline}{\mexp}$ and $\sret{\mmlab}{\mtimeline}{\mexp}$ denote the production of an event ($\scallev{\mmlab}{\mexp}$ and $\sretev{\mmlab}{\mexp}$, respectively) which may be rejected by the temporal monitors in place.
+%
+We also extend our definition of structural contracts to include ownership of flat contracts ($\sown*{\sflat{\mexp}}{\mmlab}$).
+
+%
+\NB We provide a brief explanation of some notation at the bottom of the figure.
+Of particular note, we use $\sOwn{\mexp}{\mmlab}$ to denote that $\mexp$ may have no ownership annotations, but if it has one then it is $\ell$ for all such annotations.
+%
+
+%
+Values ($\mval$) are conventional except for owned values ($\sown{\mval}{\mmlab}$) and blessed closures ($\bclos{\mmlab}{\mscon}{\mmlab}{\mmlab}{\mtimeline}{\mscon}{\mmlab}{\maddr}$).
+%
+Though we've discussed timelines ($\mtimeline$) extensively, we show here that our representation for them is either as an address ($\maddr$) or the top level ($\toplevel$).
+%
+
+%
+Our evaluation contexts are straightforward (given what we have defined) and ownership-sensitive \cite{ianjohnson:dthf:complete}.
+%
+A machine state ($\mstate$) is composed of the evaluation context ($\mctx{\mmlab}$), store ($\msto$), and store of PMSM states ($\mTMons$).
+%
+The former maps addresses to sets of values and the latter maps timelines to PMSMs.
+%
+
+%%
+\begin{figure}
+\begin{align*}
+\mctx{\mmlab} \in \ECtx &::=
+      \sapp{\mctx{\mmlab}}{\mexp}
+ \alt \sapp{\mval}{\mctx{\mmlab}}
+ \alt \sif{\mctx{\mmlab}}{\mexp}{\mexp} \\
+&\alt \vcons{\mctx{\mmlab}}{\mexp}
+ \alt \vcons{\mval}{\mctx{\mmlab}} \\
+&\alt \sSMon{\ell}{k}{j}{\mtimeline}{\mscon}{\mctx*}
+ \alt \sSMon{\ell^\prime}{k}{j}{\mtimeline}{\mscon}{\mctx{\ell}} \\
+&\alt \sTMon{\ell}{k}{j}{\mscon}{\mtcon}{\mctx*}
+ \alt \sTMon{\ell^\prime}{k}{j}{\mscon}{\mtcon}{\mctx{\ell}} \\
+&\alt \schk*{k}{\ell}{\mtimeline}{\mctx*}{\mval}
+ \alt \schk*{k}{\ell^\prime}{\mtimeline}{\mctx{\ell}}{\mval} \\
+&\alt \scall{\ell}{\mtimeline}{\mctx*}
+ \alt \scall{\ell^\prime}{\mtimeline}{\mctx{\ell}} \\
+&\alt \sret{\ell}{\mtimeline}{\mctx*}
+ \alt \sret{\ell^\prime}{\mtimeline}{\mctx{\ell}} \\
+&\alt \sown{\mctx*}{\ell}
+ \alt \sOwn{\mctx{\ell}}{\ell^\prime}
+\\
+\mctx* \in \ECtx* &::=
+      \hole
+ \alt \sapp{\mctx*}{\mexp}
+ \alt \sapp{\mval}{\mctx*}
+ \alt \sif{\mctx*}{\mexp}{\mexp} \\
+&\alt \vcons{\mctx*}{\mexp}
+ \alt \vcons{\mval}{\mctx*} \\
+&\alt \scall{\mmlab}{\mtimeline}{\mctx*}
+ \alt \sret{\mmlab}{\mtimeline}{\mctx*} \\
+\ECtx* &\subset \ECtx^\mmlab
+\\
+\mstate \in \State &= \angle{\mctx{\mmlab}, \msto, \mTMons} \quad\text{machine state}
+\\
+\msto \in \Store &= \Addr \parto \wp(\Value)
+\\
+\mTMons \in \TMons &= \Timeline \parto \wp(\PMSM)
+\end{align*}
+\caption{Evaluation contexts}
+\label{fig:ctx}
+\end{figure}
+%%
+
+%%
+\subsection{Reduction} \label{sec:reduction}
+
+% TODO:
+% * Should addresses be owned? Does this imply stores need to be owned...?
+% * Should conses be owned?
+\begin{figure*}
+\newcommand*{\update}[3]{#1^\prime = #1[#2 \mapsto #1(#2)\sqcup#3]}
+\centering
+$\begin{array}{@{}l @{\ }c@{\ } l@{}}
+\mstate \angle{\mctx{\mmlab}[\ldots], \msto, \mTMons}
+&\machstep&
+%TODO: Can mmlab change?
+\mstate^\prime \angle{\mctx{\mmlab}[\ldots], \msto^\prime, \mTMons^\prime}
+\\ \hline % If true
+\sif{ \sOwn{\strue}{\mmlab} }{\mexp_1}{\mexp_2}
+&\machstep&
+\mexp_1
+\\ % If false
+\sif{ \sOwn{\sfalse}{\mmlab} }{\mexp_1}{\mexp_2}
+&\machstep&
+\mexp_2
+\\ % Apply
+\sapp{ \sOwn{\slam{\mvar}{\mexp}}{\mmlab} }{ \sOwn{\mval}{\mmlab} }
+&\machstep&
+\sown{ \sapp{\{ \sown{\mval}{\mmlab}/\mvar \}}{\mexp} }{\mmlab}
+\\ % Temporal monitor
+\sTMon{k}{\mmlab}{j}{\mscon}{\mtcon}{\mval}
+&\machstep&
+\sSMon{k}{\mmlab}{j}{\mtimeline}{\mscon}{\mval} \\
+&&\text{where } \update{\mTMons}{\mtimeline}{\compile{\mtcon}{\mtimeline}} \\
+&&\phantom{\text{where }} \mtimeline = \salloc{\mstate} \\
+&&\text{given } \mmlab = \toplevel
+\\ % Flat monitor
+\sSMon{k}{\mmlab}{j}{\mtimeline}{ \sown*{\sflat{\mexp}}{\mmlab^\prime} }{ \sOwn{\mconstant}{\mmlab^\prime} }
+&\machstep&
+\schk*{k}{j}{\mtimeline}{ \sapp{\mexp}{\mconstant} }{\mconstant}
+\\ % Cons monitor
+\sSMon{k}{\mmlab}{j}{\mtimeline}{ \sconsc{\mscon_A}{\mscon_D} }{ \sOwn{\vcons{\mval_A}{\mval_D}}{\mmlab} }
+&\machstep&
+\sown{\vcons{ \sSMon{k}{\mmlab}{j}{\mtimeline}{\mscon_A}{\mval_A} }{ \sSMon{k}{\mmlab}{j}{\mtimeline}{\mscon_D}{\mval_D} }}{\mmlab}
+\\ % Arrow monitor
+\sSMon{k}{\mmlab}{j}{\mtimeline}{ \sarr{\mmlab_\lambda}{\mscon_D}{\mscon_R} }{\mval}
+&\machstep&
+\sown{\bclos{\mmlab_\lambda}{\mscon_D}{k}{j}{\mtimeline}{\mscon_R}{\mmlab}{\maddr}}{\mmlab} \\
+&&\text{where } \maddr = \salloc{\mstate} \\
+&&\phantom{\text{where }} \update{\msto}{\maddr}{\mval} \\
+&&\text{given } \mval = \slam{\mvar}{\mexp}
+\\ % Arrow monitor fail
+\ditto
+&\machstep&
+\sblame{k}{j} \qquad\text{given } \mval \neq \slam{\mvar}{\mexp}
+\\ % Check true
+\schk{k}{j}{ \sOwn{\strue}{j} }{\mval}
+&\machstep&
+\mval
+\\ % Check false
+\schk{k}{j}{ \sOwn{\sfalse}{j} }{\mval}
+&\machstep&
+\sblame{k}{j}
+\\ % Blessed application
+\sapp{ \sOwn{\bclos{\mmlab_\lambda}{\mscon_D}{k}{j}{\mtimeline}{\mscon_R}{\mmlab^\prime}{\maddr}}{\mmlab} }{ \sOwn{\mval}{\mmlab} }
+&\machstep&
+%TODO: Should the timeline be different?
+\mexp_{ret} \\
+&&\text{where } \mexp_{ret} =
+\sret{\mmlab_\lambda}{\mtimeline}{ \sSMon{k}{\mmlab^\prime}{j}{\mtimeline}{\mscon_R}{\mexp_{call}} } \\
+&&\phantom{\text{where }} \mexp_{call} =
+\scall{\mmlab_\lambda}{\mtimeline}{ \sapp{\mval_\lambda}{\sSMon{\mmlab^\prime}{k}{j}{\mtimeline}{\mscon_D}{\mval}} } \\
+&&\phantom{\text{where }} \mval_\lambda = \slam{\mvar}{\mexp} \in \msto(\maddr)
+\\ % Call
+\scall{\mmlab_\lambda}{\mtimeline}{\sOwn{\mval}{\mmlab}}
+&\machstep&
+\mval
+\qquad\text{where } \mTMons^\prime \in \sstep{\mTMons}{\mtimeline}{\scallev{\mmlab_\lambda}{\mval}}
+\\ % Call fail
+\ditto
+&\machstep&
+\sblame{\mmlab}{j}
+\qquad\text{given } \bot \in \sstep{\mTMons}{\mtimeline}{\scallev{\mmlab_\lambda}{\mval}}
+\\ % Return
+\sret{\mmlab_\lambda}{\mtimeline}{ \sOwn{\mval}{\mmlab} }
+&\machstep&
+\mval
+\qquad\text{where } \mTMons^\prime \in \sstep{\mTMons}{\mtimeline}{\sretev{\mmlab_\lambda}{\mval}}
+\\ % Return fail
+\ditto
+&\machstep&
+\sblame{\mmlab_\lambda}{\j}
+\qquad\text{given } \bot \in \sstep{\mTMons}{\mtimeline}{\sretev{\mmlab_\lambda}{\mval}}
+\\ \hline % Blame
+\mctx{\mmlab}[\sblame{k}{j}]
+&\machstep&
+\sblame{k}{j}
+\end{array}$
+\caption{Reduction rules}
+\label{fig:reduction}
+\end{figure*}
+
+%
+Our reduction relation given in \autoref{fig:reduction} makes use of the the single owner policy by reducing redexes only if the label of the hole matches the owner of the pieces of the redex.
+%
+We elide the rules for the primitive functions as they are standard and straightforward.
+%
+Note, however, that all of our primitives (save for $\scons$) take only addresses as arguments and each rule dereferences the addresses in the store.
+%TODO: Finish
+%%
+
+%%
+\section{Pattern-matching state machines}
+\FloatBarrier
 
 %%
 An important aspect of contract systems is that we don't have full knowledge of the program's future.
@@ -917,7 +1216,7 @@ The definition is a bit tedious and obvious, so we leave it informally specified
 \end{proof}
 %%
 
-The reduction semantics uses this monitor construction via the following metafunctions:
+The reduction semantics (\autoref{sec:reduction}) uses this monitor construction via the following metafunctions:
 \begin{align*}
   \compile{\mtcon}{\mtimeline} &= \npmsm{\setof{\pmsmstate{\pmsmq_0, \bot}}}{\translateeps(\mtcon, \mtimeline)} \\
   \sstep{\mTMons}{\mtimeline}{\mevent} &= T \cup F \\
@@ -961,287 +1260,6 @@ Shit works.
 
 \acks We thank Jay McCarthy for helpful discussions on the semantics
 and implementation of temporal contracts.
-
-
-%%
-\section{Everything Technical}\label{sec:technical}
-
-%FIXME: This is from the LTL days...
-%%
-Wrapping monitors around values associates entirely fresh NFA states.
-%
-The names given to bindings are really associated with the bindings.
-%
-We have to give up some precision for decidability --- we use a monovariant allocation scheme for monitor allocation.
-%
-This scheme allows us to lift all textual temporal contracts to the top level and check individually.
-%
-A polyvariant scheme would require either knowing how many abstract bindings are allocated during execution, or an exhaustive enumeration of possible bindings as propositions to check.
-%
-Since we run CFA before appealing to the model checker, the former is feasible, but it distracts from the overall exposition.
-%%
-
-%%
-\subsection{Syntax}
-
-\begin{figure}
-\begin{align*}
-\mexp \in \Expr &::=
-      \slit{\mconstant}
- \alt \svar{\mvar}
- \alt \sapp{\mexp}{\mexp}
- \alt \slam{\mvar}{\mexp}
- \alt \sif{\mexp}{\mexp}{\mexp} \\
-&\alt \sSMon{\mmlab}{\mmlab}{\mlab}{\mtimeline}{\mscon}{\mexp}
- \alt \sTMon{\mmlab}{\mmlab}{\mlab}{\mscon}{\mtcon}{\mexp} \\
-\mconstant \in \Constant &=
- -1 \alt 0 \alt 1 \alt \ldots \alt + \alt - \alt \ldots \\
-&\alt \strue \alt \sfalse \alt \vee \alt \wedge \alt \ldots \\
-&\alt \sunit \alt \scons \alt \scar \alt \scdr \alt \ldots \\
-\mvar \in \Var &\quad\text{ an infinite set} \\
-\mmlab \in \Label \alt \toplevel &\quad\text{ an infinite set, where $\toplevel$ is the top-level}
-\end{align*}
-\caption{Syntax}
-\label{fig:syntax}
-\end{figure}
-
-%
-\autoref{fig:syntax} presents the core, desugared syntax of our language model.
-%
-Note that the surface syntax is better represented by the pseudocode examples given in \cref{fig:sort,fig:file,fig:tcp}; for example, a user would not be able to use $\mathtt{smon}$ or $\mathtt{tmon}$ in expressions.
-%
-While the syntax is largely conventional, the nature of monitoring and labelling are worth discussion.
-
-%
-A structural monitor $\sSMon{k}{\ell}{j}{\mtimeline}{\mscon}{\mexp}$ is like a traditional monitor \cite{ianjohnson:dthf:complete}: the structural contract is given by $\mscon$ and the contract parties are given by labels: $k$ is the server, $l$ is the client, and $j$ is the contract itself.
-%
-However, our structural monitors additionally feature a timeline ($\mtimeline$), used to temporally reason over values as they flow through contract boundaries (\autoref{sec:temporal-semantics}).
-%
-
-%
-A temporal monitor $\sTMon{k}{\ell}{j}{\mtimeline}{\mscon}{\mtcon}{\mexp}$ has a structural component as well ($\mscon$), but importantly it also considers a temporal contract given by $\mtcon$.
-%
-These kinds of monitors are only introduced at the top level, and thus need not be qualified over a timeline, as it is effectively $\toplevel$.
-%
-At this point we would like to note that our usage of labels differs slightly from existing literature \cite{ianjohnson:dthf:complete}: we have a notion of the ``top level label'', denoted by $\toplevel$; this is similar to \citeauthor{ianjohnson:dthf:complete}'s use of $\ell_0$.
-%%
-
-%%
-\subsection{Value Space and Evaluation Contexts}
-
-\begin{figure}
-\begin{align*}
-\mexp &::= \ldots
- \alt \sblame{\mmlab}{\mmlab}
- \alt \schk{\mmlab}{\mmlab}{\mexp}{\mval}
- \alt \sown{\mexp}{\mmlab} \\
-&\alt \scall{\mmlab}{\mtimeline}{\mexp}
- \alt \sret{\mmlab}{\mtimeline}{\mexp}
-\\
-\mval \in \Value &::=
-     \mconstant
-\alt \vcons{\mval}{\mval}
-\alt \bclos{\mmlab}{\mscon}{\mmlab}{\mmlab}{\mtimeline}{\mscon}{\mmlab}{\maddr}
-\alt \sown{\mval}{\mmlab}
-\\
-\maddr \in \Addr &\quad\text{an infinite set} \\
-\mstimeline \in \Timeline &::= \maddr \alt \toplevel
-\\
-\mscon &::= \ldots
-\alt \sown*{\sflat{\mexp}}{\mmlab}
-\\
-\sOwn{\mexp}{\mmlab} = \sown{ \ldots \sown{\mexp}{\mmlab} \ldots }{\mmlab}
-&\quad\text{where $\forall$ labels $k$ and terms $\mexp^\prime$, $\mexp \neq \sown{\mexp^\prime}{k}$}
-\\
-\sown*{\sflat{\mexp}}{\mmlab} &\quad\text{denotes the set of responsible parties $\overline{\mmlab}$}
-\end{align*}
-\caption{Value space}
-\label{fig:values}
-\end{figure}
-%%
-
-%
-\autoref{fig:values} presents the value space for our language model.
-%
-For evaluation purposes, we extend our definition of expressions ($\mexp$) to include intermediate terms for contract checking.
-%
-$\sblame{\ell}{j}$ denotes a contract failure (of the contract $j$), which is a fatal error which blames $\ell$.
-%
-$\schk{\ell}{j}{\mexp}{\mval}$ denotes an obligation to check the contract of $j$ given by $\mexp$ against the value $\mval$, blaming $\ell$ if the contract is violated.
-%
-$\sown{\mexp}{\mmlab}$ denotes that the $\mexp$ is \emph{owned} \cite{ianjohnson:dthf:complete} by $\mmlab$; this is used to keep track of value migration for the purposes of ensuring \emph{complete monitoring}.
-%
-$\scall{\mmlab}{\mtimeline}{\mexp}$ and $\sret{\mmlab}{\mtimeline}{\mexp}$ denote the production of an event ($\scallev{\mmlab}{\mexp}$ and $\sretev{\mmlab}{\mexp}$, respectively) which may be rejected by the temporal monitors in place.
-%
-We also extend our definition of structural contracts to include ownership of flat contracts ($\sown*{\sflat{\mexp}}{\mmlab}$).
-
-%
-\NB We provide a brief explanation of some notation at the bottom of the figure.
-Of particular note, we use $\sOwn{\mexp}{\mmlab}$ to denote that $\mexp$ may have no ownership annotations, but if it has one then it is $\ell$ for all such annotations.
-%
-
-%
-Values ($\mval$) are conventional except for owned values ($\sown{\mval}{\mmlab}$) and blessed closures ($\bclos{\mmlab}{\mscon}{\mmlab}{\mmlab}{\mtimeline}{\mscon}{\mmlab}{\maddr}$).
-%
-Though we've discussed timelines ($\mtimeline$) extensively, we show here that our representation for them is either as an address ($\maddr$) or the top level ($\toplevel$).
-%
-
-%
-Our evaluation contexts are straightforward (given what we have defined) and ownership-sensitive \cite{ianjohnson:dthf:complete}.
-%
-A machine state ($\mstate$) is composed of the evaluation context ($\mctx{\mmlab}$), store ($\msto$), and store of PMSM states ($\mTMons$).
-%
-The former maps addresses to sets of values and the latter maps timelines to PMSMs.
-%
-
-%%
-\begin{figure}
-\begin{align*}
-\mctx{\mmlab} \in \ECtx &::=
-      \sapp{\mctx{\mmlab}}{\mexp}
- \alt \sapp{\mval}{\mctx{\mmlab}}
- \alt \sif{\mctx{\mmlab}}{\mexp}{\mexp}
- \alt \maddr \\
-&\alt \vcons{\mctx{\mmlab}}{\mexp}
- \alt \vcons{\mval}{\mctx{\mmlab}} \\
-&\alt \sSMon{\ell}{k}{j}{\mtimeline}{\mscon}{\mctx*}
- \alt \sSMon{\ell^\prime}{k}{j}{\mtimeline}{\mscon}{\mctx{\ell}} \\
-&\alt \sTMon{\ell}{k}{j}{\mscon}{\mtcon}{\mctx*}
- \alt \sTMon{\ell^\prime}{k}{j}{\mscon}{\mtcon}{\mctx{\ell}} \\
-&\alt \schk*{k}{\ell}{\mtimeline}{\mctx*}{\mval}
- \alt \schk*{k}{\ell^\prime}{\mtimeline}{\mctx{\ell}}{\mval} \\
-&\alt \scall{\ell}{\mtimeline}{\mctx*}
- \alt \scall{\ell^\prime}{\mtimeline}{\mctx{\ell}} \\
-&\alt \sret{\ell}{\mtimeline}{\mctx*}
- \alt \sret{\ell^\prime}{\mtimeline}{\mctx{\ell}} \\
-&\alt \sown{\mctx*}{\ell}
- \alt \sOwn{\mctx{\ell}}{\ell^\prime}
-\\
-\mctx* \in \ECtx* &::=
-      \hole
- \alt \sapp{\mctx*}{\mexp}
- \alt \sapp{\mval}{\mctx*}
- \alt \sif{\mctx*}{\mexp}{\mexp} \\
-&\alt \vcons{\mctx*}{\mexp}
- \alt \vcons{\mval}{\mctx*} \\
-&\alt \scall{\mmlab}{\mtimeline}{\mctx*}
- \alt \sret{\mmlab}{\mtimeline}{\mctx*} \\
-\ECtx* &\subset \ECtx^\mmlab
-\\
-\mstate \in \State &= \angle{\mctx{\mmlab}, \msto, \mTMons} \quad\text{machine state}
-\\
-\msto \in \Store &= \Addr \parto \wp(\Value)
-\\
-\mTMons \in \TMons &= \Timeline \parto \wp(\PMSM)
-\end{align*}
-\caption{Evaluation contexts}
-\label{fig:ctx}
-\end{figure}
-%%
-
-%%
-\subsection{Reduction}
-
-% TODO:
-% * Should addresses be owned? Does this imply stores need to be owned...?
-% * Should conses be owned?
-\begin{figure*}
-\centering
-$\begin{array}{@{}l @{\ }c@{\ } l@{}}
-\mstate \angle{\mctx{\mmlab}[\ldots], \msto, \mTMons}
-&\machstep&
-%TODO: Can mmlab change?
-\mstate^\prime \angle{\mctx{\mmlab}[\ldots], \msto^\prime, \mTMons^\prime}
-\\ \hline % If true
-\sif{ \sOwn{\strue}{\mmlab} }{\mexp_1}{\mexp_2}
-&\machstep&
-\mexp_1
-\\ % If false
-\sif{ \sOwn{\sfalse}{\mmlab} }{\mexp_1}{\mexp_2}
-&\machstep&
-\mexp_2
-\\ % Apply
-\sapp{ \sOwn{\slam{\mvar}{\mexp}}{\mmlab} }{ \sOwn{\mval}{\mmlab} }
-&\machstep&
-\sown{ \sapp{\{ \sown{\mval}{\mmlab}/\mvar \}}{\mexp} }{\mmlab}
-\\ % Temporal monitor
-\sTMon{k}{\mmlab}{j}{\mscon}{\mtcon}{\mval}
-&\machstep&
-\sSMon{k}{\mmlab}{j}{\mtimeline}{\mscon}{\mval} \\
-&&\text{where } \mTMons^\prime = \mTMons[\mtimeline \mapsto \compile{\mtcon}{\mtimeline}] \\
-&&\phantom{\text{where }} \mtimeline = \salloc{\mstate} \\
-&&\text{given } \mmlab = \toplevel
-\\ % Flat monitor
-\sSMon{k}{\mmlab}{j}{\mtimeline}{ \sown*{\sflat{\mexp}}{\mmlab^\prime} }{ \sOwn{\mconstant}{\mmlab^\prime} }
-&\machstep&
-\schk*{k}{j}{\mtimeline}{ \sapp{\mexp}{\mconstant} }{\mconstant}
-\\ % Cons monitor
-\sSMon{k}{\mmlab}{j}{\mtimeline}{ \sconsc{\mscon_A}{\mscon_D} }{ \sOwn{\vcons{\maddr_A}{\maddr_D}}{\mmlab} }
-&\machstep&
-\sown{\vcons{ \sSMon{k}{\mmlab}{j}{\mtimeline}{\mscon_A}{\maddr_A} }{ \sSMon{k}{\mmlab}{j}{\mtimeline}{\mscon_D}{\maddr_D} }}{\mmlab}
-\\ % Arrow monitor
-\sSMon{k}{\mmlab}{j}{\mtimeline}{ \sarr{\mmlab_\lambda}{\mscon_D}{\mscon_R} }{\mval}
-&\machstep&
-\sown{\bclos{\mmlab_\lambda}{\mscon_D}{k}{j}{\mtimeline}{\mscon_R}{\mmlab}{\maddr}}{\mmlab} \\
-&&\text{where } \maddr = \salloc{\mstate} \\
-&&\phantom{\text{where }} \msto^\prime = \msto[\maddr \mapsto \mval] \\
-&&\text{given } \mval = \slam{\mvar}{\mexp}
-\\ % Arrow monitor fail
-\ditto
-&\machstep&
-\sblame{k}{j} \qquad\text{given } \mval \neq \slam{\mvar}{\mexp}
-\\ % Check true
-\schk{k}{j}{ \sOwn{\strue}{j} }{\mval}
-&\machstep&
-\mval
-\\ % Check false
-\schk{k}{j}{ \sOwn{\sfalse}{j} }{\mval}
-&\machstep&
-\sblame{k}{j}
-\\ % Blessed application
-\sapp{ \sOwn{\bclos{\mmlab_\lambda}{\mscon_D}{k}{j}{\mtimeline}{\mscon_R}{\mmlab^\prime}{\maddr}}{\mmlab} }{ \sOwn{\mval}{\mmlab} }
-&\machstep&
-%TODO: Should the timeline be different?
-\mexp_{ret} \\
-%TODO: Do we even need to explicitly deref here?
-&&\text{where } \mexp_{ret} =
-\sret{\mmlab_\lambda}{\mtimeline}{ \sSMon{k}{\mmlab^\prime}{j}{\mtimeline}{\mscon_R}{\mexp_{call}} } \\
-&&\phantom{\text{where }} \mexp_{call} =
-\scall{\mmlab_\lambda}{\mtimeline}{ \sapp{\mval_\lambda}{\sSMon{\mmlab^\prime}{k}{j}{\mtimeline}{\mscon_D}{\mval}} } \\
-&&\phantom{\text{where }} \mval_\lambda = \slam{\mvar}{\mexp} = \msto(\maddr)
-\\ % Call
-\scall{\mmlab_\lambda}{\mtimeline}{\sOwn{\mval}{\mmlab}}
-&\machstep&
-\mval
-\qquad\text{where } \mTMons^\prime = \sstep{\mTMons}{\mtimeline}{\scallev{\mmlab_\lambda}{\mval}}
-\\ % Call fail
-\ditto
-&\machstep&
-\sblame{\mmlab}{j}
-\qquad\text{given } \bot = \sstep{\mTMons}{\mtimeline}{\scallev{\mmlab_\lambda}{\mval}}
-\\ % Return
-\sret{\mmlab_\lambda}{\mtimeline}{ \sOwn{\mval}{\mmlab} }
-&\machstep&
-\mval
-\qquad\text{where } \mTMons^\prime = \sstep{\mTMons}{\mtimeline}{\sretev{\mmlab_\lambda}{\mval}}
-\\ % Return fail
-\ditto
-&\machstep&
-\sblame{\mmlab_\lambda}{\j}
-\qquad\text{given } \bot = \sstep{\mTMons}{\mtimeline}{\sretev{\mmlab_\lambda}{\mval}}
-\\ % Dereference
-\maddr
-&\machstep&
-\mval
-\qquad\text{where } \mval = \msto(\maddr)
-\\ \hline % Blame
-\mctx{\mmlab}[\sblame{k}{j}]
-&\machstep&
-\sblame{k}{j}
-\end{array}$
-\caption{Reduction rules}
-\label{fig:standard}
-\end{figure*}
 
 \balance
 \bibliographystyle{plainnat}

@@ -113,7 +113,7 @@
 \newcommand*{\schk}[4]{\tuple[^{#1}_{#2}]{chk}{#3,\, #4}}
 \WithSuffix\newcommand\schk*[5]{\tuple*[^{#1}_{#2}]{chk}{#3}{#4,\, #5}}
 \DeclarePairedDelimiter\own{\lbag}{\rbag}%
-\DeclarePairedDelimiter\Own{\lbag\mkern-5mu\lbag}{\rbag\mkern-5mu\rbag}%
+\DeclarePairedDelimiter\Own{\lbag\mkern-6mu\lbag}{\rbag\mkern-6mu\rbag}%
 \newcommand*{\sown}[2]{\own{#1}^{#2}}
 \newcommand*{\sOwn}[2]{\Own{#1}^{#2}}
 \WithSuffix\newcommand\sown*[2]{\floor{#1}^{\overline{#2}}}
@@ -159,7 +159,7 @@
 
 \DeclarePairedDelimiter\compileaux{\llfloor}{\rrfloor}
 \newcommand*{\compile}[2]{\compileaux{#1}_{#2}}
-\newcommand*{\salloc}[1]{\mathit{\delta{}alloc}(#1)}
+\newcommand*{\salloc}[1]{\mathit{alloc}(#1)}
 \newcommand*{\sstep}[3]{\mathit{\delta{}step}(#1,\,#2,\,#3)}
 
 \newcommand*{\pmsmstepd}[2]{\overset{#1}{\underset{#2}{\to}}}
