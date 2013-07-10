@@ -764,6 +764,14 @@ where $\pmsmq_0 \in \pmsmq_1^\epsilon$ is defined as the least fixed point of th
   \inferrule{(\pmsmq, \epsilon, \pmsmq') \in \delta}{\pmsmq' \in \pmsmq^\epsilon} \qquad
   \inferrule{\pmsmq_0 \in \pmsmq^\epsilon \\ \pmsmq_1 \in \pmsmq_0^\epsilon}{\pmsmq_1 \in \pmsmq^\epsilon}
 \end{mathpar}
+
+\begin{lemma}
+  $\pmsmstate{\pmsmqq, \menv} \overset{\mtrace}{\underset{\delta}{\to}} \pmsmstate{\pmsmqq', \menv'}$ iff
+  $\pmsmstate{\pmsmqq, \menv} \overset{\mtrace}{\underset{\epsclose(\delta)}{\to}} \pmsmstate{\pmsmqq', \menv'}$
+\end{lemma}
+\begin{proof}
+  By induction on $\mtrace$.
+\end{proof}
 %
 \begin{align*}
  s \in \State &::= q_i \alt \pmsmpair{s}{s} \text{ where } i \in \Nat
@@ -891,7 +899,7 @@ Pattern combination ($\combinepatalone$) could just throw both patterns into a s
 The definition is a bit tedious and obvious, so we leave it informally specified for space.
 
 \begin{lemma}
-  $\mtrace \in \denotetcon{\mtcon}{\mtimeline}{\menv}$ iff $\exists \pmsmq \in F, \menv'$. $\pmsmstate{\pmsmqcur, \menv} \overset{\mtrace}{\underset{\delta}{\to}} \pmsmstate{\pmsmq, \menv'}$ is a well-formed trace (the function positions of matched events are all on $\mtimeline$) where $(\delta, F, \pmsmqlast, k') = \epshelp^\mtimeline(\mtcon, \pmsmqcur, k)$
+  $\mtrace \in \denotetcon{\mtcon}{\mtimeline}{\menv}$ iff $\exists \pmsmqq \in F, \menv'$. $\pmsmstate{\pmsmqcur, \menv} \overset{\mtrace}{\underset{\delta}{\to}} \pmsmstate{\pmsmqq, \menv'}$ is a well-formed trace (the function positions of matched events are all on $\mtimeline$) where $(\delta, F, \pmsmqlast, k') = \epshelp^\mtimeline(\mtcon, \pmsmqcur, k)$
 \end{lemma}
 \begin{proof}
   By induction on $\mtcon$ and then $\mtrace$.
