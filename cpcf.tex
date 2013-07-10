@@ -942,15 +942,30 @@ If the only possible state for the machine to be in is $\stfail$, there is a cau
 %
 Since there are several machines that could describe the timeline at one time, we return a set of possibilities: either there is a definitive failure $\setof{\bot}$, definitive success $\setof{\mTMons'}$ or a possible success $\setof{\mTMons', \bot}$.
 
-\section{Evaluation}
-%%
+\section{Abstract semantics}
 
-%%
-Our examples didn't take hours to check!
+We use the AAM approach to soundly approximate our concrete semantics.
 %
-Our model is available online \footnote{\url{http://github.com/ianj/temporal-aam}}.
-%%
-
+This first requires a CESK-like machine to transform, but there are known ways to systematically transform Felleisen-style reduction semantics into corresponding CESK machines ~\citep{?}.
+%
+The important aspect of the abstraction process is not this transformation, but the fact that the space of values becomes \emph{finite}, meaning the space of PMSM machine configurations is finite.
+%
+Therefore, the only aspect of PMSMs that we need to tamper with is the notion of equality, to weaken it to be conservative with our abstractions.
+%
+In our semantics with just closures, conses, booleans and integers, we consider syntactically equal closures and conses to be \emph{maybe} equal, equal booleans and integers to be \emph{must} equal, integer comparisons with the abstract $\mathbf{Int}$ element to be \emph{maybe} equal (assuming a simple flat abstraction of the integers) and all other possibilities \emph{never} equal.
+%
+This notion of equality lifts over sets of values in the obvious way.
+%
+There are several different techniques that we could apply in order to improve the precision of the analysis:
+\begin{itemize}
+\item{use abstract counting ~\citep{dvanhorn:Might:2006:GammaCFA} to improve equality checking of allocated data;}
+\item{use abstract garbage collection~\citep{dvanhorn:Might:2006:GammaCFA} to remove dead temporal monitors;}
+\item{use abstract garbage collection to remove bindings to dead values in live temporal monitors, considering a monitor transition that dereferences a dangling pointer to represent an impossible state (and thus can be discarded);}
+\item{separate continuation management to a pushdown abstraction~\citep{dvanhorn:Vardoulakis2011CFA2}; or}
+\item{use a polyvariant allocation strategy such as $m1$-CFA ~\citep{dvanhorn:Might2010Resolving} or polymorphic splitting~\citep{dvanhorn:wright-jagannathan-toplas98}}
+\end{itemize}
+%
+We leave this exploration and evaluation of possibilities to future work.
 %%
 \section{Conclusion}
 %%
