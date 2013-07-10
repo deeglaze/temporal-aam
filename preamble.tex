@@ -14,6 +14,9 @@
 \newcommand*{\pmsmqlast}{s_\mathit{last}}
 \newcommand*{\stackop}{\pm\epsilon}
 \newcommand*{\pmsmstate}[1]{\langle #1 \rangle}
+\newcommand*{\pmsmstateM}[2]{\pmsmstate{#1}_{#2}}
+\newcommand*{\pmsmMachine}{M}
+\newcommand*{\npmsm}[2]{\langle #1,\ #2\rangle}
 \newcommand*{\ary}{\mathit{ary}}
 
 \newcommand*{\mbindenv}{\gamma}
@@ -77,6 +80,9 @@
 
 \newcommand*{\wf}{\mathit{wf}}
 
+\newcommand*{\vpatToPattern}{\mathit{ppat}}
+\newcommand*{\vpatToData}{\mathit{vpat}}
+
 \newcommand*{\matchcall}{\mathit{mcall}}
 \newcommand*{\matchret}{\mathit{mret}}
 \newcommand*{\matchv}{\mathit{mv}}
@@ -92,8 +98,7 @@
 
 \newcommand*{\epshelp}{{\mathcal M}_\epsilon}
 \newcommand*{\epsclose}{\epsilon\text{-}\mathit{close}}
-\newcommand*{\translateeps}{\mathit{translate}0}
-\newcommand*{\translateclose}{\mathit{translate}1}
+\newcommand*{\translateeps}{\mathit{translate}}
 
 \newcommand*{\timelineis}[2]{#1 \mathrel{\mathit{on}} #2}
 \newcommand*{\labelis}[2]{#1 \mathrel{\mathit{labeled}} #2}
@@ -152,9 +157,15 @@
 \newcommand*{\swrapev}[2]{{\tt wrap}(#1,\, #2)}
 \newcommand*{\swc}{\_} 
 
-\DeclarePairedDelimiter\compile{\llfloor}{\rrfloor}
+\DeclarePairedDelimiter\compileaux{\llfloor}{\rrfloor}
+\newcommand*{\compile}[2]{\compileaux{#1}_{#2}}
 \newcommand*{\salloc}[1]{\mathit{\delta{}alloc}(#1)}
 \newcommand*{\sstep}[3]{\mathit{\delta{}step}(#1,\,#2,\,#3)}
+
+\newcommand*{\pmsmstepd}[2]{\overset{#1}{\underset{#2}{\to}}}
+\newcommand*{\pmsmstep}[2]{\overset{#1}{\to}}
+\newcommand*{\multistepd}[2]{\overset{#1}{\underset{#2}{\to\!\!\!\!\!\to}}}
+\newcommand*{\multistep}[2]{\overset{#1}{\to\!\!\!\!\!\to}}
 
 \newcommand*{\denote}[1]{[\![ #1 ]\!]}
 \newcommand*{\denotetcon}[3]{[\![ #1 ]\!]^{#2}_{#3}}
@@ -226,3 +237,5 @@
 \newcommand*{\Subpattern}{\mathit{Subpattern}}
 \newcommand*{\Qualified}{\mathit{Data}}
 \newcommand*{\MatchResult}{\mathit{Result}}
+
+\newcommand*{\QState}{\mathit{QState}}

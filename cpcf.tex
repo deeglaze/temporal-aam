@@ -192,7 +192,6 @@ Our techniques should smoothly integrate with theirs when considering partial pr
  \alt \stnot{\mtcon}
  \alt \stOr{\mtcon}{\mtcon}
  \alt \stAnd{\mtcon}{\mtcon}
-<<<<<<< HEAD
  \alt \stmany{\mtcon} \\
 &\alt \sddd \alt \stfail
  \alt \stcall{\mname}{\mvar}{\mtcon}
@@ -202,17 +201,6 @@ Our techniques should smoothly integrate with theirs when considering partial pr
 \mvpat \in \VPat &::= \mconstant \alt \mname \alt \swc \\
 \mvar \in \Var &\quad\text{an infinite set} \\
 \mname \in \Name &::= \mvar \alt \mtoplevelname
-=======
- \alt \stmany{\mtcon}
- \alt \sddd \\
-&\alt \stcall{\mname}{\mvar}{\mtcon}
- \alt \stret{\mname}{\mvar}{\mtcon} \\
-\mevent \in \Event &::= \scallev{\mname}{\mvpat} \alt \sretev{\mname}{\mvpat} \\
-\mvpat \in \VPat &::= \mconstant \alt \mvar \alt \swc \\
-\mname &::= \mvar \alt \mmlab \\
-\mvar \in \Var &\quad\text{an infinite set} \\
-\mmlab \in \Label &\quad\text{an infinite set}
->>>>>>> 7202c6fa5e683c87a9267bce9541c27bf51b2ff1
   \end{align*}
   \caption{Syntax of temporal contracts}
   \label{fig:tcontract-syntax}
@@ -240,7 +228,7 @@ However, if $\mname$ is a variable ($\mvar$), then we consult a binding environm
 %
 The distinction between variables (bound by temporal contract) and labels (bound by structural contract) is what separates our semantics from \citeauthor{ianjohnson:dfm:icfp2011}'s.
 %
-Patterns can match constants ($\mconstant$), bound variables ($\mname$), labeled functions ($\mtoplevelname$), or simply anything ($\swc$).
+Patterns can match constants ($\mconstant$), bound variables ($\mvar$), labeled functions ($\mtoplevelname$), or simply anything ($\swc$).
 %%
 
 %%
@@ -539,20 +527,25 @@ It is easy enough to amend the structural contracts to reflect the fact that a b
   \begin{align*}
     \denoteevent{\scallev{\mvar}{\mvpat}}{\mtimeline}{\menv} &= \\
     &\left\{\begin{array}{ll}
-           \setof{\apvcall{\menv(\mvar)}{\mathit{ppat}(\mvpat, \menv)}} &\text{ if } \timelineis{\menv(\mvar)}{\mtimeline} \\
+           \setbuild{\apvcall{\menv(\mvar)}{\mval}}{\mval \in \vpatToData(\mvpat, \menv)} &\text{ if } \timelineis{\menv(\mvar)}{\mtimeline} \\
            \emptyset & \text{ otherwise}
            \end{array}\right.
 \\
     \denoteevent{\scallev{\mtoplevelname}{\mvpat}}{\mtimeline}{\menv} &=
-      \setbuild{\apvcall{\mval}{\mathit{ppat}(\mvpat, \menv)}}{\labelis{\mval}{\mtoplevelname} \text{ and } \timelineis{\mval}{\mtimeline}}
+      \setbuild{\apvcall{\mval}{\mval'}}{
+        \begin{array}{l}
+\mval' \in \vpatToData(\mvpat, \menv),\\
+ \labelis{\mval}{\mtoplevelname} \text{ and } \timelineis{\mval}{\mtimeline}
+\end{array}
+}
 \\
-   \mathit{ppat}(\swc, \menv) &= \swc
+   \vpatToData(\swc, \menv) &= \Value
 \\
-   \mathit{ppat}(\mvar, \menv) &= \menv(\mvar)
+   \vpatToData(\mvar, \menv) &= \setof{\menv(\mvar)}
 \\
-   \mathit{ppat}(\mtoplevelname, \menv) &= \bclos{\mtoplevelname}{\swc}{\swc}{\swc}{\swc}{\swc}{\swc}{\swc}
+   \vpatToData(\mtoplevelname, \menv) &= \setbuild{\mval}{\mval \equiv \bclos{\mtoplevelname}{\swc}{\swc}{\swc}{\swc}{\swc}{\swc}{\swc}}
 \\
-   \mathit{ppat}(\mconstant, \menv) &= \mconstant
+   \vpatToData(\mconstant, \menv) &= \setof{\mconstant}
   \end{align*}
   where $\timelineis{\bclos{\swc}{\swc}{\swc}{\swc}{\mtimeline}{\swc}{\swc}{\swc}}{\mtimeline}$ \\
   and $\labelis{\bclos{\mtoplevelname}{\swc}{\swc}{\swc}{\swc}{\swc}{\swc}{\swc}}{\mtoplevelname}$ \\
@@ -577,7 +570,7 @@ Each temporal contract monitor redex evaluation creates a new timeline --- a new
 %
 Say $\mtimeline$ is the timeline for a contract $\mtcon$ on an expression $\mexp$.
 %
-We say $\mexp$ satisfies its temporal contract if its event trace filtered by the timeline ($\denote{\mexp}_\mtimeline$) is in the denotation of the temporal contract for that timeline ($\denotetcon{\mtcon}{\mtimeline}{\menv}$).
+We say $\mexp$ satisfies its temporal contract if its event trace filtered by the timeline ($\denote{\mexp}_\mtimeline$) is in the denotation of the temporal contract for that timeline ($\denotetcon{\mtcon}{\mtimeline}{\bot}$, where $\bot$ is an empty environment of temporal bindings).
 %
 For this to be a contract system and not just a notion of correctness, however, we need some machinery to monitor the evolution of the event trace and check to see that it meets our specification.
 %
@@ -595,33 +588,35 @@ We don't have a full list of values that will be constructed, nor is it necessar
 %
 Thus, we separate out the control states that govern the progression through satisfying a temporal contract from the bindings of names to values we encounter along the way.
 %
-Values will come from events constructors, and are allowed to be unbounded.
+Values will come from event constructors, and are allowed to be unbounded.
 %
 Instead of matching against atomic symbols to transition like an FSM, we allow for pattern matching against constructed data, to bind subdata to variables for later equality checking.
 %
 Scoping bindings comes from simply $\alpha$-converting the contract to always use unique binders.
 %
 
-To do this, we consider a machine state to be a tuple of a control state and a binding environment, and transitions may change/use the environment when pattern matching on input.
+To do this, we consider a machine state to be a tuple of a control state and a binding environment, where transitions may change/use the environment when pattern matching on input.
 %
 Additionally, since we plan to later abstract our semantics (and values), we need a weaker, tunable notion of equality (e.g., is 1 equal to $\mathbf{Int}$? We must be conservative and consider both valid).
 %
 The atomic symbols therefore come equipped with a may/must/never equality-checking function.
 %
-A PMSM is thus a tuple $(Q, F, q_0, \Sigma, \simeq, \ary, \delta)$ where
+A PMSM $\pmsmMachine$ is thus a tuple $(q_0, \simeq, \ary, \delta)$ where
 \begin{align*}
   \Sigma &\text{ a set of atoms} \\
   \simeq : \Sigma \times \Sigma \to \setof{\top, \bot, ?} &\text{ weak equality function}\\
   Q &\text{ a finite set of control states} \\
   C &\text{ a finite set of constructors} \\
-  F \subseteq Q &\text{ final/accepting states} \\
   q_0 \in Q &\text{ initial state} \\
   \ary : C \to \Nat&\text{ the arity of constructors} \\
   \delta \subseteq Q \times \Pattern \times Q & \text{ transition relation}\\[2pt]
 \end{align*}
+%
+We consider all reachable states accepting, except for the $\stfail$ state.
+%
 The pattern language consists of binding patterns, equality with reference patterns, wildcard and equality with a constant atom.
 %
-The syntax and semantics of matching patterns is in \autoref{fig:pattern-syntax}; notice that we do not change the binding environment for anti-matching ($\!$) patterns.
+The syntax and semantics of matching patterns is in \autoref{fig:pattern-syntax}; notice that we do not change the binding environment for anti-matching ($!$) patterns.
 %
 Crucially, since we will need to form intersections between machines, we need a way to state that different variables will be bound to the same value, so each position in a constructor is allowed a \emph{set} of patterns to match.
 %
@@ -695,6 +690,9 @@ The machine is input-driven, and a path through the machine is defined in \autor
 We will associate each temporal contract monitor with a state machine we generate from the temporal contract, where the data fed to the machine are call and return events that pass through the structural monitors associated with the timeline.
 %
 \begin{figure}
+  \begin{align*}
+    \mstate \in \State &::= \pmsmstate{\pmsmq, \mbindenv} \alt \stfail
+  \end{align*}
   \begin{mathpar}
     \infer{(\pmsmq, \mpat, \pmsmq') \in \delta \\
       \ensuremath{
@@ -702,8 +700,22 @@ We will associate each temporal contract monitor with a state machine we generat
              \smust{\mbindenv'} = \match(\mpat, \mdata, \mbindenv) \text{ or} \\
              \smay{\mbindenv'}  = \match(\mpat, \mdata, \mbindenv)
            \end{array}}
-}{\pmsmstate{\pmsmq, \mbindenv} \overset{\mdata}{\underset{\delta}{\to}}
-                     \pmsmstate{\pmsmq', \mbindenv'}}
+}{\pmsmstate{\pmsmq, \mbindenv} \pmsmstepd{\mdata}{\delta}
+  \pmsmstate{\pmsmq', \mbindenv'}}
+\\
+    \infer{(\pmsmq, \mpat, \pmsmq') \in \delta \\
+      \ensuremath{
+           \begin{array}{l}
+             \smay{\mbindenv'}  = \match(\mpat, \mdata, \mbindenv) \text{ or} \\
+             \mfail = \match(\mpat, \mdata, \mbindenv)
+           \end{array}}}
+          {\pmsmstate{\pmsmq, \mbindenv} \pmsmstepd{\mdata}{\delta} \stfail}
+\\
+  \inferrule{ }{\mstate \multistepd{\epsilon}{\delta} \mstate}
+\qquad
+  \inferrule{\mstate \multistepd{\mtrace}{\delta} \mstate' \\
+             \mstate' \pmsmstepd{\mdata}{\delta} \mstate''}
+            {\mstate \multistepd{\mtrace\mdata}{\delta} \mstate''}
   \end{mathpar}
   \caption{PMSM semantics}
   \label{fig:pmsm-semantics}
@@ -739,6 +751,8 @@ Negation is still annoying to deal with, so we remove tough negations by convert
                                                         {\stret{\mname}{\mvar}{\nnf(\stnot{\mtcon})}}
 \\
     \nnf(\stnot{\sddd}) &= \stfail
+\\
+    \nnf(\stnot{\stfail}) &= \sddd
   \end{align*}
   Otherwise structurally distribute $\nnf$
   \caption{Temporal contract NNF translation}
@@ -766,30 +780,28 @@ where $\pmsmq_0 \in \pmsmq_1^\epsilon$ is defined as the least fixed point of th
 \end{mathpar}
 
 \begin{lemma}
-  $\pmsmstate{\pmsmqq, \menv} \overset{\mtrace}{\underset{\delta}{\to}} \pmsmstate{\pmsmqq', \menv'}$ iff
-  $\pmsmstate{\pmsmqq, \menv} \overset{\mtrace}{\underset{\epsclose(\delta)}{\to}} \pmsmstate{\pmsmqq', \menv'}$
+  $\pmsmstate{\pmsmqq, \menv} \multistepd{\mtrace}{\delta} \pmsmstate{\pmsmqq', \menv'}$ iff
+  $\pmsmstate{\pmsmqq, \menv} \multistepd{\mtrace}{\epsclose(\delta)} \pmsmstate{\pmsmqq', \menv'}$
 \end{lemma}
 \begin{proof}
   By induction on $\mtrace$.
 \end{proof}
 %
 \begin{align*}
- s \in \State &::= q_i \alt \pmsmpair{s}{s} \text{ where } i \in \Nat
+ s \in \QState &::= q_i \alt \pmsmpair{s}{s} \text{ where } i \in \Nat
 \\
  \translateeps &: \TContract \times \Timeline \to \PMSM
 \\
- \translateeps(\mtcon, \mtimeline) &= (Q, F, \pmsmq_0, \Value, \lambda x,y . x = y, \ary, \delta) \\
+ \translateeps(\mtcon, \mtimeline) &= (\pmsmq_0, \lambda x,y . x = y, \ary, \epsclose(\delta)) \\
  \text{where }
-   (\delta, F, \pmsmqlast, k) &= \epshelp^\mtimeline(\mtcon, \pmsmq_0, 1, \emptyset, \setof{\pmsmq_0})
-\\
-   Q &= \setbuild{s, s'}{(s, \mpat, s') \in \delta}
+   (\delta, \pmsmqlast, k) &= \epshelp^\mtimeline(\mtcon, \pmsmq_0, 1, \emptyset, \setof{\pmsmq_0})
 \\
    \ary(\apvcallalone) &= 2 \\
    \ary(\apvretalone) &= 2 \\
    \ary(\bclos{\swc}{\swc}{\swc}{\swc}{\swc}{\swc}{\swc}{\swc}) &= 8 \\
 \\
 \begin{array}{l}
-    \epshelp :  \Timeline \times \TContract \times \State \times \Nat \\ \phantom{\epshelp :}\to \mathit{Transition} \times \wp(\State) \times \State \times \Nat
+    \epshelp :  \Timeline \times \TContract \times \QState \times \Nat \\ \phantom{\epshelp :}\to \mathit{Transition} \times \wp(\QState) \times \QState \times \Nat
 \end{array}\span\omit
 \end{align*}
 and
@@ -798,24 +810,24 @@ and
   \epshelp^\mtimeline(\scallev{\mvar}{\mvpat'}, \pmsmqcur, k, \delta) = \\
 \quad           (\delta
             \cup \setof{(\pmsmqcur,
-                         \apvcall{\sref{\mvar}}{\mathit{ppat}(\mvpat)},
+                         \apvcall{\sref{\mvar}}{\vpatToPattern(\mvpat)},
                          \pmsmq_k)}, \\
-\quad            \ F\cup \setof{\pmsmqcur, \pmsmq_k}, \pmsmq_k, k+1)
+\quad            \ \pmsmq_k, k+1)
 \\[2pt]
 %
   \epshelp^\mtimeline(\scallev{\mtoplevelname}{\mvpat'}, \pmsmqcur, k) = \\
 \quad           (\setof{(\pmsmqcur,
-                         \apvcall{\bclos{\mtoplevelname}{\swc}{\swc}{\swc}{\mtimeline}{\swc}{\swc}{\swc}}{\mathit{ppat}(\mvpat)},
+                         \apvcall{\bclos{\mtoplevelname}{\swc}{\swc}{\swc}{\mtimeline}{\swc}{\swc}{\swc}}{\vpatToPattern(\mvpat)},
                          \pmsmq_k)}, \\
 \quad            \ \setof{\pmsmqcur, \pmsmq_k}, \pmsmq_k, k+1)
 \\
 \begin{array}{ll}
-  \mathit{ppat}(\swc, \mtimeline) &= \swc
+  \vpatToPattern(\swc, \mtimeline) &= \swc
 \\
-  \mathit{ppat}(\mvar, \mtimeline) &= \sref{\mvar}
+  \vpatToPattern(\mvar, \mtimeline) &= \sref{\mvar}
 \\
-  \mathit{ppat}(\mtoplevelname, \mtimeline) &= \bclos{\mtoplevelname}{\swc}{\swc}{\swc}{\mtimeline}{\swc}{\swc}{\swc} \\
-  \mathit{ppat}(\mconstant, \mtimeline) &= \mconstant
+  \vpatToPattern(\mtoplevelname, \mtimeline) &= \bclos{\mtoplevelname}{\swc}{\swc}{\swc}{\mtimeline}{\swc}{\swc}{\swc} \\
+  \vpatToPattern(\mconstant, \mtimeline) &= \mconstant
 \end{array}
 \end{array}
 \end{align*}
@@ -836,11 +848,11 @@ We simply thread through a source of freshness for constructing new states.
         (\pmsmqcur, \epsilon, \pmsmq_{k+1})
       \end{array}\right\},
     \\
-    \ F \cup F' \cup \setof{\pmsmq_k, \pmsmq_{k+1}, \pmsmq_{k''}}, \pmsmq_{k''}, k''+ 1)
+    \ \pmsmq_{k''}, k''+ 1)
     \\
   %
-    \text{where } (\delta, F, \pmsmqlast^0, k') = \epshelp^\mtimeline(\mtcon_0, \pmsmq_k, k+2) \\
-    \phantom{\text{where }} (\delta', F', \pmsmqlast^1, k'') = \epshelp^\mtimeline(\mtcon_1, \pmsmq_{k+1}, k')
+    \text{where } (\delta, \pmsmqlast^0, k') = \epshelp^\mtimeline(\mtcon_0, \pmsmq_k, k+2) \\
+    \phantom{\text{where }} (\delta', \pmsmqlast^1, k'') = \epshelp^\mtimeline(\mtcon_1, \pmsmq_{k+1}, k')
   \end{array}
 \end{align*}
 
@@ -853,8 +865,8 @@ Kleene star is a simple pair of epsilon transitions:
       (\pmsmqcur, \epsilon, \pmsmqlast), \\
       (\pmsmqlast, \epsilon, \pmsmqcur)
     \end{array}\right\},
-  F \cup \setof{\pmsmqlast}, \pmsmqlast, k')
- \\ \text{where } (\delta, F, \pmsmqlast, k') = \epshelp^\mtimeline(\mtcon, \pmsmqcur, k)
+  \pmsmqlast, k')
+ \\ \text{where } (\delta, \pmsmqlast, k') = \epshelp^\mtimeline(\mtcon, \pmsmqcur, k)
 \end{array}
 \end{align*}
 
@@ -862,9 +874,9 @@ Concatenation uses the first contract's final state as the initial state for the
 \begin{align*}
   \begin{array}{l}
     \epshelp^\mtimeline(\stseq{\mtcon_0}{\mtcon_1}, \pmsmqcur, k) = 
-     (\delta \cup \delta', F \cup F', \pmsmqlast^1, k'')
-   \\ \text{where } (\delta, F, \pmsmqlast^0, k') = \epshelp^\mtimeline(\mtcon_0, \pmsmqcur, k)
-   \\\phantom{\text{where }} (\delta', F', \pmsmqlast^1, k'') = \epshelp^\mtimeline(\mtcon_1, \pmsmqlast^0, k')
+     (\delta \cup \delta', \pmsmqlast^1, k'')
+   \\ \text{where } (\delta, \pmsmqlast^0, k') = \epshelp^\mtimeline(\mtcon_0, \pmsmqcur, k)
+   \\\phantom{\text{where }} (\delta', \pmsmqlast^1, k'') = \epshelp^\mtimeline(\mtcon_1, \pmsmqlast^0, k')
   \end{array}
 \end{align*}
 %
@@ -887,10 +899,9 @@ The final state of the construction is just the pair of each machine's final sta
                 (\pmsmqq_1, \mpat', \pmsmqq'_1) \in \epsclose(\delta'), \text{ and}\\
                 \mpat'' = \combinepat{\mpat}{\mpat'}
            \end{array} \right\},\\
-  \ \setbuild{\pmsmpair{\pmsmqq_0}{\pmsmqq_1}}{\pmsmqq_0 \in F, \pmsmqq_1 \in F'},
-   \pmsmpair{\pmsmqlast^0}{\pmsmqlast^1}, k'') \\
-  \text{where } (\delta, F, \pmsmqlast^0, k') = \epshelp^\mtimeline(\mtcon_0, \pmsmqcur, k) \\
-  \phantom{\text{where }} (\delta', F', \pmsmqlast^1, k'') = \epshelp^\mtimeline(\mtcon_1, \pmsmqcur, k')
+  \ \pmsmpair{\pmsmqlast^0}{\pmsmqlast^1}, k'') \\
+  \text{where } (\delta, \pmsmqlast^0, k') = \epshelp^\mtimeline(\mtcon_0, \pmsmqcur, k) \\
+  \phantom{\text{where }} (\delta', \pmsmqlast^1, k'') = \epshelp^\mtimeline(\mtcon_1, \pmsmqcur, k')
 \end{array}
 \end{align*}
 %
@@ -899,12 +910,38 @@ Pattern combination ($\combinepatalone$) could just throw both patterns into a s
 The definition is a bit tedious and obvious, so we leave it informally specified for space.
 
 \begin{lemma}
-  $\mtrace \in \denotetcon{\mtcon}{\mtimeline}{\menv}$ iff $\exists \pmsmqq \in F, \menv'$. $\pmsmstate{\pmsmqcur, \menv} \overset{\mtrace}{\underset{\delta}{\to}} \pmsmstate{\pmsmqq, \menv'}$ is a well-formed trace (the function positions of matched events are all on $\mtimeline$) where $(\delta, F, \pmsmqlast, k') = \epshelp^\mtimeline(\mtcon, \pmsmqcur, k)$
+  $\mtrace \in \denotetcon{\mtcon}{\mtimeline}{\menv}$ iff $\exists \pmsmqq, \menv'$. $\pmsmstate{\pmsmqcur, \menv} \multistepd{\mtrace}{\delta} \pmsmstate{\pmsmqq, \menv'}$ is a well-formed trace (the function positions of matched events are all on $\mtimeline$) where $(\delta, \pmsmqlast, k') = \epshelp^\mtimeline(\mtcon, \pmsmqcur, k)$
 \end{lemma}
 \begin{proof}
   By induction on $\mtcon$ and then $\mtrace$.
 \end{proof}
 %%
+
+The reduction semantics uses this monitor construction via the following metafunctions:
+\begin{align*}
+  \compile{\mtcon}{\mtimeline} &= \npmsm{\setof{\pmsmstate{\pmsmq_0, \bot}}}{\translateeps(\mtcon, \mtimeline)} \\
+  \sstep{\mTMons}{\mtimeline}{\mevent} &= T \cup F \\
+    \text{where } {\mathcal S} &= \left\{
+\ensuremath{
+      \begin{array}{ll}
+        \npmsm{S'}{\pmsmMachine} : &
+        \begin{array}{l}
+\npmsm{S}{\pmsmMachine} \in     \mTMons(\mtimeline) \\
+ S' = \setbuild{\mstate'}{\mstate \in S, \mstate \pmsmstepd{\mevent}{\delta_\pmsmMachine} \mstate'}
+\end{array}
+      \end{array}
+}\right\}
+\\\phantom{\text{where }} T &= \setbuild{\mTMons[\mtimeline \mapsto {\mathcal S}]}{\npmsm{S}{\pmsmMachine} \in {\mathcal S}, S \neq \setof{\stfail}}
+\\\phantom{\text{where }} F &= \setbuild{\stfail}{\npmsm{\setof{\stfail}}{\pmsmMachine} \in {\mathcal S}}
+\end{align*}
+We store several machines in one timeline in anticipation of abstract aliasing --- that is, we cannot always create fresh timelines, and thus merge two together by saying the timeline is in one of a set of possible states.
+%
+The additional set comprehension is because these machines are non-deterministic, so we must step all states that that machine \emph{might} be in.
+%
+If the only possible state for the machine to be in is $\stfail$, there is a cause for blame.
+%
+Since there are several machines that could describe the timeline at one time, we return a set of possibilities: either there is a definitive failure $\setof{\bot}$, definitive success $\setof{\mTMons'}$ or a possible success $\setof{\mTMons', \bot}$.
+
 \section{Evaluation}
 %%
 
@@ -1131,7 +1168,7 @@ $\begin{array}{@{}l @{\ }c@{\ } l@{}}
 \sTMon{k}{\mmlab}{j}{\mscon}{\mtcon}{\mval}
 &\machstep&
 \sSMon{k}{\mmlab}{j}{\mtimeline}{\mscon}{\mval} \\
-&&\text{where } \mTMons^\prime = \mTMons[\mtimeline \mapsto \compile{\mtcon}] \\
+&&\text{where } \mTMons^\prime = \mTMons[\mtimeline \mapsto \compile{\mtcon}{\mtimeline}] \\
 &&\phantom{\text{where }} \mtimeline = \salloc{\mstate} \\
 &&\text{given } \mmlab = \toplevel
 \\ % Flat monitor
