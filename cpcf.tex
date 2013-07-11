@@ -118,13 +118,13 @@ Our techniques should smoothly integrate with theirs when considering partial pr
 \FloatBarrier
 \begin{figure}
   \begin{align*}
-    \mscon \in \SContract &::= \sflat{\mexp} \alt \sarr{\mtoplevelname}{\mscon}{\mscon} \alt \sconsc{\mscon}{\mscon}
+    \mscon \in \SContract &::= \sflat{\mexp} \alt \sarr{\mmlab}{\mscon}{\mscon} \alt \sconsc{\mscon}{\mscon}
 \\
     \mexp \in \Expr &::= \sTMon{\mmlab_u}{\mmlab_c}{\mmlab_o}{\mscon}{\mtcon}{\mexp}
                     \alt \sSMon{\mmlab_u}{\mmlab_c}{\mmlab_o}{\mtimeline}{\mscon}{\mexp}
                     \alt \ldots
 \\
-\mtoplevelname \in \Label&\text{ an infinite set} \\
+\mmlab \in \Label&\text{ an infinite set}
   \end{align*}
   \caption{Syntax of structural contracts with labels}
   \label{fig:scontract-syntax}
@@ -154,7 +154,7 @@ Our techniques should smoothly integrate with theirs when considering partial pr
 
 Temporal contracts provide a declarative language for monitoring the temporal ordering of events that pass through module boundaries.
 %
-We analyze a slightly different presentation than ~\citep{ianjohnson:dfm:icfp2011}'s temporal contracts that allows more precise specification of value use.
+We analyze a slightly different presentation than ~\citeauthor{ianjohnson:dfm:icfp2011}'s temporal contracts that allows more precise specification of value use.
 %
 The syntax is presented in \autoref{fig:tcontract-syntax}.
 %%
@@ -172,7 +172,7 @@ If $\mname$ is a label ($\mtoplevelname$), we simply check that the monitor wrap
 %
 However, if $\mname$ is a variable ($\mvar$), then we consult a binding environment that the monitoring system builds as we pass binding events to determine if the function is exactly equal to the value bound.
 %
-The distinction between variables (bound by temporal contract) and labels (bound by structural contract) is what separates our semantics from \citeauthor{ianjohnson:dfm:icfp2011}'s.
+Our distinction between variables (bound by temporal contract) and labels (bound by structural contract) is one aspect of what separates our semantics from \citeauthor{ianjohnson:dfm:icfp2011}'s.
 %
 Patterns can match constants ($\mconstant$), bound variables ($\mvar$), labeled functions ($\mtoplevelname$), or simply anything ($\swc$).
 %%
@@ -180,11 +180,11 @@ Patterns can match constants ($\mconstant$), bound variables ($\mvar$), labeled 
 %%
 \citeauthor{ianjohnson:dfm:icfp2011}'s semantics for referring to functions is problematic; we give a slightly different account that captures the spirit of their prose describing their system, and indeed mirrors their actual implementation.
 %
-Consider one of their motivating examples (recalled in \autoref{fig:sort} and addressed in \autoref{sec:sort}) was to protect the comparator passed to a sort function from escaping the scope of the call.
+Consider one of their motivating examples (recalled---using our syntax and semantics---in \autoref{fig:sort} and addressed in \autoref{sec:sort}), which was to protect the comparator passed to a sort function from escaping the scope of the call.
 %
 What this should mean is the particular binding introduced by a call to $sort$ cannot be called after $sort$ returns, \ie, each constructed monitor around given comparators should not be called after $sort$ returns.
 %
-However, the flat use of \emph{labels} instead of bindings causes a second call to an in-spirit-correct $sort$ to fail, since it internally calls the comparator of the same label, but different monitor construction.
+However, the flat use of \emph{labels} instead of \emph{bindings} would cause a second call to a supposedly-correct $sort$ to fail, since it internally calls the comparator of the same label, but of a different monitor construction.
 %
 \citeauthor{ianjohnson:dfm:icfp2011}'s implementation also includes call/return matching via a different binding at the call site to eventually use in the matching return.
 %
@@ -205,6 +205,7 @@ We leave call/return matching to future work, as it is not necessary to verify t
       &    &(List\ Pos) \\
       &\to &(List\ Pos) \\
  \end{array}$
+ \\
  $\begin{array}{ @{~}r@{} l @{}l }
   \text{where}\quad
   &\stnot{(&\sddd~ \call{sort}~ \stmany{\snonevent{\ret{sort}}}~ \call{sort}~ \sddd)} \\
@@ -257,7 +258,7 @@ Note also that the negated clauses of the temporal contract are prefixed and suf
 \FloatBarrier
 
 %%
-In \autoref{fig:file} we show the contract for a hypothetical file system, which can be used to open files by giving the $open$ function a filename (a $String$); we are then given a file handle contracted by $FileContract$.
+In \autoref{fig:file} we show the contract for a hypothetical file system, which can be used to open files by giving the $open$ function a filename (a $String$); the client is then given a file handle contracted by $FileContract$.
 %
 A file handle, in turn, is a record of functions which interact with the file: $read$, $write$, and $close$, all which perform the expected behaviors.
 %%
@@ -277,6 +278,12 @@ Instead, the property is a \emph{safety property}, though expressed in the affir
 
 \subsection{TCP example}
 
+\newcommand*{\tcpc}{\mathit{TCPConnection}}
+\newcommand*{\tcpcc}{\mathit{TCPConnectionContract}}
+\newcommand*{\tcpsock}{\mathit{TCPSocket}}
+\newcommand*{\tcpsendc}{\mathit{TCPSendContract}}
+\newcommand*{\tcprecvc}{\mathit{TCPRecvContract}}
+\newcommand*{\tcpdata}{\mathit{TCPData}}
 \newcommand*{\tcpstyle}[1]{\texttt{#1}}
 \FloatBarrier
 \begin{figure}
@@ -288,23 +295,23 @@ Instead, the property is a \emph{safety property}, though expressed in the affir
  \newcommand*{\tcpsynack}{\tcpstyle{SYN\&ACK}}
  \newcommand*{\tcpfin}{\tcpstyle{FIN}}
  %\newcommand*{\tcpfinack}{\tcpstyle{FIN\&ACK}}
- $TCPConnectionContract\, =~ Record$ \\
+ $\tcpcc\, =~ Record$ \\
  $\begin{array}{ @{\quad~}l@{\ :} @{~}l @{\ \to\ }l }
-  open & TCPSocket & TCPSendContract \\
-  listen & TCPSocket & TCPRecvContract
+  open & \tcpsock & \tcpsendc \\
+  listen & \tcpsock & \tcprecvc
  \end{array}$ \\
- $TCPData =$
+ $\tcpdata =$
  $~ \tcpsyn \mid \tcpack \mid \tcpsynack \mid \tcpfin \mid \tcpstyle{Data}(\_)$
 
- $TCPConnection =~ Record$ \\
+ $\tcpc =~ Record$ \\
  $\begin{array}{ @{\quad~}l@{\ :} @{~}l@{\ \to\ } l }
-  send & TCPData & Unit \\
-  recv & Unit & TCPData \\
+  send & \tcpdata & Unit \\
+  recv & Unit & \tcpdata \\
   timeout & Duration & Unit \\
   close & Unit & Unit
  \end{array}$ \\
 
- $TCPSendContract =~ TCPConnection$ \\
+ $\tcpsendc =~ \tcpc$ \\
  $\begin{array}{ @{~}r@{\quad} l @{}l }
   \text{where}
   &&\send{\tcpsyn}~ \notclose \\
@@ -329,7 +336,7 @@ Instead, the property is a \emph{safety property}, though expressed in the affir
   &&\ret{timeout}~ \ret{close}
  \end{array}$
 
- $TCPRecvContract =~ TCPConnection$ \\
+ $\tcprecvc =~ \tcpc$ \\
  $\begin{array}{ @{~}r@{\quad} l @{}l @{}l }
   \text{where}
   &&\rcv{\tcpsyn}~ \notclose \\
@@ -371,20 +378,20 @@ Instead, the property is a \emph{safety property}, though expressed in the affir
 %%
 In \autoref{fig:tcp} we show the contract for a hypothetical TCP connection module.
 %
-A client of this module may $open$ a $TCPSocket$ for initiating a connection or may $listen$ to a $TCPSocket$ for passively connecting.
+A client of this module may $open$ a $\tcpsock$ for initiating a connection or may $listen$ to a $\tcpsock$ for passively connecting.
 %
-A $TCPConnection$ is defined similarly to our file system example: it is a record of functions which interact with the connection: $send$, $recv$, $timeout$, and $close$.
+A $\tcpc$ is defined similarly to our file system example: it is a record of functions which interact with the connection: $send$, $recv$, $timeout$, and $close$.
 %
-Notably, $send$ and $recv$ interact with data in the form of $TCPData$, which can be one of the special packets used in the TCP protocol or can simply be some amount of user data ($\tcpstyle{Data}(\_)$).
+Notably, $send$ and $recv$ interact with data in the form of $\tcpdata$, which can be one of the special packets used in the TCP protocol or can simply be some amount of user data ($\tcpstyle{Data}(\_)$).
 %
 %TODO: maybe express timing out in a better manner?
 The $timeout$ function is simply internally used by the module to set timeouts for interactions with the other end of the TCP connection; clients do not directly use it and it is included solely for the ability to reason over timeouts in the temporal contract.
 %%
 
 %%
-A socket on the ``sending'' end of the TCP connection (having used $open$) is obligated to use the connection according to the temporal component of $TCPSendContract$.
+A socket on the ``sending'' end of the TCP connection (having used $open$) is obligated to use the connection according to the temporal component of $\tcpsendc$.
 %
-Likewise, a socket on the ``receiving'' end of the TCP connection (having used $listen$) is constrained by $TCPRecvContract$.
+Likewise, a socket on the ``receiving'' end of the TCP connection (having used $listen$) is constrained by $\tcprecvc$.
 %
 The contracts are very involved, but they implement a simplified version of the TCP connection lifecycle given in \autoref{fig:tcp-fsm}.
 %
@@ -392,35 +399,25 @@ Note that the temporal clause in each contract is phrased in the affirmative, as
 %
 It states that the client uses the socket in a manner consistent with the TCP protocol and can expect the other end to as well.
 %
-The key difference between this property and a traditional liveness property is that it speaks of a liveness property with respect to \emph{a particular contract-monitoring} of a $TCPConnection$; prefix-closure is still present at the top level (\autoref{fig:tcontract-denotation}) and thus the protocol noted in the temporal contract may not occur if no $TCPConnection$ is used.
+The key difference between this property and a traditional liveness property is that it speaks of a liveness property with respect to \emph{a particular contract-monitoring} of a $\tcpc$; prefix-closure is still present at the top level (cf. \autoref{fig:tcontract-denotation}) and thus the protocol noted in the temporal contract may not occur if no $\tcpc$ is used.
 %%
 
 %%
 \section{Semantics of Temporal Contracts} \label{sec:temporal-semantics}
-%%
 
-%%
-Now that we have a clear view of the behavior of temporal contracts, we nail down a formal semantics that we use to prove the correctness of our monitoring system.
-%
-The semantics we present is in the style of Felleisen's reduction semantics~\citep{ianjohnson:Felleisen:2009:SEP:1795772}, which can be systematically transformed into an abstract machine in the form presented in~\citet{dvanhorn:VanHorn2010Abstracting}.
-%
-See \autoref{sec:technical} for now.
-%%
-
-%%
 As noted in \autoref{sec:sort}, temporal contracts are associated with structural contracts that label function components within them.
 %
 For simple exposition, we will consider tuples as the main organizational tool for contracting the interactions between multiple functions.
 %
-Since we consider monitor constructions as a more basic notion of equality, we also see each temporal monitor construction as starting its own ``timeline,'' which sees its own filtered view of events in the system.
+Since we consider monitor constructions as a more basic notion of equality, we also see each temporal monitor construction as starting its own \emph{timeline}, which sees its own filtered view of events in the system.
 %
 Thus, as values flow through contract boundaries, they are considered on different timelines.
 %
-\citeauthor{ianjohnson:dfm:icfp2011} formalized their semantics in terms of a nondeterministic machine that defined its interactions on all event streams, and thus their machine was on a single ``timeline.''
+\citeauthor{ianjohnson:dfm:icfp2011} formalized their semantics in terms of a nondeterministic machine that defined its interactions on all event streams, and thus their machine was on a single timeline.
 %
 The semantics of temporal contracts that we propose uses pointer-equality of monitors for comparisons of non-primitive data.
 %
-Our semantics makes interaction between temporal contract monitors explicit, so we can verify whole programs.
+Our semantics makes interaction between temporal contract monitors explicit, allowing us to verify whole programs.
 %%
 
 %%
@@ -428,7 +425,7 @@ We denote temporal contracts as sets of event traces that satisfy the contract, 
 %
 The semantics is close to \citeauthor{ianjohnson:dfm:icfp2011}'s definition, and given in \autoref{fig:tcontract-denotation}.
 %
-We made the express design choice to require a function contract monitor wrapping for named values to consider their calls or returns as events --- this choice is reflected in the denotation of events in \autoref{fig:event-denotation}.
+We made the design choice to require a function contract monitor wrapping for named values to consider their calls or returns as events --- this choice is reflected in the denotation of events in \autoref{fig:event-denotation}.
 %
 The reason for this is that control should flow back to the timeline considered in order for an event to affect that timeline.
 %
@@ -529,14 +526,19 @@ Say $\mtimeline$ is the timeline for a contract $\mtcon$ on an expression $\mexp
 %
 We say $\mexp$ satisfies its temporal contract if its event trace filtered by the timeline ($\denote{\mexp}_\mtimeline$) is in the denotation of the temporal contract for that timeline ($\denotetcon{\mtcon}{\mtimeline}{\bot}$, where $\bot$ is an empty environment of temporal bindings).
 %
-For this to be a contract system and not just a notion of correctness, however, we need some machinery to monitor the evolution of the event trace and check to see that it meets our specification.
+For this to be a contract system and not just a notion of correctness, however, we need some machinery to monitor the progression of the event trace and check to see that it meets our specification.
 %
 The contracts could be interpreted with some simple combinators, but there is no guarantee that the space of combinators is finite, which is important for our analysis.
 %
-We introduce a simple generalization of finite state machines (FSMs) that is not necessarily finite-state in order to match against events and bind values for later equality checking: pattern-matching state machines.
+We introduce a simple generalization of finite state machines (FSMs) that is not necessarily finite-state in order to match against events and bind values for later equality checking: \emph{pattern-matching state machines} (\emph{PMSM}s).
 
 %%
 \section{Semantics}\label{sec:technical}
+
+Now that we have a clear view of the behavior of temporal contracts, we nail down a formal semantics that we use to prove the correctness of our monitoring system.
+%
+The semantics we present is in the style of Felleisen's reduction semantics~\citep{ianjohnson:Felleisen:2009:SEP:1795772}, which can be systematically transformed into an abstract machine in the form presented in~\citet{dvanhorn:VanHorn2010Abstracting}.
+%%
 
 %FIXME: This is from the LTL days...
 %%
@@ -585,7 +587,7 @@ While the syntax is largely conventional, the nature of monitoring and labelling
 %
 A structural monitor $\sSMon{k}{\ell}{j}{\mtimeline}{\mscon}{\mexp}$ is like a traditional monitor \cite{ianjohnson:dthf:complete}: the structural contract is given by $\mscon$ and the contract parties are given by labels: $k$ is the server, $l$ is the client, and $j$ is the contract itself.
 %
-However, our structural monitors additionally feature a timeline ($\mtimeline$), used to temporally reason over values as they flow through contract boundaries (\autoref{sec:temporal-semantics}).
+However, our structural monitors additionally feature a timeline ($\mtimeline$), used to temporally reason over values as they flow through contract boundaries (cf. \autoref{sec:temporal-semantics}).
 %
 
 %
@@ -636,13 +638,13 @@ At this point we would like to note that our usage of labels differs slightly fr
 %
 For evaluation purposes, we extend our definition of expressions ($\mexp$) to include intermediate terms for contract checking.
 %
-$\sblame{\ell}{j}$ denotes a contract failure (of the contract $j$), which is a fatal error which blames $\ell$.
+The $\sblame{\ell}{j}$ expression denotes a contract failure (of the contract $j$), which is a fatal error which blames $\ell$.
 %
-$\schk{\ell}{j}{\mexp}{\mval}$ denotes an obligation to check the contract of $j$ given by $\mexp$ against the value $\mval$, blaming $\ell$ if the contract is violated.
+An $\schk{\ell}{j}{\mexp}{\mval}$ expression denotes an obligation to check the contract of $j$ given by $\mexp$ against the value $\mval$, blaming $\ell$ if the contract is violated.
 %
-$\sown{\mexp}{\mmlab}$ denotes that the $\mexp$ is \emph{owned} \cite{ianjohnson:dthf:complete} by $\mmlab$; this is used to keep track of value migration for the purposes of ensuring \emph{complete monitoring}, using the concept of \emph{single ownership}.
+Expressions of the form $\scall{\mmlab}{\mtimeline}{\mexp}$ and $\sret{\mmlab}{\mtimeline}{\mexp}$ denote the production of an event ($\scallev{\mmlab}{\mexp}$ and $\sretev{\mmlab}{\mexp}$, respectively) which may be rejected by the temporal monitors in place.
 %
-$\scall{\mmlab}{\mtimeline}{\mexp}$ and $\sret{\mmlab}{\mtimeline}{\mexp}$ denote the production of an event ($\scallev{\mmlab}{\mexp}$ and $\sretev{\mmlab}{\mexp}$, respectively) which may be rejected by the temporal monitors in place.
+The expression $\sown{\mexp}{\mmlab}$ denotes that the $\mexp$ is \emph{owned} \cite{ianjohnson:dthf:complete} by $\mmlab$; this is used to keep track of value migration for the purposes of ensuring \emph{complete monitoring}, using the concept of \emph{single ownership}.
 %
 We also extend our definition of structural contracts to include ownership of flat contracts ($\sown*{\sflat{\mexp}}{\mmlab}$).
 
@@ -651,15 +653,17 @@ We also extend our definition of structural contracts to include ownership of fl
 %
 Of particular note, we use $\sOwn{\mexp}{\mmlab}$ to denote that $\mexp$ may have no ownership annotations, but if it has one then it is $\ell$ for all such annotations.
 %
+Our concept and usage of ownership is identical to that of \citet{ianjohnson:dthf:complete}, which we recommend reading to fully understand this topic; as it is orthogonal to our work, we do not delve into it in much detail in this paper.
+%
 
 %
 Values ($\mval$) are conventional except for owned values ($\sown{\mval}{\mmlab}$) and blessed closures ($\bclos{\mmlab}{\mscon}{\mmlab}{\mmlab}{\mtimeline}{\mscon}{\mmlab}{\maddr}$).
 %
-Though we've discussed timelines ($\mtimeline$) extensively, we show here that our representation for them is either as an address ($\maddr$) or the top level ($\toplevel$).
+Though we've discussed timelines ($\mtimeline$) extensively (cf. \autoref{sec:temporal-semantics}), we show here that our representation for them is either as an address ($\maddr$) or the top level ($\toplevel$).
 %
 
 %
-Our evaluation contexts are straightforward (given what we have defined) and ownership-sensitive \cite{ianjohnson:dthf:complete}.
+Our evaluation contexts (\autoref{fig:ctx}) are straightforward (given what we have defined) and ownership-sensitive \cite{ianjohnson:dthf:complete}.
 %
 A machine state ($\mstate$) is composed of the evaluation context ($\mctx{\mmlab}$), store ($\msto$), and store of PMSM states ($\mTMons$).
 %
@@ -699,7 +703,7 @@ The former maps addresses to sets of values and the latter maps timelines to PMS
  \alt \sret{\mmlab}{\mtimeline}{\mctx*} \\
 \ECtx* &\subset \ECtx^\mmlab
 \\
-\mstate \in \State &= \angle{\mctx{\mmlab}, \msto, \mTMons} \quad\text{machine state}
+\mstate \in \State &= \chevron{\mctx{\mmlab}, \msto, \mTMons} \quad\text{machine state}
 \\
 \msto \in \Store &= \Addr \parto \wp(\Value)
 \\
@@ -720,10 +724,10 @@ The former maps addresses to sets of values and the latter maps timelines to PMS
 \newcommand*{\update}[3]{#1^\prime = #1[#2 \mapsto #1(#2)\sqcup#3]}
 \centering
 $\begin{array}{@{}l @{\ }c@{\ } l@{}}
-\mstate \angle{\mctx{\mmlab}[\ldots], \msto, \mTMons}
+\mstate \chevron{\mctx{\mmlab}[\ldots], \msto, \mTMons}
 &\machstep&
 %TODO: Can mmlab change?
-\mstate^\prime \angle{\mctx{\mmlab}[\ldots], \msto^\prime, \mTMons^\prime}
+\mstate^\prime \chevron{\mctx{\mmlab}[\ldots], \msto^\prime, \mTMons^\prime}
 \\ \hline % If true
 \sif{ \sOwn{\strue}{\mmlab} }{\mexp_1}{\mexp_2}
 &\machstep&
@@ -827,22 +831,22 @@ An important aspect of contract systems is that we don't have full knowledge of 
 %
 We don't have a full list of values that will be constructed, nor is it necessary to have this full list.
 %
-Thus, we separate out the control states that govern the progression through satisfying a temporal contract from the bindings of names to values we encounter along the way.
+Thus, we separate out the control states---governing the progression through satisfying a temporal contract---from the bindings of names to values we encounter along the way.
 %
 Values will come from event constructors, and are allowed to be unbounded.
 %
-Instead of matching against atomic symbols to transition like an FSM, we allow for pattern matching against constructed data, to bind subdata to variables for later equality checking.
+Unlike a conventional FSM, instead of transitioning by matching against atomic symbols, we allow for pattern matching against constructed data; this allows for the binding of subdata to variables for later equality checking.
 %
-Scoping bindings comes from simply $\alpha$-converting the contract to always use unique binders.
+We also scope bindings by simply $\alpha$-converting contracts to always use unique binders.
 %
 
 To do this, we consider a machine state to be a tuple of a control state and a binding environment, where transitions may change/use the environment when pattern matching on input.
 %
-Additionally, since we plan to later abstract our semantics (and values), we need a weaker, tunable notion of equality (e.g., is 1 equal to $\mathbf{Int}$? We must be conservative and consider both valid).
+Additionally, since we plan to later abstract our semantics (and values), we need a weaker, tunable notion of equality (\eg, is 1 equal to $\mathbf{Int}$? We must be conservative and consider both valid).
 %
 The atomic symbols therefore come equipped with a may/must/never equality-checking function.
 %
-A PMSM $\pmsmMachine$ is thus a tuple $(q_0, \simeq, \ary, \delta)$ where
+A PMSM $\pmsmMachine$ is thus a tuple $(q_0, \simeq, \ary, \delta)$ where:
 \begin{align*}
   \Sigma &\text{ a set of atoms} \\
   \simeq : \Sigma \times \Sigma \to \setof{\top, \bot, ?} &\text{ weak equality function}\\
@@ -857,7 +861,7 @@ A PMSM $\pmsmMachine$ is thus a tuple $(q_0, \simeq, \ary, \delta)$ where
   For all $\matom, \matom' \in \Sigma$. $a \simeq a' = \top$ implies $a = a'$ and $a \simeq a' = \bot$ implies $a \neq a'$.
 \end{property}
 %
-We consider all reachable states accepting, except for the $\stfail$ state.
+We consider all reachable states as accepting, except for the $\stfail$ state.
 %
 The pattern language consists of binding patterns, equality with reference patterns, wildcard and equality with a constant atom.
 %
@@ -924,7 +928,8 @@ We lift $\simeq$ over constructors ($\simeq^\mconstructor$) by folding $\wedge$ 
   \label{fig:pattern-syntax}
 \end{figure}
 
-The machine is input-driven, and a path through the machine is defined in \autoref{fig:pmsm-semantics}.
+%TODO: Do we need to define input-driven?
+The machine is \emph{input-driven}, and a path through the machine is defined in \autoref{fig:pmsm-semantics}.
 %
 We will associate each temporal contract monitor with a state machine we generate from the temporal contract, where the data fed to the machine are call and return events that pass through the structural monitors associated with the timeline.
 %
@@ -953,9 +958,9 @@ We will associate each temporal contract monitor with a state machine we generat
 
 \subsection{Compiling temporal contracts to PMSMs}
 %
-The compilation process of temporal contract to PMSM is very similar to that of regular expression to NFA.
+The compilation process of a temporal contract to a PMSM is very similar to that of a regular expression to a NFA.
 %
-Negation is still annoying to deal with, so we remove tough negations by converting temporal contracts into a negative normal form before we start the translation.
+Negation is still cumbersome to deal with, so we cope with them by converting temporal contracts into a negative normal form before we start the translation.
 %
 \begin{figure}
   \begin{align*}
@@ -1034,7 +1039,10 @@ where $\pmsmq_0 \in \pmsmq_1^\epsilon$ is defined as the least fixed point of th
     \epshelp :  \Timeline \times \TContract \times \QState \times \Nat \\ \phantom{\epshelp :}\to \mathit{Transition} \times \wp(\QState) \times \QState \times \Nat
 \end{array}\span\omit
 \end{align*}
-and
+
+%FIXME: Pretty terrible
+and:
+
 \begin{align*}
 \begin{array}{l}
   \epshelp^\mtimeline(\scallev{\mvar}{\mvpat'}, \pmsmqcur, k, \delta) = \\
@@ -1063,7 +1071,7 @@ and
 \end{align*}
 Return events are similarly translated, and binding events are similar to their non-binding counterparts, only the created final state becomes the initial state for constructing the machine for the following contract.
 
-The translation for or is similar to constructing the union of NFAs.
+The translation for ``or'' is similar to constructing the union of NFAs.
 %
 We simply thread through a source of freshness for constructing new states.
 %
@@ -1113,7 +1121,7 @@ Concatenation uses the first contract's final state as the initial state for the
 
 Intersection has the most complex construction, so we saved it for last.
 %
-In order to avoid an exponential explosion of states that we must construct \emph{up-front}, we do not determinize the machines and do the standard DFA intersection construction.
+In order to avoid an exponential explosion of states that we must construct \emph{up-front}, we neither determinize the machines nor then perform the standard DFA intersection construction.
 %
 Instead, we simply remove $\epsilon$ transitions and construct the product automaton from that, since we will then make the two machines sync up in terms of input consumed across transitions.
 %
@@ -1135,7 +1143,9 @@ The final state of the construction is just the pair of each machine's final sta
 \end{array}
 \end{align*}
 %
-Pattern combination ($\combinepatalone$) could just throw both patterns into a set together and wait to fail if there absolutely is no overlap, but we're a bit more proactive than that and rule out patterns that outright don't match, such as disequal constants or patterns with separate constructors.
+Pattern combination ($\combinepatalone$) could just throw both patterns into a set together and wait to fail if there is no overlap.
+%
+However, we're a bit more proactive than that and rule out patterns that outright don't match, such as disequal constants or patterns with separate constructors.
 %
 The definition is a bit tedious and obvious, so we leave it informally specified for space.
 
@@ -1186,11 +1196,11 @@ S = \setof{\stfail} \text{ or } \\
 \end{align*}
 We store several machines in one timeline in anticipation of abstract aliasing --- that is, we cannot always create fresh timelines, and thus merge two together by saying the timeline is in one of a set of possible states.
 %
-The additional set comprehension is because these machines are non-deterministic, so we must step all states that that machine \emph{might} be in.
+The additional set comprehension is because these machines are non-deterministic, so we must step all states in which that machine \emph{might} be.
 %
-If the only possible state for the machine to be in is $\stfail$, or there are no sure ways to accept (no state with $\top$ valuation), there is a cause for blame.
+If the only possible state in which the machine can be is $\stfail$, or there are no sure ways to accept (no state with $\top$ valuation), there is a cause for blame.
 %
-Since there are several machines that could describe the timeline at one time, we return a set of possibilities: either there is a definitive failure $\setof{\bot}$, definitive success $\setof{\mTMons'}$ or a possible success $\setof{\mTMons', \bot}$.
+Since there are several machines that could describe the timeline at one time, we return a set of possibilities: either there is a definitive failure $\setof{\bot}$, definitive success $\setof{\mTMons'}$, or a possible success $\setof{\mTMons', \bot}$.
 
 \section{Abstract semantics}
 

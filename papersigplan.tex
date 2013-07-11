@@ -1,31 +1,11 @@
 \documentclass[preprint,onecolumn,9pt]{sigplanconf} %{onecol}
-\usepackage{alltt,mathpartir,multicol}
-\usepackage{amsmath,amsthm,natbib}
-\usepackage{amssymb,tikz}
-\usepackage{stmaryrd}
-\usepackage{url}
-\usepackage{graphicx,color}
-\usepackage{anyfontsize}
-\usepackage{balance}
-\usepackage{calc}
-\usepackage[english]{babel}
-\usepackage[noabbrev]{cleveref}
-\usepackage[hidelinks]{hyperref}
-\usepackage{placeins}
+
+\input{preamble}
 
 %% For sigplan
 \newtheorem{theorem}{Theorem}
 \newtheorem{lemma}{Lemma}
 \newtheorem{property}{Property}
-
-\newcommand*{\naive}{naive}
-\newcommand*{\naively}{naively}
-\newcommand*{\Naive}{Naive}
-\newcommand*{\Naively}{Naively}
-% \usepackage{xltxtra}
-% \setmonofont[Scale=MatchLowercase]{DejaVu Sans Mono}
-%
-\input{preamble}
 
 \begin{document}
 
@@ -40,21 +20,17 @@
 %\author{J. Ian Johnson \and Nicholas Alexander Marquez \and David Van Horn}
 %\institution{Northeastern University}
 
-
 \maketitle
 \begin{abstract}
-\input{abstract.tex}
+\input{abstract}
 \end{abstract}
 
-\input{cpcf.tex}
+\input{cpcf}
 
 \acks We thank Jay McCarthy for helpful discussions on the semantics
 and implementation of temporal contracts.
 
 \balance
-\bibliographystyle{plainnat}
-%\input{paper.bbl}
-\bibliography{bibliography}
+\input{epilogue}
 
-% \include{appendix}
 \end{document}

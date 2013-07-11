@@ -1,30 +1,5 @@
 \documentclass{llncs}
-\usepackage{alltt,mathpartir,multicol}
-\usepackage{amsmath,natbib}
-\usepackage{amssymb,tikz}
-\usepackage{stmaryrd}
-\usepackage{url}
-\usepackage{graphicx,color}
-\usepackage{anyfontsize}
-\usepackage{balance}
-\usepackage{calc}
-\usepackage[english]{babel}
-\usepackage[noabbrev]{cleveref}
-\usepackage[hidelinks]{hyperref}
-\usepackage{placeins}
 
-%% For sigplan
-%\newtheorem{theorem}{Theorem}
-%\newtheorem{lemma}{Lemma}
-%\newtheorem{property}{Property}
-
-\newcommand*{\naive}{naive}
-\newcommand*{\naively}{naively}
-\newcommand*{\Naive}{Naive}
-\newcommand*{\Naively}{Naively}
-% \usepackage{xltxtra}
-% \setmonofont[Scale=MatchLowercase]{DejaVu Sans Mono}
-%
 \input{preamble}
 
 \begin{document}
@@ -43,17 +18,14 @@
 \maketitle
 
 \begin{abstract}
-\input{abstract.tex}
+\input{abstract}
 \end{abstract}
 
-\input{cpcf.tex}
+\input{cpcf}
 
 \thanks We thank Jay McCarthy for helpful discussions on the semantics
 and implementation of temporal contracts.
 
-\bibliographystyle{plainnat}
-%\input{paper.bbl}
-\bibliography{bibliography}
+\input{epilogue}
 
-% \include{appendix}
 \end{document}
