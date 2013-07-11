@@ -1,0 +1,15 @@
+  Behavioral contracts allow languages to internalize a notion of ``type checking'' at run time, so that untyped or statically-typed-but-currently-failing-the-type-checker programs can still be run/tested with expected invariants checked on-the-fly.
+%
+  Contracts go beyond typical type systems because they give full access to the language, allowing expression of strong invariants that a traditional type checker could not verify.
+%
+  Contract violations during testing or even after deployment help correct both the implementation and specification of software without having to provide a proof of correctness up-front.
+%%
+
+%%
+  Temporal higher-order contracts provide a language for specifying and dynamically monitoring adhereance to stateful protocols in a higher-order language.
+%
+  Just as higher-order function contracts internalize an extra-linguistic type-checking process to the dynamic semantics, we claim that temporal contracts internalize the extra-linguistic process of model-checking.
+%
+  To demonstrate, we propose using abstracting abstract machines (AAM) on a language with temporal higher-order contracts to generate both a finite model and the proof obligations to feed to an off-the-shelf model-checker.
+%
+  This approach affords us a simple and direct proof of soundness.
