@@ -1,5 +1,6 @@
 \input{common}
-\usepackage{textcomp,wasysym, stmaryrd}
+\usepackage{textcomp,wasysym}
+\usepackage{amsmath,stmaryrd}
 
 % Metavariables
 \newcommand*{\matchstate}{\mu}
@@ -196,7 +197,17 @@
 \newcommand*{\vcons}[2]{\tuple{\scons}{#1,\, #2}}
 \newcommand*{\vconst}[3]{\tuple{\scons}{#1,\, #2}_{#3}}
 \newcommand*{\vMon}[2][\ ]{\tuple[#1]{mon}{#2}}
-\newcommand*{\bclos}[8]{#1 : #2^{#3} \overset{#4}{\underset{#5}{\dashrightarrow}} #6^{#7} \chevron{#8}}
+%\newcommand*{\bclosarrow}[2]{\genfrac{}{}{0pt}{#1}{#2}}
+\newcommand{\bclosarrow}[2]{%
+  \mathrel{\vbox{\offinterlineskip\ialign{%
+    \hfil##\hfil\cr
+    $\scriptscriptstyle#1$\cr
+    %\noalign{\kern0ex}
+    $\dashrightarrow$\cr
+    %\noalign{\kern0ex}
+    $\scriptscriptstyle#2$\cr
+}}}}
+\newcommand*{\bclos}[8]{#1 : #2^{#3} \bclosarrow{#4}{#5} #6^{#7} \chevron{#8}}
 
 % Notation
 \newcommand*{\many}[1]{\overline{#1}}
@@ -249,15 +260,14 @@
 
 % Imports for the paper
 \usepackage{alltt,mathpartir,multicol}
-\usepackage{amsmath,natbib}
-\usepackage{amssymb,tikz}
-\usepackage{stmaryrd}
+\usepackage{natbib}
+\usepackage{amssymb}
 \usepackage{url}
 \usepackage{graphicx,color}
 \usepackage{anyfontsize}
 \usepackage{balance}
 \usepackage{calc}
 \usepackage[english]{babel}
-\usepackage[noabbrev]{cleveref}
 \usepackage[hidelinks]{hyperref}
+\usepackage{cleveref}
 \usepackage{placeins}
