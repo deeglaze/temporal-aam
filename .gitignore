@@ -1,0 +1,14 @@
+*.log
+*.aux
+*.blg
+*.bbl
+*.pdf
+*.v
+*.bst
+*.doc
+*.dem
+*.dvi
+*.ind
+*.zip
+*.clean
+*~
