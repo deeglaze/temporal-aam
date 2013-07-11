@@ -1,59 +1,3 @@
-\documentclass[preprint,onecolumn,9pt]{sigplanconf} %{onecol}
-\usepackage{alltt,mathpartir,multicol}
-\usepackage{amsmath,amsthm,natbib}
-\usepackage{amssymb,tikz}
-\usepackage{stmaryrd}
-\usepackage{url}
-\usepackage{graphicx,color}
-\usepackage{anyfontsize}
-\usepackage{balance}
-\usepackage{calc}
-\usepackage[english]{babel}
-\usepackage[noabbrev]{cleveref}
-\usepackage[hidelinks]{hyperref}
-\usepackage{placeins}
-
-\newtheorem{theorem}{Theorem}
-\newtheorem{lemma}{Lemma}
-
-\newcommand*{\naive}{naive}
-\newcommand*{\naively}{naively}
-\newcommand*{\Naive}{Naive}
-\newcommand*{\Naively}{Naively}
-% \usepackage{xltxtra}
-% \setmonofont[Scale=MatchLowercase]{DejaVu Sans Mono}
-%
-\input{preamble}
-
-\begin{document}
-
-\conferenceinfo{WXYZ '05}{date, City.}
-\copyrightyear{2005}
-\copyrightdata{[to be supplied]}
-\title{Static Verification of Temporal Higher-Order Contracts}
-
-\authorinfo{J. Ian Johnson \and Nicholas Alexander Marquez \and David Van Horn}
-           {Northeastern University}
-           {}
-\maketitle
-\begin{abstract}
-  Behavioral contracts allow languages to internalize a notion of ``type checking'' at run time, so that untyped or statically-typed-but-currently-failing-the-type-checker programs can still be run/tested with expected invariants checked on-the-fly.
-%
-  Contracts go beyond typical type systems because they give full access to the language, allowing expression of strong invariants that a traditional type checker could not verify.
-%
-  Contract violations during testing or even after deployment help correct both the implementation and specification of software without having to provide a proof of correctness up-front.
-%%
-
-%%
-  Temporal higher-order contracts provide a language for specifying and dynamically monitoring adhereance to stateful protocols in a higher-order language.
-%
-  Just as higher-order function contracts internalize an extra-linguistic type-checking process to the dynamic semantics, we claim that temporal contracts internalize the extra-linguistic process of model-checking.
-%
-  To demonstrate, we propose using abstracting abstract machines (AAM) on a language with temporal higher-order contracts to generate both a finite model and the proof obligations to feed to an off-the-shelf model-checker.
-%
-  This approach affords us a simple and direct proof of soundness.
-\end{abstract}
-
 \section{Introduction}
 
 Software systems are typically large, consist of many modules, and have invariants that are typically inexpressible or too costly to express (and prove) in the language's static type system, if it has one.
@@ -605,9 +549,6 @@ We have to give up some precision for decidability --- we use a monovariant allo
 This scheme allows us to lift all textual temporal contracts to the top level and check individually.
 %
 A polyvariant scheme would require either knowing how many abstract bindings are allocated during execution, or an exhaustive enumeration of possible bindings as propositions to check.
-%
-Since we run CFA before appealing to the model checker, the former is feasible, but it distracts from the overall exposition.
-%%
 
 %%
 \subsection{Syntax}
@@ -707,6 +648,7 @@ We also extend our definition of structural contracts to include ownership of fl
 
 %
 \NB We provide a brief explanation of some notation at the bottom of the figure.
+%
 Of particular note, we use $\sOwn{\mexp}{\mmlab}$ to denote that $\mexp$ may have no ownership annotations, but if it has one then it is $\ell$ for all such annotations.
 %
 
@@ -910,6 +852,10 @@ A PMSM $\pmsmMachine$ is thus a tuple $(q_0, \simeq, \ary, \delta)$ where
   \ary : C \to \Nat&\text{ the arity of constructors} \\
   \delta \subseteq Q \times \Pattern \times Q & \text{ transition relation}\\[2pt]
 \end{align*}
+
+\begin{property}
+  For all $\matom, \matom' \in \Sigma$. $a \simeq a' = \top$ implies $a = a'$ and $a \simeq a' = \bot$ implies $a \neq a'$.
+\end{property}
 %
 We consider all reachable states accepting, except for the $\stfail$ state.
 %
@@ -921,7 +867,7 @@ Crucially, since we will need to form intersections between machines, we need a 
 %
 Additionally, $\combinefalone$ on $\mbindenv$s is a right-biased finite function combination; we don't allow non-linear patterns (though it would be an easy extension) so the bias doesn't matter.
 %
-We lift $\simeq$ over constructors ($\simeq^\top$) by folding $\wedge$ over the data to compare atoms in the leaves.
+We lift $\simeq$ over constructors ($\simeq^\mconstructor$) by folding $\wedge$ over the data to compare atoms in the leaves.
 %
 \begin{figure}
   \begin{align*}
@@ -935,7 +881,9 @@ We lift $\simeq$ over constructors ($\simeq^\top$) by folding $\wedge$ over the 
 \\
     \mbindenv \in \BindEnv &= \Var \to \Qualified
 \\
-    \MatchResult &::= \mfail \alt \smay{\mbindenv} \alt \smust{\mbindenv}
+    t \in \Valuation &::= \top \alt\ ?
+\\
+    \MatchResult &::= \mfail \alt \smatch{\mbindenv}{t}
 \\
     \match &: \Pattern \times \Qualified \times \BindEnv \to \MatchResult
 \\
@@ -948,37 +896,29 @@ We lift $\simeq$ over constructors ($\simeq^\top$) by folding $\wedge$ over the 
 \\
     \match(\snonevent{\mconstructor(\mpat \ldots)}, \mdata, \mbindenv) &=
       \left\{\begin{array}{ll}
-               \smust{\mbindenv} & \text{if } \mfail = \mres \\
-               \smay{\mbindenv} & \text{if } \smay{\mbindenv'} = \mres \\
-               \mfail & \text{if } \smust{\mbindenv'} = \mres \\
+               \smatch{\mbindenv}{\top} & \text{if } \mfail = \mres \\
+               \smatch{\mbindenv}{?} & \text{if } \smatch{\mbindenv'}{?} = \mres \\
+               \mfail & \text{if } \smatch{\mbindenv'}{\top} = \mres \\
              \end{array}\right.
     \\ \text{where }& \mres = \match(\mconstructor(\mpatset \ldots), \mdata, \mbindenv)
 \\
-    \match(\swc, \mdata, \mbindenv) &= \smust{\mbindenv}
+    \match(\swc, \mdata, \mbindenv) &= \smatch{\mbindenv}{\top}
 \\
-    \match(\sref{\mvar}, \mdata, \mbindenv) &= \weakif(\mbindenv, \mdata \simeq^\top \mbindenv(\mvar))
+    \match(\sref{\mvar}, \mdata, \mbindenv) &= \weakif(\mbindenv, \mdata \simeq^\mconstructor \mbindenv(\mvar))
 \\
-    \match(\sbind{\mvar}, \mdata, \mbindenv) &= \smust{\mbindenv[\mvar \mapsto \mdata]}
+    \match(\sbind{\mvar}, \mdata, \mbindenv) &= \smatch{\mbindenv[\mvar \mapsto \mdata]}{\top}
 \\
     \match(\matom, \matom', \mbindenv) &= \weakif(\mbindenv, \matom \simeq \matom')
 \\
     \match(\mpat, \mdata, \mbindenv) &= \mfail \text{ otherwise}
 \\[2pt]
-    \weakif(\mbindenv, \top) &= \smust{\mbindenv}
-\\
-    \weakif(\mbindenv, ?) &= \smay{\mbindenv}
-\\
     \weakif(\mbindenv, \bot) &= \mfail
+\\
+    \weakif(\mbindenv, t) &= \smatch{\mbindenv}{t} \text{ otherwise}
 \\[2pt]
-    \sqcup\span \text{ the symmetric closure of the following rules}
+    \mfail \sqcup \mbindenv &= \mbindenv \sqcup \mfail = \mfail
 \\
-    \mfail \sqcup \mbindenv &= \mfail
-\\
-    \smay{\mbindenv} \sqcup \smay{\mbindenv'} &= \smay{\combinef{\mbindenv}{\mbindenv'}}
-\\
-    \smay{\mbindenv} \sqcup \smust{\mbindenv'} &= \smay{\combinef{\mbindenv}{\mbindenv'}}
-\\
-    \smust{\mbindenv} \sqcup \smust{\mbindenv'} &= \smust{\combinef{\mbindenv}{\mbindenv'}}
+    \smatch{\mbindenv}{t} \sqcup \smatch{\mbindenv'}{t'} &= \smatch{\combinef{\mbindenv}{\mbindenv'}}{t \vee t'}
   \end{align*}
   \caption{Pattern syntax and semantics}
   \label{fig:pattern-syntax}
@@ -990,25 +930,16 @@ We will associate each temporal contract monitor with a state machine we generat
 %
 \begin{figure}
   \begin{align*}
-    \mstate \in \State &::= \pmsmstate{\pmsmq, \mbindenv} \alt \stfail
+    \mstate \in \State &::= \pmsmstate{\pmsmq, \mbindenv, t} \alt \stfail
   \end{align*}
   \begin{mathpar}
     \infer{(\pmsmq, \mpat, \pmsmq') \in \delta \\
-      \ensuremath{
-           \begin{array}{l}
-             \smust{\mbindenv'} = \match(\mpat, \mdata, \mbindenv) \text{ or} \\
-             \smay{\mbindenv'}  = \match(\mpat, \mdata, \mbindenv)
-           \end{array}}
-}{\pmsmstate{\pmsmq, \mbindenv} \pmsmstepd{\mdata}{\delta}
-  \pmsmstate{\pmsmq', \mbindenv'}}
+             \smatch{\mbindenv'}{t'} = \match(\mpat, \mdata, \mbindenv)}
+          {\pmsmstate{\pmsmq, \mbindenv, t} \pmsmstepd{\mdata}{\delta} \pmsmstate{\pmsmq', \mbindenv', t'}}
 \\
     \infer{(\pmsmq, \mpat, \pmsmq') \in \delta \\
-      \ensuremath{
-           \begin{array}{l}
-             \smay{\mbindenv'}  = \match(\mpat, \mdata, \mbindenv) \text{ or} \\
-             \mfail = \match(\mpat, \mdata, \mbindenv)
-           \end{array}}}
-          {\pmsmstate{\pmsmq, \mbindenv} \pmsmstepd{\mdata}{\delta} \stfail}
+             \mfail = \match(\mpat, \mdata, \mbindenv)}
+          {\pmsmstate{\pmsmq, \mbindenv, t} \pmsmstepd{\mdata}{\delta} \stfail}
 \\
   \inferrule{ }{\mstate \multistepd{\epsilon}{\delta} \mstate}
 \qquad
@@ -1079,8 +1010,8 @@ where $\pmsmq_0 \in \pmsmq_1^\epsilon$ is defined as the least fixed point of th
 \end{mathpar}
 
 \begin{lemma}
-  $\pmsmstate{\pmsmqq, \menv} \multistepd{\mtrace}{\delta} \pmsmstate{\pmsmqq', \menv'}$ iff
-  $\pmsmstate{\pmsmqq, \menv} \multistepd{\mtrace}{\epsclose(\delta)} \pmsmstate{\pmsmqq', \menv'}$
+  $\matchstate \multistepd{\mtrace}{\delta} \matchstate'$ iff
+  $\matchstate \multistepd{\mtrace}{\epsclose(\delta)} \matchstate'$
 \end{lemma}
 \begin{proof}
   By induction on $\mtrace$.
@@ -1208,17 +1139,33 @@ Pattern combination ($\combinepatalone$) could just throw both patterns into a s
 %
 The definition is a bit tedious and obvious, so we leave it informally specified for space.
 
-\begin{lemma}
-  $\mtrace \in \denotetcon{\mtcon}{\mtimeline}{\menv}$ iff $\exists \pmsmqq, \menv'$. $\pmsmstate{\pmsmqcur, \menv} \multistepd{\mtrace}{\delta} \pmsmstate{\pmsmqq, \menv'}$ is a well-formed trace (the function positions of matched events are all on $\mtimeline$) where $(\delta, \pmsmqlast, k') = \epshelp^\mtimeline(\mtcon, \pmsmqcur, k)$
+\begin{lemma}[Soundness]
+  If $\mtrace \in \denotetcon{\mtcon}{\mtimeline}{\menv}$ then $\exists \pmsmqq, \menv', t$.
+%
+  $\pmsmstate{\pmsmqcur, \menv, \top} \multistepd{\mtrace}{\delta} \pmsmstate{\pmsmqq, \menv', t}$ is a well-formed trace (the function positions of matched events are all on $\mtimeline$) and $\top \sqsubseteq t$
+%
+  where $(\delta, \pmsmqlast, k') = \epshelp^\mtimeline(\mtcon, \pmsmqcur, k)$
 \end{lemma}
 \begin{proof}
   By induction on $\mtcon$ and then $\mtrace$.
 \end{proof}
-%%
+%
+\begin{lemma}[Partial completeness]
+  If $\exists \pmsmqq, \menv'$.
+%
+  $\pmsmstate{\pmsmqcur, \menv, \top} \multistepd{\mtrace}{\delta} \pmsmstate{\pmsmqq, \menv', \top}$ is a well-formed trace,
+  then $\mtrace \in \denotetcon{\mtcon}{\mtimeline}{\menv}$
+%
+  where $(\delta, \pmsmqlast, k') = \epshelp^\mtimeline(\mtcon, \pmsmqcur, k)$
+\end{lemma}
+\begin{proof}
+  By induction on $\mtcon$ and then $\mtrace$.
+\end{proof}
+%
 
 The reduction semantics (\autoref{sec:reduction}) uses this monitor construction via the following metafunctions:
 \begin{align*}
-  \compile{\mtcon}{\mtimeline} &= \npmsm{\setof{\pmsmstate{\pmsmq_0, \bot}}}{\translateeps(\mtcon, \mtimeline)} \\
+  \compile{\mtcon}{\mtimeline} &= \npmsm{\setof{\pmsmstate{\pmsmq_0, \bot, \top}}}{\translateeps(\mtcon, \mtimeline)} \\
   \sstep{\mTMons}{\mtimeline}{\mevent} &= T \cup F \\
     \text{where } {\mathcal S} &= \left\{
 \ensuremath{
@@ -1231,15 +1178,45 @@ The reduction semantics (\autoref{sec:reduction}) uses this monitor construction
       \end{array}
 }\right\}
 \\\phantom{\text{where }} T &= \setbuild{\mTMons[\mtimeline \mapsto {\mathcal S}]}{\npmsm{S}{\pmsmMachine} \in {\mathcal S}, S \neq \setof{\stfail}}
-\\\phantom{\text{where }} F &= \setbuild{\stfail}{\npmsm{\setof{\stfail}}{\pmsmMachine} \in {\mathcal S}}
+\\\phantom{\text{where }} F &= \left\{\stfail : \npmsm{S}{\pmsmMachine} \in {\mathcal S},
+  \begin{array}{l}
+S = \setof{\stfail} \text{ or } \\
+\forall \mstate\equiv\pmsmstate{\pmsmqq, \mbindenv, t}\in S. t \neq \top
+\end{array}\right\}
 \end{align*}
 We store several machines in one timeline in anticipation of abstract aliasing --- that is, we cannot always create fresh timelines, and thus merge two together by saying the timeline is in one of a set of possible states.
 %
 The additional set comprehension is because these machines are non-deterministic, so we must step all states that that machine \emph{might} be in.
 %
-If the only possible state for the machine to be in is $\stfail$, there is a cause for blame.
+If the only possible state for the machine to be in is $\stfail$, or there are no sure ways to accept (no state with $\top$ valuation), there is a cause for blame.
 %
 Since there are several machines that could describe the timeline at one time, we return a set of possibilities: either there is a definitive failure $\setof{\bot}$, definitive success $\setof{\mTMons'}$ or a possible success $\setof{\mTMons', \bot}$.
+
+\section{Abstract semantics}
+
+We use the AAM approach to soundly approximate our concrete semantics.
+%
+This first requires a CESK-like machine to transform, but there are known ways to systematically transform Felleisen-style reduction semantics into corresponding CESK machines ~\citep{?}.
+%
+The important aspect of the abstraction process is not this transformation, but the fact that the space of values becomes \emph{finite}, meaning the space of PMSM machine configurations is finite.
+%
+Therefore, the only aspects of PMSMs that we need to tamper with are allowing binding to sets of values, and the notion of equality, to weaken it to be conservative with our abstractions.
+%
+In our semantics with just closures, conses, booleans and integers, we consider syntactically equal closures and conses to be \emph{maybe} equal, equal booleans and integers to be \emph{must} equal, integer comparisons with the abstract $\mathbf{Int}$ element to be \emph{maybe} equal (assuming a simple flat abstraction of the integers) and all other possibilities \emph{never} equal.
+%
+This notion of equality lifts over sets of values in the obvious way.
+%
+There are several different techniques that we could apply in order to improve the precision of the analysis:
+\begin{itemize}
+\item{use abstract counting ~\citep{dvanhorn:Might:2006:GammaCFA} to improve equality checking of allocated data;}
+\item{use abstract garbage collection~\citep{dvanhorn:Might:2006:GammaCFA} to remove dead temporal monitors;}
+\item{use abstract garbage collection to remove bindings to dead values in live temporal monitors, considering a monitor transition that dereferences a dangling pointer to represent an impossible state (and thus can be discarded);}
+\item{separate continuation management to a pushdown abstraction~\citep{dvanhorn:Vardoulakis2011CFA2}; or}
+\item{use a polyvariant allocation strategy such as $m$-CFA ~\citep{dvanhorn:Might2010Resolving} or polymorphic splitting~\citep{dvanhorn:wright-jagannathan-toplas98}.}
+\end{itemize}
+%
+We leave this exploration and evaluation of possibilities to future work.
+%%
 
 \section{Evaluation}
 %%
@@ -1257,14 +1234,3 @@ Our model is available online \footnote{\url{http://github.com/ianj/temporal-aam
 %%
 Shit works.
 %%
-
-\acks We thank Jay McCarthy for helpful discussions on the semantics
-and implementation of temporal contracts.
-
-\balance
-\bibliographystyle{plainnat}
-%\input{paper.bbl}
-\bibliography{bibliography}
-
-% \include{appendix}
-\end{document}

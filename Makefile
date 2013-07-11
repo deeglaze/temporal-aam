@@ -1,15 +1,24 @@
 export TEXINPUTS := ./imgs:${TEXINPUTS}
-CURRENT=cpcf
+CURRENT=paper
+CONTENT=cpcf
+LAYOUT=llncs
 
 WGETDVANHORNBIB=curl -o dvanhorn.bib "http://www.citeulike.org/bibtex/user/dvanhorn?fieldmap=posted-at:date-added&do_username_prefix=1&key_type=4&fieldmap=url:x-url&fieldmap=doi:x-doi&fieldmap=address:x-address&fieldmap=isbn:x-isbn&fieldmap=issn:x-issn&fieldmap=month:x-month&fieldmap=comment:comment&fieldmap=booktitle:booktitle&fieldmap=abstract:x-abstract&fieldmap=pages:pages&volume:volume"
 
 WGETIANJBIB=curl -o ianj.bib "http://www.citeulike.org/bibtex/user/ianjohnson?fieldmap=posted-at:date-added&do_username_prefix=1&key_type=4&fieldmap=url:x-url&fieldmap=doi:x-doi&fieldmap=address:x-address&fieldmap=isbn:x-isbn&fieldmap=issn:x-issn&fieldmap=month:x-month&fieldmap=comment:comment&fieldmap=booktitle:booktitle&fieldmap=abstract:x-abstract&fieldmap=pages:pages&volume:volume"
 
-default: $(CURRENT).tex
-	rubber ${opts} -v -d $(CURRENT).tex
+default: $(CURRENT)$(LAYOUT).tex
+	rubber ${opts} -v -d $(CURRENT)$(LAYOUT).tex
 
-show: $(CURRENT).pdf
-	xdg-open $(CURRENT).pdf
+sigplan: $(CURRENT)sigplan.tex
+	rubber ${opts} -v -d $(CURRENT)sigplan.tex
+
+lncs: $(CURRENT)llncs.tex
+	rubber ${opts} -v -d $(CURRENT)llncs.tex
+
+
+show: $(CURRENT)$(LAYOUT).pdf
+	xdg-open $(CURRENT)$(LAYOUT).pdf
 
 getbib:
 	$(WGETDVANHORNBIB)
@@ -19,10 +28,10 @@ getbib:
 	cat ianj.bib.clean dvh-bibliography.bib.clean > bibliography.bib
 
 bibtex:
-	bibtex $(CURRENT)
+	bibtex $(CURRENT)$(LAYOUT)
 
 edit:
-	sex emacs $(CURRENT).tex
+	sex emacs $(CONTENT).tex
 
 clean:
-	rm -f $(CURRENT).{dvi,ps,pdf,log,toc,blg,bbl,aux,rel} *.log *~ *.out reviews.txt
+	rm -f $(CURRENT)$(LAYOUT).{dvi,ps,pdf,log,toc,blg,bbl,aux,rel} *.log *~ *.out reviews.txt

@@ -2,6 +2,7 @@
 \usepackage{textcomp,wasysym, stmaryrd}
 
 % Metavariables
+\newcommand*{\matchstate}{\mu}
 \newcommand*{\mconstructor}{c}
 \newcommand*{\matom}{a}
 \newcommand*{\mdata}{v}
@@ -22,6 +23,7 @@
 \newcommand*{\mbindenv}{\gamma}
 \newcommand*{\mbindstack}{\Gamma}
 \newcommand*{\mres}{\mathit{result}}
+\newcommand*{\meqs}{I}
 
 \newcommand*{\mprog}{p}
 \newcommand*{\mdef}{D}
@@ -204,6 +206,7 @@
 \newcommand*{\combinefalone}{\triangleleft}
 
 \newcommand{\mfail}{\mathbf{fail}}
+\newcommand{\smatch}[2]{{#1}_{#2}}
 
 % Spaces
 \newcommand*{\Prog}{\mathit{Program}}
@@ -239,3 +242,6 @@
 \newcommand*{\MatchResult}{\mathit{Result}}
 
 \newcommand*{\QState}{\mathit{QState}}
+\newcommand*{\MatchState}{\mathit{MState}}
+
+\newcommand*{\Valuation}{\mathit{Valuation}}

@@ -1,0 +1,59 @@
+\documentclass{llncs}
+\usepackage{alltt,mathpartir,multicol}
+\usepackage{amsmath,natbib}
+\usepackage{amssymb,tikz}
+\usepackage{stmaryrd}
+\usepackage{url}
+\usepackage{graphicx,color}
+\usepackage{anyfontsize}
+\usepackage{balance}
+\usepackage{calc}
+\usepackage[english]{babel}
+\usepackage[noabbrev]{cleveref}
+\usepackage[hidelinks]{hyperref}
+\usepackage{placeins}
+
+%% For sigplan
+%\newtheorem{theorem}{Theorem}
+%\newtheorem{lemma}{Lemma}
+%\newtheorem{property}{Property}
+
+\newcommand*{\naive}{naive}
+\newcommand*{\naively}{naively}
+\newcommand*{\Naive}{Naive}
+\newcommand*{\Naively}{Naively}
+% \usepackage{xltxtra}
+% \setmonofont[Scale=MatchLowercase]{DejaVu Sans Mono}
+%
+\input{preamble}
+
+\begin{document}
+
+%\conferenceinfo{WXYZ '05}{date, City.}
+%\copyrightyear{2005}
+%\copyrightdata{[to be supplied]}
+\title{Static Verification of Temporal Higher-Order Contracts}
+
+%\authorinfo{J. Ian Johnson \and Nicholas Alexander Marquez \and David Van Horn}
+%           {Northeastern University}
+%           {}
+\author{J. Ian Johnson \and Nicholas Alexander Marquez \and David Van Horn}
+\institute{Northeastern University}
+
+\maketitle
+
+\begin{abstract}
+\input{abstract.tex}
+\end{abstract}
+
+\input{cpcf.tex}
+
+\thanks We thank Jay McCarthy for helpful discussions on the semantics
+and implementation of temporal contracts.
+
+\bibliographystyle{plainnat}
+%\input{paper.bbl}
+\bibliography{bibliography}
+
+% \include{appendix}
+\end{document}
