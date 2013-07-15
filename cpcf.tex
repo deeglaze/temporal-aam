@@ -754,9 +754,19 @@ $\begin{array}{@{}l @{\ }c@{\ } l@{} r}
 &\machstep&
 \sSMon{k}{\mmlab}{j}{\mtimeline}{\mscon}{\mval}
 \name{tmon} \\
-&&\text{where } \update{\mTMons}{\mtimeline}{\compile{\mtcon}{\mtimeline}} \\
+&&\text{where } \update{\mTMons}{\mtimeline}{\smachine} \\
+&&\phantom{\text{where }} \smachine = \compile{\mtcon}{\mtimeline} \ne \bot \\
 &&\phantom{\text{where }} \mtimeline = \salloc{\mstate} \\
 &&\text{given } \mmlab = \toplevel
+
+\\ % Temporal monitor compilation fail
+\ditto
+&\machstep&
+\sblame{j}{j}
+\name{tmon-fail} \\
+&&\text{where } \bot = \compile{\mtcon}{\mtimeline} \\
+&&\phantom{\text{where }} \mtimeline = \salloc{\mstate} \\
+&&\text{given } \mmlab = \toplevel 
 
 \\ % Flat monitor
 \sSMon{k}{\mmlab}{j}{\mtimeline}{ \sown*{\sflat{\mexp}}{\mmlab^{\prime\prime}} }{ \sOwn{\mconstant}{\mmlab^{\prime\prime}} }
@@ -856,6 +866,8 @@ The \namefmt{tmon} rule compiles the temporal contract inside of the $\mathtt{tm
 The structural component of the contract ($\mscon$) is then used to rewrap the monitored value ($\mval$) inside of a structural monitor ($\mathtt{smon}$) associated with the timeline.
 %
 Temporal monitors only exist at the top level, and so the context's ownership label \emph{must} be $\toplevel$.
+%
+Should the compilation of the temporal contract fail --- which would happen \eg if the PMSM is initially not accepting --- then the reduction would instead blame the contract in \namefmt{tmon-fail}.
 %
 
 %
