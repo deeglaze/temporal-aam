@@ -19,11 +19,19 @@ mod PMSM is
   pr Syntax .
   pr BindEnv .
   pr INT .
-  pr TRIT .
   pr WEAK-OPTION{BindEnv} .
   pr LIST{AllPat} .
   pr LIST{SContract} .
   pr Abstraction .
+
+  sort Valuation .
+  op trueP : -> Valuation [ctor] . *** only true for prefix closure
+  op UP : -> Valuation [ctor] . *** only unknown for prefix closure
+  op true : -> Valuation [ctor] .
+  op U : -> Valuation [ctor] .
+  op false : -> Valuation [ctor] .
+  
+  op ¬_ : Valuation -> Valuation .
 
   op r$_ : VAR -> NamePat [ctor] .
   op rΛ_ : MLabel -> NamePat [ctor] .
@@ -49,6 +57,12 @@ mod PMSM is
   vars Ds Ds' : List{SContract} .
   vars A A' : Event .
   var wδ : Weak-Option{BindEnv} .
+
+  eq ¬ true = false .
+  eq ¬ trueP = false .
+  eq ¬ U = U .
+  eq ¬ UP = UP .
+  eq ¬ false = true .
 
   op matchpat : Pattern Pattern BindEnv -> Weak-Option{BindEnv} .
   op nonmatchpat : Pattern Pattern BindEnv -> Weak-Option{BindEnv} .
@@ -110,11 +124,11 @@ mod TConPMSM is
   vars d d' d0 d1 : MachineDo .
   vars mkm1 mkm : MakeMachine .
   vars δ δ' δ0 δ1 : BindEnv .
-  vars t t' : Trit .
+  vars t t' : Valuation .
   vars T T' : TContract .
   var wcns : List{WCNamePat} .
 
-  op mtop : Machine Trit -> MachineTop [ctor] .
+  op mtop : Machine Valuation -> MachineTop [ctor] .
   op bmachine : MachineDo BindEnv -> Machine [ctor] .
   op machine : MachineDo -> Machine [ctor] .
 
@@ -148,17 +162,27 @@ mod TConPMSM is
   eq event->pattern(callact(n, wcns)) = callev(n, wcns) .
   eq event->pattern(retact(n, wcns)) = retev(n, wcns) .
 
-  op TCon->Machine : TContract BindEnv Trit -> MachineTop .
-  eq TCon->Machine(tev(E), δ, t) = mtop(bmachine(machine-match(event->pattern(E)), δ), t) .
-  eq TCon->Machine(!ev(E), δ, t) = mtop(bmachine(machine-nonmatch(event->pattern(E)), δ), t) .
+  op Compile : TContract -> MachineTop .
+  eq Compile(T) = TContract(T, empty, trueP) .
+
+  op prefix-val : Valuation -> Valuation .
+  eq prefix-val(true) = trueP .
+  eq prefix-val(U) = UP .
+  eq prefix-val(trueP) = trueP .
+  eq prefix-val(UP) = UP .
+  eq prefix-val(false) = false .
+
+  op TCon->Machine : TContract BindEnv Valuation -> MachineTop .
+  eq TCon->Machine(tev(E), δ, t) = mtop(bmachine(machine-match(event->pattern(E)), δ), prefix-val(t)) .
+  eq TCon->Machine(!ev(E), δ, t) = mtop(bmachine(machine-nonmatch(event->pattern(E)), δ), prefix-val(t)) .
   eq TCon->Machine(ddd, δ, t) = mtop(machine(machine-sigma-star), t) .
   eq TCon->Machine(T ∪ T', δ, t) = union-machine((TCon->Machine(T, δ, t), TCon->Machine(T', δ, t))) .
-  eq TCon->Machine(T · T', δ, t) = seq-machine(TCon->Machine(T, δ), thunk(TCon->Machine(T', δ, t))) .
+  eq TCon->Machine(T · T', δ, t) = seq-machine(TCon->Machine(T, δ, prefix-val(t)), thunk(TCon->Machine(T', δ, t))) .
   eq TCon->Machine(¬ T, δ, t) = complement-machine(TCon->Machine(T, δ, t)) .
   eq TCon->Machine(kl T, δ, t) = star-machine(TCon->Machine(T, δ, t)) .
   eq TCon->Machine(dseq(pat, T), δ, t) = mtop(bmachine(machine-dseq(pat, T), δ), t) .
 
-  op machine->valuation : MachineTop Trit -> MachineTop .
+  op machine->valuation : MachineTop Valuation -> MachineTop .
   eq machine->valuation(mtop(m, t), t') = mtop(m, t') .
 
   eq sigma-star-machine = mtop(machine(machine-sigma-star), true) .
@@ -180,11 +204,11 @@ mod TConPMSM is
   eq union-machine(empty) = null-machine .
   eq union-machine(mt) = mt .
   eq union-machine((mtop(machine(machine-null), false), mts)) = union-machine(mts) . *** m0 is null machine
-  eq union-machine((mtop(machine(machine-null), U), mts)) = machine->valuation(union-machine(mts), U) .
-  eq union-machine((mtop(machine(machine-null), true), mts)) = machine->valuation(union-machine(mts), true) .
+  ceq union-machine((mtop(machine(machine-null), t), mts)) = machine->valuation(union-machine(mts), t)
+     if t == true or-else t == U or-else t == trueP or-else t == UP .
   eq union-machine((mtop(m, t), mts)) = mtop(machine(machine-union((m, topset->set(union-machine(mts))))), t) [owise] .
 
-  eq complement-machine(mtop(m, t)) = mtop(machine(machine-complement(m)), not t) .
+  eq complement-machine(mtop(m, t)) = mtop(machine(machine-complement(m)), ¬ t) .
 
   op make-machine : MakeMachine -> MachineTop .
   eq make-machine(mk-star(mt)) = star-machine(mt) .
@@ -193,12 +217,14 @@ mod TConPMSM is
   eq seq-machine(mtop(machine(machine-null), true), mkm1) = make-machine(mkm1) .
   eq seq-machine(mtop(machine(machine-null), U), mkm1) = make-machine(mkm1) .
   eq seq-machine(mtop(machine(machine-null), false), mkm1) = null-machine .
-  eq seq-machine(mtop(m, false), mkm1) = mtop(machine(machine-seq(m, mkm1)), false) .
-  eq seq-machine(mtop(m, t), mkm1) =
-     union-machine((mtop(machine(machine-seq(m, mkm1)), false), make-machine(mkm1))) [owise] .
+  ceq seq-machine(mtop(m, t), mkm1) = mtop(machine(machine-seq(m, mkm1)), t)
+      if t == false or-else t == trueP or-else t == UP .
+  ceq seq-machine(mtop(m, t), mkm1) =
+     union-machine((mtop(machine(machine-seq(m, mkm1)), t), make-machine(mkm1)))
+     if t == true or-else t == U [owise] .
 
   eq star-machine(mtop(machine(machine-null), false)) = null-machine .
-  eq star-machine(mt) = machine->valuatiuon(seq-machine(machine->valuation(mt, false), mk-star(mt)), true) .
+  eq star-machine(mt) = machine->valuation(seq-machine(machine->valuation(mt, trueP), mk-star(mt)), true) .
 
   op do-machine : Machine Pattern -> MachineTop .
   eq step(mtop(m, t), pat) = do-machine(m, pat) .
@@ -232,8 +258,8 @@ mod TConPMSM is
   *** Dependent sequencing
   ceq do-machine(bmachine(machine-dseq(pat, T), δ), pat') = null-machine
       if Never := matchpat(pat, pat', δ) .
-  ceq do-machine(bmachine(machine-dseq(pat, T), δ), pat') = TCon->Machine(T, δ', true)
+  ceq do-machine(bmachine(machine-dseq(pat, T), δ), pat') = TCon->Machine(T, δ', trueP)
       if Must δ' := matchpat(pat, pat', δ) .
-  ceq do-machine(bmachine(machine-dseq(pat, T), δ), pat') = TCon->Machine(T, δ', U)
+  ceq do-machine(bmachine(machine-dseq(pat, T), δ), pat') = TCon->Machine(T, δ', UP)
       if May δ' := matchpat(pat, pat', δ) .
 endm
