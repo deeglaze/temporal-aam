@@ -719,7 +719,7 @@ The former maps addresses to sets of values and the latter maps timelines to PMS
 % TODO:
 % * Should addresses be owned? Does this imply stores need to be owned...?
 % * Should conses be owned?
-\newcommand*{\namefmt}[1]{\textit{\texttt{#1}}}
+\newcommand*{\namefmt}[1]{\textit{\textsc{#1}}}
 \begin{figure*}
 \newcommand*{\update}[3]{#1^\prime = #1[#2 \mapsto #1(#2)\sqcup#3]}
 \newcommand*{\name}[1]{&\text{[\namefmt{#1}]}}
@@ -727,8 +727,8 @@ The former maps addresses to sets of values and the latter maps timelines to PMS
 $\begin{array}{@{}l @{\ }c@{\ } l@{} r}
 \mstate \chevron{\mctx{\mmlab}[\ldots], \msto, \mTMons}
 &\machstep&
-%TODO: Can mmlab change?
-\mstate^\prime \chevron{\mctx{\mmlab}[\ldots], \msto^\prime, \mTMons^\prime}
+%TODO: Can mmlab change? For now, yup.
+\mstate^\prime \chevron{\mctx{\mmlab^\prime}[\ldots], \msto^\prime, \mTMons^\prime}
 \name{rule-name}
 
 \\ \hline % If true
@@ -759,7 +759,7 @@ $\begin{array}{@{}l @{\ }c@{\ } l@{} r}
 &&\text{given } \mmlab = \toplevel
 
 \\ % Flat monitor
-\sSMon{k}{\mmlab}{j}{\mtimeline}{ \sown*{\sflat{\mexp}}{\mmlab^\prime} }{ \sOwn{\mconstant}{\mmlab^\prime} }
+\sSMon{k}{\mmlab}{j}{\mtimeline}{ \sown*{\sflat{\mexp}}{\mmlab^{\prime\prime}} }{ \sOwn{\mconstant}{\mmlab^{\prime\prime}} }
 &\machstep&
 \schk*{k}{j}{\mtimeline}{ \sapp{\mexp}{\mconstant} }{\mconstant}
 \name{smon-flat}
@@ -798,16 +798,17 @@ $\begin{array}{@{}l @{\ }c@{\ } l@{} r}
 \name{chk-false}
 
 \\ % Blessed application (call)
-\sapp{ \sOwn{\bclos{\mmlab_\lambda}{\mscon_D}{k}{j}{\mtimeline}{\mscon_R}{\mmlab^\prime}{\maddr}}{\mmlab} }{ \sOwn{\mval}{\mmlab} }
+\sapp{ \sOwn{\bclos{\mmlab_\lambda}{\mscon_D}{k}{j}{\mtimeline}{\mscon_R}{\mmlab^{\prime\prime}}{\maddr}}{\mmlab} }{ \sOwn{\mval}{\mmlab} }
 &\machstep&
 %TODO: Should the timeline be different?
 \mexp_{ret}
 \name{call} \\
 &&\text{where } \mexp_{ret} =
-\sret{\mmlab_\lambda}{\mtimeline}{ \sSMon{k}{\mmlab^\prime}{j}{\mtimeline}{\mscon_R}{\mexp_{call}} } \\
-&&\phantom{\text{where }} \mexp_{call} = \sapp{\mval_\lambda}{\sSMon{\mmlab^\prime}{k}{j}{\mtimeline}{\mscon_D}{\mval}} \\
+\sret{\mmlab_\lambda}{\mtimeline}{ \sSMon{k}{\mmlab^{\prime\prime}}{j}{\mtimeline}{\mscon_R}{\mexp_{call}} } \\
+&&\phantom{\text{where }} \mexp_{call} = \sapp{\mval_\lambda}{\sSMon{\mmlab^{\prime\prime}}{k}{j}{\mtimeline}{\mscon_D}{\mval}} \\
 &&\phantom{\text{where }} \mval_\lambda = \slam{\mvar}{\mexp} \in \msto(\maddr) \\
-&&\phantom{\text{where }} \mTMons^\prime \in \sstep{\mTMons}{\mtimeline}{\scallev{\mmlab_\lambda}{\mval}}
+&&\phantom{\text{where }} \mTMons^\prime \in \sstep{\mTMons}{\mtimeline}{\scallev{\mmlab_\lambda}{\mval}} \\
+&&\phantom{\text{where }} \mmlab^\prime = \mmlab_\lambda
 
 \\ % Call fail
 \ditto
@@ -817,17 +818,18 @@ $\begin{array}{@{}l @{\ }c@{\ } l@{} r}
 \name{call-fail}
 
 \\ % Return
-\sret{\mmlab_\lambda}{\mtimeline}{ \sOwn{\mval}{\mmlab} }
+\sret{\mmlab_{ret}}{\mtimeline}{ \sOwn{\mval}{\mmlab} }
 &\machstep&
-\mval
-\qquad\text{where } \mTMons^\prime \in \sstep{\mTMons}{\mtimeline}{\sretev{\mmlab_\lambda}{\mval}}
-\name{return}
+\sown{\mval}{\mmlab_{ret}}
+\name{return} \\
+&&\text{where } \mTMons^\prime \in \sstep{\mTMons}{\mtimeline}{\sretev{\mmlab}{\mval}} \\
+&&\phantom{\text{where }} \mmlab^\prime = \mmlab_{ret}
 
 \\ % Return fail
 \ditto
 &\machstep&
-\sblame{\mmlab_\lambda}{\j}
-\qquad\text{given } \bot \in \sstep{\mTMons}{\mtimeline}{\sretev{\mmlab_\lambda}{\mval}}
+\sblame{\mmlab}{\j}
+\qquad\text{given } \bot \in \sstep{\mTMons}{\mtimeline}{\sretev{\mmlab}{\mval}}
 \name{return-fail}
 
 \\ \hline % Blame
@@ -886,11 +888,13 @@ Assuming that the call is temporally permissible, then we construct an applicati
 %
 In turn, we wrap \emph{that} expression in a structural range monitor, which itself is wrapped in a return event production (which will be handled in \namefmt{return}/\namefmt{return-fail}).
 %
-Note that this formulation guarantees that a call event is produced \emph{before} the call actually occurs, which is obviously critical to the correctness of these temporal contracts.
+This formulation guarantees that a call event is produced \emph{before} the call actually occurs, which is obviously critical to the correctness of these temporal contracts.
+%
+Finally, note that the evaluation context's owner becomes the callee after this step (in line with the call).
 %
 
 %
-To complete our modeling of temporal monitors, we must also vet return events; we do so in \namefmt{return}.
+To complete our modeling of temporal monitors, we must also represent return events; we do so in \namefmt{return}.
 %
 Once we have reduced an application to a value, we must note that the function which was called will now return.
 %
@@ -898,7 +902,11 @@ Again, we check with any relevant PMSMs---using the $\delta{}step$ function---wh
 %
 Otherwise, we reduce to the return value.
 %
-Note that this formulation guarantees that a return event is produced \emph{before} the return actually completes, again critical for correctness.
+This formulation guarantees that a return event is produced \emph{before} the return actually completes, again critical for correctness.
+%
+After this reduction step, the evaluation context's owner becomes that of the original caller again (in line with the return).
+%
+Note also that the returning context takes ownership of the returned value as well.
 %
 
 %%
