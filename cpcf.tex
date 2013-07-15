@@ -723,6 +723,8 @@ The former maps addresses to sets of values and the latter maps timelines to PMS
 \begin{figure*}
 \newcommand*{\update}[3]{#1^\prime = #1[#2 \mapsto #1(#2)\sqcup#3]}
 \newcommand*{\name}[1]{&\text{[\namefmt{#1}]}}
+\newcommand*{\where}{\text{where }}
+\newcommand*{\cwhere}{\phantom{\where}}
 \centering
 $\begin{array}{@{}l @{\ }c@{\ } l@{} r}
 \mstate \chevron{\mctx{\mmlab}[\ldots], \msto, \mTMons}
@@ -754,9 +756,9 @@ $\begin{array}{@{}l @{\ }c@{\ } l@{} r}
 &\machstep&
 \sSMon{k}{\mmlab}{j}{\mtimeline}{\mscon}{\mval}
 \name{tmon} \\
-&&\text{where } \update{\mTMons}{\mtimeline}{\smachine} \\
-&&\phantom{\text{where }} \smachine = \compile{\mtcon}{\mtimeline} \ne \bot \\
-&&\phantom{\text{where }} \mtimeline = \salloc{\mstate} \\
+&&\where \update{\mTMons}{\mtimeline}{\smachine} \\
+&&\cwhere \smachine = \compile{\mtcon}{\mtimeline} \ne \bot \\
+&&\cwhere \mtimeline = \salloc{\mstate} \\
 &&\text{given } \mmlab = \toplevel
 
 \\ % Temporal monitor compilation fail
@@ -764,8 +766,8 @@ $\begin{array}{@{}l @{\ }c@{\ } l@{} r}
 &\machstep&
 \sblame{j}{j}
 \name{tmon-fail} \\
-&&\text{where } \bot = \compile{\mtcon}{\mtimeline} \\
-&&\phantom{\text{where }} \mtimeline = \salloc{\mstate} \\
+&&\where \bot = \compile{\mtcon}{\mtimeline} \\
+&&\cwhere \mtimeline = \salloc{\mstate} \\
 &&\text{given } \mmlab = \toplevel 
 
 \\ % Flat monitor
@@ -785,8 +787,8 @@ $\begin{array}{@{}l @{\ }c@{\ } l@{} r}
 &\machstep&
 \sown{\bclos{\mmlab_\lambda}{\mscon_D}{k}{j}{\mtimeline}{\mscon_R}{\mmlab}{\maddr}}{\mmlab}
 \name{smon-arrow} \\
-&&\text{where } \maddr = \salloc{\mstate} \\
-&&\phantom{\text{where }} \update{\msto}{\maddr}{\mval} \\
+&&\where \maddr = \salloc{\mstate} \\
+&&\cwhere \update{\msto}{\maddr}{\mval} \\
 &&\text{given } \mval = \slam{\mvar}{\mexp}
 
 \\ % Arrow monitor fail
@@ -813,12 +815,12 @@ $\begin{array}{@{}l @{\ }c@{\ } l@{} r}
 %TODO: Should the timeline be different?
 \mexp_{ret}
 \name{call} \\
-&&\text{where } \mexp_{ret} =
+&&\where \mexp_{ret} =
 \sret{\mmlab_\lambda}{\mtimeline}{ \sSMon{k}{\mmlab^{\prime\prime}}{j}{\mtimeline}{\mscon_R}{\mexp_{call}} } \\
-&&\phantom{\text{where }} \mexp_{call} = \sapp{\mval_\lambda}{\sSMon{\mmlab^{\prime\prime}}{k}{j}{\mtimeline}{\mscon_D}{\mval}} \\
-&&\phantom{\text{where }} \mval_\lambda = \slam{\mvar}{\mexp} \in \msto(\maddr) \\
-&&\phantom{\text{where }} \mTMons^\prime \in \sstep{\mTMons}{\mtimeline}{\scallev{\mmlab_\lambda}{\mval}} \\
-&&\phantom{\text{where }} \mmlab^\prime = \mmlab_\lambda
+&&\cwhere \mexp_{call} = \sapp{\mval_\lambda}{\sSMon{\mmlab^{\prime\prime}}{k}{j}{\mtimeline}{\mscon_D}{\mval}} \\
+&&\cwhere \mval_\lambda = \slam{\mvar}{\mexp} \in \msto(\maddr) \\
+&&\cwhere \mTMons^\prime \in \sstep{\mTMons}{\mtimeline}{\scallev{\mmlab_\lambda}{\mval}} \\
+&&\cwhere \mmlab^\prime = \mmlab_\lambda
 
 \\ % Call fail
 \ditto
@@ -832,8 +834,8 @@ $\begin{array}{@{}l @{\ }c@{\ } l@{} r}
 &\machstep&
 \sown{\mval}{\mmlab_{ret}}
 \name{return} \\
-&&\text{where } \mTMons^\prime \in \sstep{\mTMons}{\mtimeline}{\sretev{\mmlab}{\mval}} \\
-&&\phantom{\text{where }} \mmlab^\prime = \mmlab_{ret}
+&&\where \mTMons^\prime \in \sstep{\mTMons}{\mtimeline}{\sretev{\mmlab}{\mval}} \\
+&&\cwhere \mmlab^\prime = \mmlab_{ret}
 
 \\ % Return fail
 \ditto
