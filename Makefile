@@ -1,4 +1,4 @@
-export TEXINPUTS := ./imgs:${TEXINPUTS}
+export TEXINPUTS := ./imgs:./pfsteps:${TEXINPUTS}
 CURRENT=paper
 CONTENT=cpcf
 LAYOUT=llncs
@@ -10,7 +10,7 @@ WGETIANJBIB=curl -o ianj.bib "http://www.citeulike.org/bibtex/user/ianjohnson?fi
 default: $(CURRENT)$(LAYOUT).tex
 	rubber ${opts} -v -d $(CURRENT)$(LAYOUT).tex
 
-sigplan: $(CURRENT)sigplan.tex
+sigplan sig: $(CURRENT)sigplan.tex
 	rubber ${opts} -v -d $(CURRENT)sigplan.tex
 
 lncs: $(CURRENT)llncs.tex
@@ -19,6 +19,10 @@ lncs: $(CURRENT)llncs.tex
 
 show: $(CURRENT)$(LAYOUT).pdf
 	xdg-open $(CURRENT)$(LAYOUT).pdf
+
+showsig: $(CURRENT)sigplan.pdf
+	xdg-open $(CURRENT)sigplan.pdf
+
 
 getbib:
 	$(WGETDVANHORNBIB)

@@ -19,6 +19,7 @@ mod PMSM is
   pr Syntax .
   pr BindEnv .
   pr INT .
+  pr TRIT .
   pr WEAK-OPTION{BindEnv} .
   pr LIST{AllPat} .
   pr LIST{SContract} .
@@ -109,17 +110,18 @@ mod TConPMSM is
   vars d d' d0 d1 : MachineDo .
   vars mkm1 mkm : MakeMachine .
   vars δ δ' δ0 δ1 : BindEnv .
+  vars t t' : Trit .
   vars T T' : TContract .
   var wcns : List{WCNamePat} .
 
-  op accepting : Machine -> MachineTop [ctor] .
-  op nonaccepting : Machine -> MachineTop [ctor] .
+  op mtop : Machine Trit -> MachineTop [ctor] .
   op bmachine : MachineDo BindEnv -> Machine [ctor] .
   op machine : MachineDo -> Machine [ctor] .
 
   *** Canonical machines
   op null-machine : -> MachineTop .
   op epsilon-machine : -> MachineTop .
+  op Upsilon-machine : -> MachineTop .
   op sigma-star-machine : -> MachineTop .
 
   op machine-null : -> MachineDo [ctor] .
@@ -141,45 +143,35 @@ mod TConPMSM is
 
   op mk-star : MachineTop -> MakeMachine [ctor] .
   op thunk : MachineTop -> MakeMachine [ctor] .
-  op ext : TContract -> MakeMachine [ctor] .
 
   op event->pattern : Event -> Pattern .
   eq event->pattern(callact(n, wcns)) = callev(n, wcns) .
   eq event->pattern(retact(n, wcns)) = retev(n, wcns) .
 
-  op TCon->Machine : TContract BindEnv -> MachineTop .
-  eq TCon->Machine(tev(E), δ) = accepting(bmachine(machine-match(event->pattern(E)), δ)) .
-  eq TCon->Machine(!ev(E), δ) = accepting(bmachine(machine-nonmatch(event->pattern(E)), δ)) .
-  eq TCon->Machine(ddd, δ) = sigma-star-machine .
-  eq TCon->Machine(T ∪ T', δ) = union-machine((TCon->Machine(T, δ), TCon->Machine(T', δ))) .
-  eq TCon->Machine(T · T', δ) = seq-machine(TCon->Machine(T, δ), thunk(TCon->Machine(T', δ))) .
-  eq TCon->Machine(¬ T, δ) = complement-machine(TCon->Machine(T, δ)) .
-  eq TCon->Machine(kl T, δ) = star-machine(TCon->Machine(T, δ)) .
-  eq TCon->Machine(dseq(pat, T), δ) = accepting(bmachine(machine-dseq(pat, T), δ)) .
+  op TCon->Machine : TContract BindEnv Trit -> MachineTop .
+  eq TCon->Machine(tev(E), δ, t) = mtop(bmachine(machine-match(event->pattern(E)), δ), t) .
+  eq TCon->Machine(!ev(E), δ, t) = mtop(bmachine(machine-nonmatch(event->pattern(E)), δ), t) .
+  eq TCon->Machine(ddd, δ, t) = mtop(machine(machine-sigma-star), t) .
+  eq TCon->Machine(T ∪ T', δ, t) = union-machine((TCon->Machine(T, δ, t), TCon->Machine(T', δ, t))) .
+  eq TCon->Machine(T · T', δ, t) = seq-machine(TCon->Machine(T, δ), thunk(TCon->Machine(T', δ, t))) .
+  eq TCon->Machine(¬ T, δ, t) = complement-machine(TCon->Machine(T, δ, t)) .
+  eq TCon->Machine(kl T, δ, t) = star-machine(TCon->Machine(T, δ, t)) .
+  eq TCon->Machine(dseq(pat, T), δ, t) = mtop(bmachine(machine-dseq(pat, T), δ), t) .
 
-  op machine->accepting : MachineTop -> MachineTop .
-  op machine->nonaccepting : MachineTop -> MachineTop .
-  eq machine->accepting(nonaccepting(m)) = accepting(m) .
-  eq machine->accepting(mt) = mt [owise] .
+  op machine->valuation : MachineTop Trit -> MachineTop .
+  eq machine->valuation(mtop(m, t), t') = mtop(m, t') .
 
-  eq machine->nonaccepting(accepting(m)) = nonaccepting(m) .
-  eq machine->nonaccepting(mt) = mt [owise] .
-
-  op machine-accepting? : MachineTop -> Bool .
-  eq machine-accepting?(nonaccepting(m)) = false .
-  eq machine-accepting?(accepting(m)) = true .
-
-  eq sigma-star-machine = accepting(machine(machine-sigma-star)) .
-  eq null-machine = nonaccepting(machine(machine-null)) .
-  eq epsilon-machine = accepting(machine(machine-null)) .
+  eq sigma-star-machine = mtop(machine(machine-sigma-star), true) .
+  eq null-machine = mtop(machine(machine-null), false) .
+  eq epsilon-machine = mtop(machine(machine-null), true) .
+  eq Upsilon-machine = mtop(machine(machine-null), U) .
 
   op machine-do : Machine -> MachineDo .
   eq machine-do(bmachine(d, δ)) = d .
   eq machine-do(machine(d)) = d .
 
   op top->machine : MachineTop -> Machine .
-  eq top->machine(accepting(m)) = m .
-  eq top->machine(nonaccepting(m)) = m .
+  eq top->machine(mtop(m, t)) = m .
 
   op topset->set : Set{MachineTop} -> Set{Machine} .
   eq topset->set(empty) = empty .
@@ -187,30 +179,29 @@ mod TConPMSM is
 
   eq union-machine(empty) = null-machine .
   eq union-machine(mt) = mt .
-  eq union-machine((nonaccepting(machine(machine-null)), mts)) = union-machine(mts) . *** m0 is null machine
-  eq union-machine((accepting(machine(machine-null)), mts)) = machine->accepting(union-machine(mts)) .
-  eq union-machine((accepting(m), mts)) = accepting(machine(machine-union((m, topset->set(union-machine(mts)))))) .
-  eq union-machine((nonaccepting(m), mts)) = nonaccepting(machine(machine-union((m, topset->set(union-machine(mts)))))) [owise] .
+  eq union-machine((mtop(machine(machine-null), false), mts)) = union-machine(mts) . *** m0 is null machine
+  eq union-machine((mtop(machine(machine-null), U), mts)) = machine->valuation(union-machine(mts), U) .
+  eq union-machine((mtop(machine(machine-null), true), mts)) = machine->valuation(union-machine(mts), true) .
+  eq union-machine((mtop(m, t), mts)) = mtop(machine(machine-union((m, topset->set(union-machine(mts))))), t) [owise] .
 
-  eq complement-machine(accepting(m)) = nonaccepting(machine(machine-complement(m))) .
-  eq complement-machine(nonaccepting(m)) = accepting(machine(machine-complement(m))) .
+  eq complement-machine(mtop(m, t)) = mtop(machine(machine-complement(m)), not t) .
 
   op make-machine : MakeMachine -> MachineTop .
   eq make-machine(mk-star(mt)) = star-machine(mt) .
   eq make-machine(thunk(mt)) = mt .
 
-  eq seq-machine(accepting(machine(machine-null)), mkm1) = make-machine(mkm1) .
-  eq seq-machine(nonaccepting(machine(machine-null)), mkm1) = null-machine .
-  eq seq-machine(accepting(m), mkm1) =
-     union-machine((nonaccepting(machine(machine-seq(m, mkm1))), make-machine(mkm1))) .
-  eq seq-machine(nonaccepting(m), mkm1) = nonaccepting(machine(machine-seq(m, mkm1))) .
+  eq seq-machine(mtop(machine(machine-null), true), mkm1) = make-machine(mkm1) .
+  eq seq-machine(mtop(machine(machine-null), U), mkm1) = make-machine(mkm1) .
+  eq seq-machine(mtop(machine(machine-null), false), mkm1) = null-machine .
+  eq seq-machine(mtop(m, false), mkm1) = mtop(machine(machine-seq(m, mkm1)), false) .
+  eq seq-machine(mtop(m, t), mkm1) =
+     union-machine((mtop(machine(machine-seq(m, mkm1)), false), make-machine(mkm1))) [owise] .
 
-  eq star-machine(nonaccepting(machine(machine-null))) = null-machine .
-  eq star-machine(mt) = machine->accepting(seq-machine(machine->nonaccepting(mt), mk-star(mt))) .
+  eq star-machine(mtop(machine(machine-null), false)) = null-machine .
+  eq star-machine(mt) = machine->valuatiuon(seq-machine(machine->valuation(mt, false), mk-star(mt)), true) .
 
   op do-machine : Machine Pattern -> MachineTop .
-  eq step(accepting(m), pat) = do-machine(m, pat) .
-  eq step(nonaccepting(m), pat) = do-machine(m, pat) .
+  eq step(mtop(m, t), pat) = do-machine(m, pat) .
 
   op do-machines : Set{Machine} Pattern -> Set{MachineTop} .
   eq do-machines(empty, pat) = empty .
@@ -227,7 +218,7 @@ mod TConPMSM is
       if Must δ' := matchpat(pat, pat', δ) .
   ceq do-machine(bmachine(machine-match(pat), δ), pat') = null-machine
       if Never := matchpat(pat, pat', δ) .
-  ceq do-machine(bmachine(machine-match(pat), δ), pat') = union-machine((null-machine, epsilon-machine))
+  ceq do-machine(bmachine(machine-match(pat), δ), pat') = Upsilon-machine
       if May δ' := matchpat(pat, pat', δ) .
 
   *** ! A
@@ -235,14 +226,14 @@ mod TConPMSM is
       if Must δ' := nonmatchpat(pat, pat', δ) .
   ceq do-machine(bmachine(machine-nonmatch(pat), δ), pat') = null-machine
       if Never := nonmatchpat(pat, pat', δ) .
-  ceq do-machine(bmachine(machine-nonmatch(pat), δ), pat') = union-machine((null-machine, epsilon-machine))
+  ceq do-machine(bmachine(machine-nonmatch(pat), δ), pat') = Upsilon-machine
       if May δ' := nonmatchpat(pat, pat', δ) .
 
   *** Dependent sequencing
   ceq do-machine(bmachine(machine-dseq(pat, T), δ), pat') = null-machine
       if Never := matchpat(pat, pat', δ) .
-  ceq do-machine(bmachine(machine-dseq(pat, T), δ), pat') = TCon->Machine(T, δ')
+  ceq do-machine(bmachine(machine-dseq(pat, T), δ), pat') = TCon->Machine(T, δ', true)
       if Must δ' := matchpat(pat, pat', δ) .
-  ceq do-machine(bmachine(machine-dseq(pat, T), δ), pat') = union-machine((TCon->Machine(T, δ'), null-machine))
+  ceq do-machine(bmachine(machine-dseq(pat, T), δ), pat') = TCon->Machine(T, δ', U)
       if May δ' := matchpat(pat, pat', δ) .
 endm

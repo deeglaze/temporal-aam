@@ -437,12 +437,13 @@ It is easy enough to amend the structural contracts to reflect the fact that a b
    \denoteevent{\mevent}{\menv}{\mtimeline}
 \\
    \denotetcon{\stseq{\mtcon_0}{\mtcon_1}}{\mtimeline}{\menv} &=
+%   \prefixes(\denotetcon{\mtcon_0}{\mtimeline}{\menv}) \cup
    \setbuild{\mtrace_0 \cdot \mtrace_1}{\mtrace_0 \in \denotetcon{\mtcon_0}{\mtimeline}{\menv}, \mtrace_1 \in \denotetcon{\mtcon_1}{\mtimeline}{\menv}}
 \\
    \denotetcon{\stnot{\mtcon}}{\mtimeline}{\menv} &=
-    \setbuild{\mtrace}{\mtrace \in \Traces^\mtimeline, \\
-                      &\phantom{= \{ \mtrace : } \forall \mtrace' \in \denotetcon{\mtcon}{\mtimeline}{\menv}. \mtrace' \text{ is not a prefix of } \mtrace}
-%   \Traces^\mtimeline \setminus \denotetcon{\mtcon}{\mtimeline}{\menv} % DISCONTINUOUS!
+  %  \setbuild{\mtrace}{\mtrace \in \Traces^\mtimeline, \\
+  %                    &\phantom{= \{ \mtrace : } \forall \mtrace' \in \denotetcon{\mtcon}{\mtimeline}{\menv}. \mtrace' \text{ is not a prefix of } \mtrace}
+   \Traces^\mtimeline \setminus \denotetcon{\mtcon}{\mtimeline}{\menv} % DISCONTINUOUS!
 \\
    \denotetcon{\stOr{\mtcon_0}{\mtcon_1}}{\mtimeline}{\menv} &=
    \denotetcon{\mtcon_0}{\mtimeline}{\menv} \cup \denotetcon{\mtcon_1}{\mtimeline}{\menv}
@@ -468,7 +469,7 @@ It is easy enough to amend the structural contracts to reflect the fact that a b
             {\mtrace \in \denoteevent{\sretev{\mname}{\mval}}{\mtimeline}{\menv},
              \mtrace' \in \denotetcon{\mtcon}{\mtimeline}{\menv[\mvar' \mapsto \mval]}}
   \end{align*}
-  The denotation is (implicitly) composed with prefix closure at the top level to allow the progression of execution.
+  We use prefix closure to allow the progression of execution, but also cut out discontinuities.
   \begin{align*}
     \prefixes(\Pi) &= \setbuild{\mtrace}{\exists \mtrace' \in \Pi. \mtrace \text{ is a prefix of } \mtrace'}
   \end{align*}
@@ -513,7 +514,7 @@ Say we defined negation to be
 \begin{equation*}
   \denotetcon{\stnot{\mtcon}}{\mtimeline}{\menv} = \Traces^\mtimeline \setminus \denotetcon{\mtcon}{\mtimeline}{\menv}\text.
 \end{equation*}
-In this case, $\mevent\mevent' \in \denotetcon{\stnot{\mevent}}{\mtimeline}{\menv}$, and because of prefix closure, $\mevent \in \denotetcon{\stnot{\mevent}}{\mtimeline}{\menv}$!
+In this case, $\mevent\mevent' \in \prefixes(\denotetcon{\stnot{\mevent}}{\mtimeline}{\menv})$, and because of prefix closure, $\mevent \in \prefixes(\denotetcon{\stnot{\mevent}}{\mtimeline}{\menv})$!
 %
 Temporal contract monitors should blame the faulty party as soon as the contract has been violated, and thus any trace with a faulty prefix should be rejected.
 %%
@@ -523,7 +524,7 @@ Each temporal contract monitor redex evaluation creates a new timeline --- a new
 %
 Say $\mtimeline$ is the timeline for a contract $\mtcon$ on an expression $\mexp$.
 %
-We say $\mexp$ satisfies its temporal contract if its event trace filtered by the timeline ($\denote{\mexp}_\mtimeline$) is in the denotation of the temporal contract for that timeline ($\denotetcon{\mtcon}{\mtimeline}{\bot}$, where $\bot$ is an empty environment of temporal bindings).
+We say $\mexp$ satisfies its temporal contract if its event trace filtered by the timeline ($\denote{\mexp}_\mtimeline$) is in the denotation of the temporal contract for that timeline ($\prefixes(\denotetcon{\mtcon}{\mtimeline}{\bot})$, where $\bot$ is an empty environment of temporal bindings).
 %
 For this to be a contract system and not just a notion of correctness, however, we need some machinery to monitor the progression of the event trace and check to see that it meets our specification.
 %
@@ -1042,14 +1043,16 @@ Negation is still cumbersome to deal with, so we cope with them by converting te
 %
 \begin{figure}
   \begin{align*}
-    \nnf(\stnot{\stseq{\mtcon_0}{\mtcon_1}}) &=
+    \nnf(\stnot{(\stseq{\mtcon_0}{\mtcon_1})}) &=
       \stOr{\nnf(\stnot{\mtcon_0})}{\stseq{\nnf(\mtcon_0)}{\nnf(\stnot{\mtcon_1})}}
+% XXX Is this the right def?
+%      \stOr{(\stseq{\nnf(\stnot{\mtcon_0})}{\sddd})}{\stseq{\nnf(\mtcon_0)}{\nnf(\stnot{\mtcon_1})}}
 \\
-    \nnf(\stnot{\stnot{\mtcon}}) &= \nnf(\mtcon)
+    \nnf(\stnot{\stnot{\mtcon}}) &= \stseq{\nnf(\mtcon)}{\sddd}
 \\
-    \nnf(\stnot{\stOr{\mtcon_0}{\mtcon_1}}) &= \stAnd{\nnf(\stnot{\mtcon_0})}{\nnf(\stnot{\mtcon_1})}
+    \nnf(\stnot{(\stOr{\mtcon_0}{\mtcon_1})}) &= \stAnd{\nnf(\stnot{\mtcon_0})}{\nnf(\stnot{\mtcon_1})}
 \\
-    \nnf(\stnot{\stAnd{\mtcon_0}{\mtcon_1}}) &= \stOr{\nnf(\stnot{\mtcon_0})}{\nnf(\stnot{\mtcon_1})}
+    \nnf(\stnot{(\stAnd{\mtcon_0}{\mtcon_1})}) &= \stOr{\nnf(\stnot{\mtcon_0})}{\nnf(\stnot{\mtcon_1})}
 \\
     \nnf(\stnot{\mevent}) &= \stseq{\snonevent{\mevent}}{\sddd}
 \\
@@ -1057,10 +1060,10 @@ Negation is still cumbersome to deal with, so we cope with them by converting te
 \\
     \nnf(\stnot{\stmany{\mtcon}}) &= \nnf(\stnot{\mtcon})
 \\
-    \nnf(\stnot{\stcall{\mname}{\mvar}{\mtcon}}) &= \stOr{\stseq{\snonevent{\scallev{\mname}{\swc}}}{\sddd}}
+    \nnf(\stnot{\stcall{\mname}{\mvar}{\mtcon}}) &= \stOr{(\stseq{\snonevent{\scallev{\mname}{\swc}}}{\sddd})}
                                                          {\stcall{\mname}{\mvar}{\nnf(\stnot{\mtcon})}}
 \\
-    \nnf(\stnot{\stret{\mname}{\mvar}{\mtcon}}) &= \stOr{\stseq{\snonevent{\sretev{\mname}{\swc}}}{\sddd}}
+    \nnf(\stnot{\stret{\mname}{\mvar}{\mtcon}}) &= \stOr{(\stseq{\snonevent{\sretev{\mname}{\swc}}}{\sddd})}
                                                         {\stret{\mname}{\mvar}{\nnf(\stnot{\mtcon})}}
 \\
     \nnf(\stnot{\sddd}) &= \stfail
@@ -1075,10 +1078,75 @@ Negation is still cumbersome to deal with, so we cope with them by converting te
 \begin{theorem}
   $\denotetcon{\mtcon}{\mtimeline}{\menv} = \denotetcon{\nnf(\mtcon)}{\mtimeline}{\menv}$
 \end{theorem}
+\ifproof{
 \begin{proof}
   By induction on the $\nnf$'s recursion scheme.
+  \begin{byCases}
+    \case{\stnot{(\stseq{\mtcon_0}{\mtcon_1})}}{
+      By IH, it suffices to show
+$\forall \mtcon_0 \mtcon_1 \mtimeline \menv. \denotetcon{\stnot{(\stseq{\mtcon_0}{\mtcon_1})}}{\mtimeline}{\menv} = \denotetcon{\stOr{\stnot{\mtcon_0}}{\stseq{\mtcon_0}{\stnot{\mtcon_1}}}}{\mtimeline}{\menv}$
+($\Rightarrow$) Let $\mtrace \in \denotetcon{\stnot{(\stseq{\mtcon_0}{\mtcon_1})}}{\mtimeline}{\menv}$ be arbitrary.
+By cases on $\mtrace$ prefixed by some $\mtrace_p \in \denotetcon{\mtcon_0}{\mtimeline}{\menv}$:
+\begin{byCases}
+  \case{\exists \mtrace_r. \mtrace = \mtrace_p \cdot \mtrace_r}{
+   By cases on $\mtrace_r$ prefixed by a trace in $\denotetcon{\mtcon_1}{\mtimeline}{\menv}$:
+   \begin{byCases}
+     \case{\exists \mtrace' \in \denotetcon{\mtcon_1}{\mtimeline}{\menv}, \mtrace''. \mtrace_r = \mtrace'\cdot\mtrace''}{
+       Contradiction, since $\mtrace_p\cdot\mtrace' \in \denotetcon{\stseq{\mtcon_0}{\mtcon_1}}{\mtimeline}{\menv}$ is a prefix of $\mtrace$}
+     \case{\forall \mtrace' \in \denotetcon{\mtcon_1}{\mtimeline}{\menv}, \mtrace''. \mtrace_r \neq \mtrace'\cdot\mtrace''}{
+       It follows that $\mtrace_r \in \denotetcon{\stnot{\mtcon_1}}{\mtimeline}{\menv}$ and thus $\mtrace \in \denotetcon{\stseq{\mtcon_0}{\stnot{\mtcon_1}}}{\mtimeline}{\menv}$.
+     }\end{byCases}
+   }
+  \case{\forall \mtrace_p \in \denotetcon{\mtcon_0}{\mtimeline}{\menv}, \mtrace_r. \mtrace \neq \mtrace_p \cdot \mtrace_r}{This is another way to state $\mtrace \in \denotetcon{\stnot{\mtcon_0}}{\mtimeline}{\menv}$.}
+\end{byCases}
+($\Leftarrow$) Let $\mtrace \in \denotetcon{\stOr{\stnot{\mtcon_0}}{\stseq{\mtcon_0}{\stnot{\mtcon_1}}}}{\mtimeline}{\menv}$ be arbitrary.
+    Let $\mtrace' \in \denotetcon{\stseq{\mtcon_0}{\mtcon_1}}{\mtimeline}{\menv}$ be arbitrary.
+    If $\exists \mtrace_r. \mtrace = \mtrace' \cdot \mtrace_r$,
+    then since $\exists \mtrace_p\in \denotetcon{\mtcon_0}{\mtimeline}{\menv}, \mtrace_q\in \denotetcon{\mtcon_1}{\mtimeline}{\menv} . \mtrace' = \mtrace_p \cdot \mtrace_q$,
+    $\mtrace = \mtrace_p\cdot\mtrace_q\cdot\mtrace_r$, which is a contradiction.}
+%
+  \case{\stnot{\stnot{\mtcon}}}{
+    By IH, it suffices to show $\forall \mtcon, \mtimeline,\menv. \denotetcon{\stnot{\stnot{\mtcon}}}{\mtimeline}{\menv} = \denotetcon{\mtcon}{\mtimeline}{\menv}$.
+\\
+($\Rightarrow$) Let $\mtrace \in \denotetcon{\stnot{\stnot{\mtcon}}}{\mtimeline}{\menv}$ be arbitrary.
+We show $\exists \mtrace_p \in \denotetcon{\mtcon}{\mtimeline}{\menv}, \mtrace_r. \mtrace = \mtrace_p \cdot \mtrace_r$.
+Suppose not for contradiction.
+Thus $\forall \mtrace_p \in \denotetcon{\mtcon}{\mtimeline}{\menv}, \mtrace_r. \mtrace \neq \mtrace_p \cdot \mtrace_r$.
+This means, by definition, $\mtrace \in \denotetcon{\stnot{\mtcon}}{\mtimeline}{\menv}$.
+However, by case assumption $\forall \mtrace_p \in \denotetcon{\stnot{\mtcon}}{\mtimeline}{\menv}, \mtrace_r. \mtrace \neq \mtrace_p \cdot \mtrace_r$, so with $\mtrace_p = \mtrace, \mtrace_r = \epsilon$ we derive a contradiction.
+Therefore $\mtrace \in \denotetcon{\stseq{\mtcon}{\sddd}}{\mtimeline}{\menv}$.
+\\
+($\Leftarrow$) Let $\mtrace \in \denotetcon{\stseq{\mtcon}{\sddd}}{\mtimeline}{\menv}$ be arbitrary.
+By definition, $\exists \mtrace_p\in\denotetcon{\mtcon}{\mtimeline}{\menv},\mtrace_r.\mtrace = \mtrace_p \cdot \mtrace_r$.
+Let $\mtrace_n \in \denotetcon{\stnot{\mtcon}}{\mtimeline}{\menv}$ be arbitrary.
+We show $\mtrace_n$ is not a prefix of $\mtrace$.
+Suppose it were, for contradiction.
+Then, $\exists \mtrace_q. \mtrace = \mtrace_n \cdot\mtrace_q$.
+Since $\forall \mtrace_u \in \denotetcon{\mtrace}{\mtimeline}{\menv}$, $\mtrace_u$ is not a prefix of $\mtrace_n$
+    }
+%
+    \case{\stnot{(\stOr{\mtcon_0}{\mtcon_1})}}{...}
+%
+    \case{\stnot{(\stAnd{\mtcon_0}{\mtcon_1})}}{...}
+%
+    \case{\stnot{\mevent}}{...}
+%
+    \case{\stnot{\snonevent{\mevent}}}{...}
+%
+    \case{\stnot{\stmany{\mtcon}}}{...}
+%
+    \case{\stnot{\stcall{\mname}{\mvar}{\mtcon}}}{...}
+%
+    \case{\stnot{\stret{\mname}{\mvar}{\mtcon}}}{...}
+%
+    \case{\stnot{\sddd}}{...}
+%
+    \case{\stnot{\stfail}}{...}
+%
+    \otherwise{Structural cases follow by direct application of the induction hypothesis.}
+  \end{byCases}
 \end{proof}
-
+}
 The translation easily follows if we temporarily allow $\epsilon$ transitions that we later remove (that is, the $\Pattern$ component of $\delta$ may also be an $\epsilon$).
 %
 To remove $\epsilon$ transitions, we elaborate the transition relation in the following way:
@@ -1227,29 +1295,33 @@ However, we're a bit more proactive than that and rule out patterns that outrigh
 %
 The definition is a bit tedious and obvious, so we leave it informally specified for space.
 
-\begin{lemma}[Soundness]
+\begin{theorem}[Soundness]
   If $\mtrace \in \denotetcon{\mtcon}{\mtimeline}{\menv}$ then $\exists \pmsmqq, \menv', t$.
 %
-  $\pmsmstate{\pmsmqcur, \menv, \top} \multistepd{\mtrace}{\delta} \pmsmstate{\pmsmqq, \menv', t}$ is a well-formed trace (the function positions of matched events are all on $\mtimeline$) and $\top \sqsubseteq t$
+  $\pmsmstate{\pmsmqcur, \menv, \top} \multistepd{\mtrace}{\delta} \pmsmstate{\pmsmqq, \menv', t}$ is a well-formed trace (the function positions of matched events are all on $\mtimeline$)
 %
   where $(\delta, \pmsmqlast, k') = \epshelp^\mtimeline(\mtcon, \pmsmqcur, k)$
-\end{lemma}
+\end{theorem}
 \begin{proof}
   By induction on $\mtcon$ and then $\mtrace$.
 \end{proof}
 %
-\begin{lemma}[Partial completeness]
+\begin{theorem}[Concrete completeness]
   If $\exists \pmsmqq, \menv'$.
 %
   $\pmsmstate{\pmsmqcur, \menv, \top} \multistepd{\mtrace}{\delta} \pmsmstate{\pmsmqq, \menv', \top}$ is a well-formed trace,
-  then $\mtrace \in \denotetcon{\mtcon}{\mtimeline}{\menv}$
+  then $\mtrace \in \denotetcon{\mtcon}{\mtimeline}{\menv}$.
+  If $\pmsmstate{\pmsmqcur, \menv, \top} \multistepd{\mtrace}{\delta} \stfail$ is a well-formed trace, then $\mtrace \notin \denotetcon{\mtcon}{\mtimeline}{\menv}$
 %
   where $(\delta, \pmsmqlast, k') = \epshelp^\mtimeline(\mtcon, \pmsmqcur, k)$
-\end{lemma}
+\end{theorem}
 \begin{proof}
   By induction on $\mtcon$ and then $\mtrace$.
 \end{proof}
 %
+When $\simeq$ never has uncertainty, such as in the concrete semantics, this machine accepts only traces that are in the denotation of the contract it was compiled from.
+%
+This theorem ensures us our monitoring system is correct (provided the semantics only provides well-formed traces, which it does).
 
 The reduction semantics (\autoref{sec:reduction}) uses this monitor construction via the following metafunctions:
 \begin{align*}

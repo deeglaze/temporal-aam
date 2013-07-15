@@ -1,6 +1,9 @@
 \input{common}
 \usepackage{textcomp,wasysym}
 \usepackage{amsmath,stmaryrd}
+\usepackage{pfsteps}
+% Switches for verbosity
+\newcommand*{\ifproof}[1]{#1}
 
 % Metavariables
 \newcommand*{\matchstate}{\mu}
@@ -80,6 +83,7 @@
 \newcommand*{\weakif}{\mathit{weak\text{-}if}}
 \newcommand*{\nnf}{{\mathcal N}}
 \newcommand*{\prefixes}{\mathit{prefixes}}
+\newcommand*{\smooth}{\mathit{smooth}}
 
 \newcommand*{\wf}{\mathit{wf}}
 
@@ -155,6 +159,7 @@
 \newcommand*{\sarr}[3]{#1 : #2 \mapsto #3}
 \newcommand*{\sflat}[1]{{\tt flat}(#1)}
 
+\newcommand*{\doneev}{{\tt End}}
 \newcommand*{\scallev}[2]{{\tt call}(#1,\, #2)}
 \newcommand*{\sretev}[2]{{\tt ret}(#1,\, #2)}
 \newcommand*{\swrapev}[2]{{\tt wrap}(#1,\, #2)}
@@ -172,6 +177,7 @@
 
 \newcommand*{\denote}[1]{[\![ #1 ]\!]}
 \newcommand*{\denotetcon}[3]{[\![ #1 ]\!]^{#2}_{#3}}
+\newcommand*{\denotetconfull}[3]{[\![\![ #1 ]\!]\!]^{#2}_{#3}}
 \newcommand*{\denoteevent}[3]{\llparenthesis #1 \rrparenthesis_{#2}^{#3}}
 \newcommand*{\denotevpat}[2]{\llparenthesis #1 \rrparenthesis_{#2}}
 \newcommand*{\aptopcall}[2]{{\tt call}^{\toplevel}(#1,\,#2)}
@@ -218,6 +224,8 @@
 
 \newcommand{\mfail}{\mathbf{fail}}
 \newcommand{\smatch}[2]{{#1}_{#2}}
+
+\newcommand{\prefixof}[2]{#1 \text{ is a prefix of } #2}
 
 % Spaces
 \newcommand*{\Prog}{\mathit{Program}}
