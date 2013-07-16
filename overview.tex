@@ -1,0 +1,284 @@
+\begin{figure}
+  \begin{align*}
+    \mscon \in \SContract &::= \sflat{\mexp} \alt \sarr{\mmlab}{\mscon}{\mscon} \alt \sconsc{\mscon}{\mscon}
+\\
+    \mexp \in \Expr &::= \sTMon{\mmlab_u}{\mmlab_c}{\mmlab_o}{\mscon}{\mtcon}{\mexp}
+                    \alt \sSMon{\mmlab_u}{\mmlab_c}{\mmlab_o}{\mtimeline}{\mscon}{\mexp}
+                    \alt \ldots
+\\
+\mmlab \in \Label&\text{ an infinite set}
+  \end{align*}
+  \caption{Syntax of structural contracts with labels}
+  \label{fig:scontract-syntax}
+\end{figure}
+
+\begin{figure}
+  \begin{align*}
+ \mtcon \in \TContract &::=
+      \mevent \alt \snonevent{\mevent}
+ \alt \stseq{\mtcon}{\mtcon}
+ \alt \stnot{\mtcon}
+ \alt \stOr{\mtcon}{\mtcon}
+ \alt \stAnd{\mtcon}{\mtcon}
+ \alt \stmany{\mtcon} \\
+&\alt \sddd \alt \stfail
+ \alt \stcall{\mname}{\mvar}{\mtcon}
+ \alt \stret{\mname}{\mvar}{\mtcon}
+\\
+\mevent \in \Event &::= \scallev{\mname}{\mvpat} \alt \sretev{\mname}{\mvpat} \\
+\mvpat \in \VPat &::= \mconstant \alt \mname \alt \swc \\
+\mvar \in \Var &\quad\text{an infinite set} \\
+\mname \in \Name &::= \mvar \alt \mtoplevelname
+  \end{align*}
+  \caption{Syntax of temporal contracts}
+  \label{fig:tcontract-syntax}
+\end{figure}
+
+Temporal contracts provide a declarative language for monitoring the temporal ordering of events that pass through module boundaries.
+%
+We analyze a slightly different presentation than ~\citeauthor{ianjohnson:dfm:icfp2011}'s temporal contracts that allows more precise specification of value use.
+%
+The syntax is presented in \autoref{fig:tcontract-syntax}.
+%%
+
+%%
+Temporal contracts ($\mtcon$) include events ($\mevent$) (for $\mevent$ction), negated events ($\snonevent{\mevent}$), concatenation ($\stseq{\mtcon}{\mtcon}$) (often represented using juxtaposition), negated contracts ($\stnot{\mtcon}$), Kleene closure of events ($\stmany{\mtcon}$), union ($\stOr{\mtcon}{\mtcon}$), intersection ($\stAnd{\mtcon}{\mtcon}$), the universal temporal contract ($\sddd$), the empty temporal contract ($\stfail$), and higher-order binding events ($\stcall{\mname}{\mvar}$ and $\stret{\mname}{\mvar}$).
+%
+The difference between $\snonevent{\mevent}$ and $\stnot{\mtcon}$ is that the first must be an event and force time to step forward once, whereas the second may match arbitrarily many events.
+%%
+
+%%
+Events themselves are expressed as patterns denoting calls ($\scallev{\mname}{\mvpat}$) or returns ($\sretev{\mname}{\mvpat}$), with respect to a particular function $\mname$ and with its argument or result matching a pattern $\mvpat$.
+%
+If $\mname$ is a label ($\mtoplevelname$), we simply check that the monitor wrapping the function has the same label (attached via the structural contract).
+%
+However, if $\mname$ is a variable ($\mvar$), then we consult a binding environment that the monitoring system builds as we pass binding events to determine if the function is exactly equal to the value bound.
+%
+Our distinction between variables (bound by temporal contract) and labels (bound by structural contract) is one aspect of what separates our semantics from \citeauthor{ianjohnson:dfm:icfp2011}'s.
+%
+Patterns can match constants ($\mconstant$), bound variables ($\mvar$), labeled functions ($\mtoplevelname$), or simply anything ($\swc$).
+%%
+
+%%
+\citeauthor{ianjohnson:dfm:icfp2011}'s semantics for referring to functions is problematic; we give a slightly different account that captures the spirit of their prose describing their system, and indeed mirrors their actual implementation.
+%
+Consider one of their motivating examples (recalled---using our syntax and semantics---and discussed in \autoref{sec:sort}), which was to protect the comparator passed to a sort function from escaping the scope of the call.
+%
+What this should mean is the particular binding introduced by a call to $sort$ cannot be called after $sort$ returns, \ie, each constructed monitor around given comparators should not be called after $sort$ returns.
+%
+However, the flat use of \emph{labels} instead of \emph{bindings} would cause a second call to a supposedly-correct $sort$ to fail, since it internally calls the comparator of the same label, but of a different monitor construction.
+%
+\citeauthor{ianjohnson:dfm:icfp2011}'s implementation also includes call/return matching via a different binding at the call site to eventually use in the matching return.
+%
+We leave call/return matching to future work, as it is not necessary to verify the motivating examples.
+%%
+
+%%
+\subsection{Sort example} \label{sec:sort}
+
+\renewcommand*{\arraystretch}{1.2}
+\newcommand*{\call}[1]{\scallev{#1}{\_}}
+\newcommand*{\ret}[1]{\sretev{#1}{\_}}
+\begin{align*}
+ &\begin{array}{ l @{\quad}l@{\ } c @{\ }l }
+ SortContract =
+ &sort &:   &(cmp\ :\ Pos\ \to Pos\ \to\ Bool) \\
+ &     &    &(List\ Pos) \\
+ &     &\to &(List\ Pos) \\
+ \end{array}
+ \\
+ &~\begin{array}{ @{~}r@{} l @{}l }
+  \text{where}\quad
+  &\stnot{(&\sddd~ \call{sort}~ \stmany{\snonevent{\ret{sort}}}~ \call{sort}~ \sddd)} \\
+  \cap\quad
+  &\stnot{(&\sddd~ \scallev{sort}{?cmp}~ \sddd~ \\
+  &&\ret{sort} \sddd~ \call{cmp}~ \sddd)}
+ \end{array}
+ %\caption{Sort example}
+ %\label{fig:sort}
+\end{align*}
+
+%%
+This example gives contract for a hypothetical $sort$ function which takes two arguments: a comparator and a list (of positive numbers).
+%
+The notation ``$\mathit{name}\ :\ Domain\ \to\ Range$'' describes a function contract where the argument satisfies the $Domain$ contract and the result satisfies the $Range$ contract.
+%
+The ``$\mathit{name}\ :$'' prefix denotes the name of the function, for use in the temporal aspect of the contract.
+%%
+
+%%
+$SortContract$ is also has a temporal component, given by the ``where'' clauses following its structural (function) contract.
+%
+The first of these clauses states that a second call to $sort$ may not occur (hence the negation of the trace) if there is no intervening return from $sort$ ($\stmany{\snonevent{\ret{sort}}}$).
+%
+This is specifying a particular safety property (as evidenced by the negation of the trace): $sort$ is supposed to be \emph{non-reentrant}.
+%
+The second temporal clause specifies a higher-order property; it states that, given a call to $sort$, its associated $cmp$ argument cannot be called after $sort$ returns.
+%%
+
+%%
+Note also that the negated clauses of the temporal contract are prefixed and suffixed by ``$\sddd$''.
+%TODO: Provide decent and intuitive explanation that doesn't require any forward-reference
+%%
+
+%%
+\subsection{File example} \label{sec:file}
+
+\begin{align*}
+ &FileSystemContract\, =\, open\, :\, String\, \to\, FileContract \\
+ &FileContract =~ Record \\
+ &\begin{array}{ @{\quad~}l@{\ :} @{~}l@{\ \to\ } l }
+  read & Unit & String \\
+  write & String & Unit \\
+  close & Unit & Unit
+ \end{array} \\
+ &\text{where}\quad \sddd~ \ret{close}
+ %\caption{File example}
+ %\label{fig:file}
+\end{align*}
+
+%%
+This example gives the contract for a hypothetical file system, which can be used to open files by giving the $open$ function a filename (a $String$); the client is then given a file handle contracted by $FileContract$.
+%
+A file handle, in turn, is a record of functions which interact with the file: $read$, $write$, and $close$, all which perform the expected behaviors.
+%%
+
+%%
+The temporal contract is interesting: it is not phrased in terms of a negation, but rather an affirmation.
+%
+Its goal is to state that a user of the file is forbidden from making use of the file handle (through the use of its component functions) after the user has $close$d the file.
+%
+It is phrased such that there is no ``$\sddd$'' at the end of its trace; thus this means that the last reference one can make to such a monitored record is returning from $close$; after that, it cannot be used.
+%
+%TODO: Do we need to define prefix-closure?
+Note that this is not a \emph{liveness property}; this does not mean that a return from $close$ \emph{must} happen, as traces are \emph{prefix-closed}.
+%
+Instead, the property is a \emph{safety property}, though expressed in the affirmative.
+%%
+
+%%
+\subsection{TCP example} \label{sec:tcp}
+
+\newcommand*{\tcpc}{\mathit{TCPConnection}}
+\newcommand*{\tcpcc}{\mathit{TCPConnectionContract}}
+\newcommand*{\tcpsock}{\mathit{TCPSocket}}
+\newcommand*{\tcpsendc}{\mathit{TCPSendContract}}
+\newcommand*{\tcprecvc}{\mathit{TCPRecvContract}}
+\newcommand*{\tcpdata}{\mathit{TCPData}}
+\newcommand*{\tcpstyle}[1]{\texttt{#1}}
+\FloatBarrier
+\begin{figure}
+ \newcommand*{\send}[1]{\scallev{send}{#1}}
+ \newcommand*{\rcv}[1]{\sretev{recv}{#1}}
+ \newcommand*{\notclose}{\snonevent{\call{close}}}
+ \newcommand*{\tcpsyn}{\tcpstyle{SYN}}
+ \newcommand*{\tcpack}{\tcpstyle{ACK}}
+ \newcommand*{\tcpsynack}{\tcpstyle{SYN\&ACK}}
+ \newcommand*{\tcpfin}{\tcpstyle{FIN}}
+ %\newcommand*{\tcpfinack}{\tcpstyle{FIN\&ACK}}
+ $\tcpcc\, =~ Record$ \\
+ $\begin{array}{ @{\quad~}l@{\ :} @{~}l @{\ \to\ }l }
+  open & \tcpsock & \tcpsendc \\
+  listen & \tcpsock & \tcprecvc
+ \end{array}$ \\
+ $\tcpdata =$
+ $~ \tcpsyn \mid \tcpack \mid \tcpsynack \mid \tcpfin \mid \tcpstyle{Data}(\_)$
+
+ $\tcpc =~ Record$ \\
+ $\begin{array}{ @{\quad~}l@{\ :} @{~}l@{\ \to\ } l }
+  send & \tcpdata & Unit \\
+  recv & Unit & \tcpdata \\
+  timeout & Duration & Unit \\
+  close & Unit & Unit
+ \end{array}$ \\
+
+ $\tcpsendc =~ \tcpc$ \\
+ $\begin{array}{ @{~}r@{\quad} l @{}l }
+  \text{where}
+  &&\send{\tcpsyn}~ \notclose \\
+  &&\rcv{\tcpsynack}~ \notclose \\
+  &&\send{\tcpack}~ \stmany{\notclose} \\
+
+  &&\cup
+  \begin{aligned}
+   &\left(
+    \begin{aligned}
+     &\rcv{\tcpfin}~ \send{\tcpack} \\
+     &\send{\tcpfin}~ \rcv{\tcpack}
+    \end{aligned}
+   \right) \\
+   &\left(
+    \begin{aligned}
+     &\call{close}~ \send{\tcpfin} \\
+     &\rcv{\tcpack}~ \rcv{\tcpfin}~ \send{\tcpack}
+    \end{aligned}
+   \right)
+  \end{aligned} \\
+  &&\ret{timeout}~ \ret{close}
+ \end{array}$
+
+ $\tcprecvc =~ \tcpc$ \\
+ $\begin{array}{ @{~}r@{\quad} l @{}l @{}l }
+  \text{where}
+  &&\rcv{\tcpsyn}~ \notclose \\
+  &&\send{\tcpsynack}~ \notclose \\
+  &&\rcv{\tcpack}~ \stmany{\notclose} \\
+
+  &&\cup
+  \begin{aligned}
+   &\left(
+    \begin{aligned}
+     &\call{close}~ \send{\tcpfin} \\
+     &\rcv{\tcpack}~ \rcv{\tcpfin}~ \send{\tcpack}
+    \end{aligned}
+   \right) \\
+   &\left(
+    \begin{aligned}
+     &\rcv{\tcpfin}~ \send{\tcpack} \\
+     &\call{close}~ \send{\tcpfin}~ \rcv{\tcpack}
+    \end{aligned}
+   \right)
+  \end{aligned} \\
+  &&\ret{timeout}~ \ret{close}
+ \end{array}$
+
+ \caption{TCP example}
+ \label{fig:tcp}
+\end{figure}
+
+% TODO: Source this from WP
+\begin{figure}
+ \centering
+ \fontsize{4}{5} \selectfont
+ \def \svgwidth{\columnwidth}
+ \input{tcp-fsm.pdf_tex}
+ \caption{Simplified TCP FSM for \autoref{fig:tcp}}
+ \label{fig:tcp-fsm}
+\end{figure}
+
+%%
+In \autoref{fig:tcp} we show the contract for a hypothetical TCP connection module.
+%
+A client of this module may $open$ a $\tcpsock$ for initiating a connection or may $listen$ to a $\tcpsock$ for passively connecting.
+%
+A $\tcpc$ is defined similarly to our file system example: it is a record of functions which interact with the connection: $send$, $recv$, $timeout$, and $close$.
+%
+Notably, $send$ and $recv$ interact with data in the form of $\tcpdata$, which can be one of the special packets used in the TCP protocol or can simply be some amount of user data ($\tcpstyle{Data}(\_)$).
+%
+%TODO: maybe express timing out in a better manner?
+The $timeout$ function is simply internally used by the module to set timeouts for interactions with the other end of the TCP connection; clients do not directly use it and it is included solely for the ability to reason over timeouts in the temporal contract.
+%%
+
+%%
+A socket on the ``sending'' end of the TCP connection (having used $open$) is obligated to use the connection according to the temporal component of $\tcpsendc$.
+%
+Likewise, a socket on the ``receiving'' end of the TCP connection (having used $listen$) is constrained by $\tcprecvc$.
+%
+The contracts are very involved, but they implement a simplified version of the TCP connection lifecycle given in \autoref{fig:tcp-fsm}.
+%
+Note that the temporal clause in each contract is phrased in the affirmative, as in \autoref{sec:file}; however, unlike that example, this property is indeed a (restricted) kind of \emph{liveness property}.
+%
+It states that the client uses the socket in a manner consistent with the TCP protocol and can expect the other end to as well.
+%
+The key difference between this property and a traditional liveness property is that it speaks of a liveness property with respect to \emph{a particular contract-monitoring} of a $\tcpc$; prefix-closure is still present at the top level (cf. \autoref{fig:tcontract-denotation}) and thus the protocol noted in the temporal contract may not occur if no $\tcpc$ is used.
+%%
