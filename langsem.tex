@@ -312,6 +312,7 @@ $\begin{array}{@{}l @{\ }c@{\ } l@{} r}
 &\machstep&
 \sblame{k}{j}
 \name{blame}
+
 \end{array}$
 \caption{Reduction rules}
 \label{fig:reduction}
@@ -384,4 +385,13 @@ This formulation guarantees that a return event is produced \emph{before} the re
 After this reduction step, the evaluation context's owner becomes that of the original caller again (in line with the return).
 %
 Note also that the returning context takes ownership of the returned value as well.
+%
+
+%
+\paragraph{Complete Monitoring}
+Our dynamic semantics preserves complete monitoring given the introduction of temporal contracts.
+%
+This is guaranteed via our extension of the use of the single-ownership principle to our use of temporal contracts.
+%
+We are also mindful of the change of context ownership, given that we consider temporally-tracked functions to be modules and thus temporally-sensitive calls and returns become module boundaries that must be correctly monitored.
 %
