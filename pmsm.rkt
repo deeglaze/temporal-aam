@@ -51,7 +51,8 @@
 (define Tcon0 (¬ (cons (call Any Any) ρ₀)))
 (define Tcon1 (¬ (· (cons (call Any Any) ρ₀) (cons (kl Any) ρ₀))))
 (define Tcon2 (¬ (cons (call Any 0) ρ₀)))
-(define Tcon3 (· (cons (kl Any) ρ₀) (· (cons (call values Any) ρ₀) (cons (call values 0) ρ₀))))
+(define Tcon3 (· (cons (kl (!ev (call values Any))) ρ₀)
+                 (· (cons (call values Any) ρ₀) (cons (call values 0) ρ₀))))
 (define Tcon4 (¬ (¬ Tcon3)))
 (define π0 (list (call values 0)))
 (define π1 (list (call values 1)))
@@ -112,6 +113,7 @@
       (if (pred T)
           (recur (extract T) a)
           (set-add a T)))))
+;(trace flat-collect);
 (define (∪simpl Ts)
   (define Ts′ (flat-collect ∪? ∪-Ts Ts))
   (cond [(set-empty? Ts′) #f]
@@ -395,7 +397,7 @@
                     (match (∂1 T₁)
                       [#f (tl (·simpl T₀′ T₁) t′)]
                       ;; Both derivatives matched.
-                      [(tl T₁′ t″) (tl (∪ (set (·simpl T₀′ T₁) T₁′)) (∨ t′ t″))])]
+                      [(tl T₁′ t″) (tl (∪simpl (set (·simpl T₀′ T₁) T₁′)) (∨ t′ t″))])]
                    [v (error '∂ "Oops0 ~a" v)])
                  (match (∂1 T₀)
                    [#f #f]
@@ -439,7 +441,7 @@
                      [v (error '∂ "Oops5 ~a" v)])))
                (if (set-empty? Ts′)
                    #f
-                   (tl (∪ Ts′) t′)))]
+                   (tl (∪simpl Ts′) t′)))]
 
             ;; Match all
             [(∩ Ts)
