@@ -51,10 +51,19 @@
 (define Tcon0 (¬ (cons (call Any Any) ρ₀)))
 (define Tcon1 (¬ (· (cons (call Any Any) ρ₀) (cons (kl Any) ρ₀))))
 (define Tcon2 (¬ (cons (call Any 0) ρ₀)))
+(define Tcon3 (· (cons (kl Any) ρ₀) (· (cons (call values Any) ρ₀) (cons (call values 0) ρ₀))))
+(define Tcon4 (¬ (¬ Tcon3)))
 (define π0 (list (call values 0)))
 (define π1 (list (call values 1)))
+(define π2 (list (call add1 0) (call values 1)))
+(define π3 (append π2 (list (call values 0))))
+(define π4 (append π2 (list (call values 1))))
+;; Expect all the following combinations to be satisfied.
+;; 2,1 2,3 2,4
+;; 3,0 3,1 3,2 3,3
+;; 4,0 4,1 4,2
 
-;; Ternary logic
+;; 3-valued logic
 (struct -must ()) (define must (-must))
 (struct -may ()) (define may (-may))
 
@@ -92,20 +101,30 @@
   [((== ε eq?) T₁) T₁]
   [(T₀ (== ε eq?)) T₀]
   ;; Right-associate
-  [((· T₀₀ T₀₁) T₁) (· T₀₀ (·simpl T₀₁ T₁))]
+  [((· T₀₀ T₀₁) T₁) (·simpl T₀₀ (·simpl T₀₁ T₁))]
   ;; No simplifications
   [(T₀ T₁) (· T₀ T₁)])
 
+;; Flatten ∪s and ∪s into one big ∪ or ∩.
+(define (flat-collect pred extract Ts)
+  (let recur ([Ts Ts] [a ∅])
+    (for/fold ([a a]) ([T (in-set Ts)])
+      (if (pred T)
+          (recur (extract T) a)
+          (set-add a T)))))
 (define (∪simpl Ts)
-  (cond [(set-empty? Ts) #f]
-        [(= (set-count Ts) 1) (set-first Ts)]
-        [else (∪ Ts)]))
+  (define Ts′ (flat-collect ∪? ∪-Ts Ts))
+  (cond [(set-empty? Ts′) #f]
+        [(= (set-count Ts′) 1) (set-first Ts′)]
+        [else (∪ Ts′)]))
 
 (define (∩simpl Ts)
-  (cond [(set-empty? Ts) Σ̂*]
-        [(= (set-count Ts) 1) (set-first Ts)]
-        [else (∩ Ts)]))
+  (define Ts′ (flat-collect ∩? ∩-Ts Ts))
+  (cond [(set-empty? Ts′) Σ̂*]
+        [(= (set-count Ts′) 1) (set-first Ts′)]
+        [else (∩ Ts′)]))
 
+;; Combine bindings giving preference to the right hash.
 (define (◃ ρ₀ ρ₁)
   (for/fold ([ρ ρ₀]) ([(k v) (in-hash ρ₁)])
     (hash-set ρ k v)))
@@ -161,13 +180,14 @@
 
 (define/match (C T)
   [((== ε eq?)) (set Any)]
-  [((== Any eq?)) (set Any #f)]
+  [((or (== Any eq?) #f)) (set Any #f)]
   [((!ev A))
-   (if (eq? A Any)
-       (set Any #f)
-       (set A (!constructed (constructed-c A) (constructed-data A))))]
-  [((constructed kind pats))
-   (set T (!constructed kind pats))]
+   (match A
+     [(== Any eq?) (set Any #f)]
+     [(or (constructed kind data) (!constructed kind data))
+      (set (constructed kind data) (!constructed kind data))])]
+  [((or (constructed kind pats) (!constructed kind pats)))
+   (set (constructed kind pats) (!constructed kind pats))]
   [((or (∪ Ts) (∩ Ts))) (C⋀ Ts)]
   [((or (kl T) (¬ T))) (C T)]
   [((· T₀ T₁))
@@ -259,9 +279,9 @@
 (define (evt-overlap A A′)
   (not (not (evt-intersect A A′))))
 
-(define (C∧ r s)
-  (match (evt-intersect (C r) (C s))
-    [#f #f]
+(define (C∧ Sr Ss)
+  (match (evt-intersect Sr Ss)
+    [#f ∅]
     [(mres t As) As]))
 
 ;; Reduce C∧ over a set.
@@ -307,7 +327,7 @@
   (for/fold ([S ∅]) ([state (in-set states)])
     (match state
       [(State q γ _)
-       (define transitions (hash-ref δ q ∅))
+       (define transitions (hash-ref δ q #hash()))
        (for*/fold ([S S])
            ([(pat nexts) (in-hash transitions)]
             [res (in-value (matches pat input γ))]
@@ -384,14 +404,14 @@
 
             ;; Negation differs because it waits until we have a /full/ match.
             ;; Thus, we do a nullability check to see if it is satisfied.
-            ;; If a may state, we stay may.
+            ;; If a may state, we stay may only if the contract is nullable.
             [(¬ T)
              (match (∂1 T)
                [#f Σ*]
                [(tl T′ (== must eq?))
                 (and (not (ν? T′))
                      (tl (negate T′) must))]
-               [(tl T′ t′) (tl (negate T′) t′)]
+               [(tl T′ t′) (tl (negate T′) t′)] ;; FIXME: Need a may fail (#f)
                [v (error '∂ "Oops2 ~a" v)])]
 
             [(cons (kl T′) ρ)
@@ -463,17 +483,21 @@
               (match (∂̂1 T₀)
                 [#f #f]
                 [T′ (·simpl T′ T₁)]))]
+         
          [(¬ T)
           (match (∂̂1 T)
             [#f Σ̂*]
             [T′ (and (not (ν? T′)) (negate T′))])]
+         
          [(kl T′)
           (match (∂̂1 T′)
             [#f #f]
             [T″ (·simpl T″ T)])]
+         
          ;; dseq
          [(bind B T)
           (and (evt-overlap B A) T)]
+         
          ;; Match some
          [(∪ Ts)
           (let/ec break
@@ -484,6 +508,7 @@
                   [#f Ts′] ;; shortcut
                   [T′ (set-add Ts′ T′)])))
             (∪simpl Ts′))]
+
          ;; Match all
          [(∩ Ts)
           (let/ec break
@@ -494,9 +519,12 @@
                   [(== Σ̂* eq?) Ts′] ;; shortcut
                   [T′ (set-add Ts′ T′)])))
             (∩simpl Ts′))]
+
          ;; Was done, now too many.
          [(== ε eq?) #f]
+
          [(cons T ρ) (∂̂1 T)] ;; Kill bindings
+
          ;; Event/unevent
          [Aor!A (and (evt-overlap Aor!A A)
                      ε)])]
@@ -522,6 +550,7 @@
           [else
            (define Q′ (set-add Q qc))
            (explore Q′ δ′ qc)])]
+        ;; No match ⇒ no transition
         [else (values Q δ)]))
      inner)
 
@@ -529,6 +558,7 @@
      (define f (goto q))
      (for/fold ([Q Q] [δ δ]) ([A (in-set (C q))])
        (f A Q δ)))
+;;   (trace explore goto)
 
    (define (mkPMSM T)
      (define q₀
@@ -553,12 +583,18 @@
 (define-values/invoke-unit/infer (export TCon-deriv^) (link concrete@ TCon-deriv@))
 
 (printf "Big test~%")
-(for*/list ([T (in-list (list Tcon0 Tcon1 Tcon2
-                         ))]
-            [TM (in-value (mkPMSM T))]
-            [π (in-list (list π0 π1))])
-  (cons (run (tl T must) π)
-        (step* TM (set (PMSM-q₀ TM)) π)))
+(reverse
+ (for/fold ([acc '()])
+     ([T (in-list (list Tcon0 Tcon1 Tcon2 Tcon3 Tcon4))]
+      [Ti (in-naturals)])
+   (define TM (mkPMSM T))
+   (for/fold ([acc acc]) ([π (in-list (list π0 π1 π2 π3 π4))]
+                          [πi (in-naturals)])
+     (cons 
+      (list (format "~a,~a" Ti πi)
+            (run (tl T must) π)
+            (step* TM (set (PMSM-q₀ TM)) π))
+      acc))))
 
 
 #|
