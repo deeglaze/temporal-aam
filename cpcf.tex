@@ -1,3 +1,4 @@
+%FIXME: Still from LTL days...
 \section{Introduction}
 
 Software systems are typically large, consist of many modules, and have invariants that are typically inexpressible or too costly to express (and prove) in the language's static type system, if it has one.
@@ -55,6 +56,7 @@ Our contributions in this paper are as follows:
 %%
 
 %%
+%FIXME: Still from LTL days...
 \section{Related Work}
 %%
 
@@ -142,7 +144,13 @@ The important aspect of the abstraction process is not this transformation, but 
 %
 Therefore, the only aspects of PMSMs that we need to tamper with are allowing binding to sets of values, and the notion of equality, to weaken it to be conservative with our abstractions.
 %
-In our semantics with just closures, conses, booleans and integers, we consider syntactically equal closures and conses to be \emph{maybe} equal, equal booleans and integers to be \emph{must} equal, integer comparisons with the abstract $\mathbf{Int}$ element to be \emph{maybe} equal (assuming a simple flat abstraction of the integers) and all other possibilities \emph{never} equal.
+In our semantics with just closures, conses, booleans and integers, we consider:
+\begin{itemize}
+ \item syntactically equal closures and conses to be ``\emph{maybe}-equal'';
+ \item equal booleans and integers to be ``\emph{must}-equal'';
+ \item integer comparisons with the abstract $\mathbf{Int}$ element to be ``\emph{maybe}-equal'' (assuming a simple flat abstraction of the integers);
+ \item and all other possibilities to be ``\emph{never}-equal''.
+\end{itemize}
 %
 This notion of equality lifts over sets of values in the obvious way.
 %
