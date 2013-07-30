@@ -20,6 +20,7 @@
 (define (ð? x)
   (match x
     [(or (cons (? ∂?) (? hash?))
+         (? ∂?)
          (¬ (? ð?))
          (· (? ð?) (? ð?))
          (kl (? ð?))
@@ -412,7 +413,21 @@
        (if (set-empty? Ts′)
            Σ*
            (form (∩ Ts′) t′))))
+
+   (define (bindp B A T ρ)
+     (match (matches B A ρ)
+       [(== M⊥ eq?) M⊥]
+       [(mres t′ ρ′) (tl (cons T ρ′) t′)]
+       [M (error '∂ "oops10 ~a" M)]))
    
+   (define (patp pat A ρ)
+     (match (matches pat A ρ)
+       [(== M⊥ eq?) M⊥]
+       [(mres t ρ′) (tl ε t)]
+       [M (error '∂ "oops11 ~a" M)]))
+   
+   (define ρ₀ #hasheq())
+
    ;; Top level temporal contracts with distributed ρs.
    (define (ð A T)
      (define (ð1 T) (ð A T))
@@ -425,7 +440,10 @@
        [(kl T′) (klp ð1 tl T′ T)]
        [(∪ Ts) (∪p ð1 tl Ts)]
        [(∩ Ts) (∩p ð1 tl Ts)]
-       [T (error 'ð "Bad top-level Tcon ~a" T)]))
+       ;; Top level! Can't have previous bindings. T can't have closures.
+       [(bind B T) (bindp B A T ρ₀)]
+       [Aor!A (patp Aor!A A ρ₀)]))
+
 
    (define (∂ A T ρ)
      (define (∂1 T) (∂ A T ρ))
@@ -439,21 +457,53 @@
        [(∪ Ts) (∪p ∂1 tlρ Ts)]
        [(∩ Ts) (∩p ∂1 tlρ Ts)]
        ;; dseq
-       [(bind B T)
-        (match (matches B A ρ)
-          [(== M⊥ eq?) M⊥]
-          [(mres t′ ρ′) (tl (cons T ρ′) t′)]
-          [M (error '∂ "oops10 ~a" M)])]
+       [(bind B T) (bindp B A T ρ)]
        ;; Event/unevent
-       [Aor!A (match (matches Aor!A A ρ)
-                [(== M⊥ eq?) M⊥]
-                [(mres t ρ′) (tl ε t)]
-                [M (error '∂ "oops11 ~a" M)])]))
+       [Aor!A (patp Aor!A A ρ)]))
 
 #|
-F⟦¬ T⟧_ρ = P⟦¬ T⟧_ρ = ¬p(F⟦T⟧_ρ)
+F⟦ε⟧ = {ε}
+F⟦T,ρ⟧ = F⟦T⟧ρ
+F⟦pat⟧ = F⟦pat⟧∅
+F⟦〈pat〉T⟧ = {dπ : π ∈ F⟦T⟧ρ where ρ = matches(pat, d, ∅)}
+F⟦∪ Ttls⟧ = ⋃{Ttl ∈ Ttls} F⟦Ttl⟧
+F⟦∩ Ttls⟧ = ⋂{Ttl ∈ Ttls} F⟦Ttl⟧
+F⟦¬ Ttl⟧ = P⟦¬ Ttl⟧ = ¬p(F⟦Ttl⟧)
+F⟦Ttl*⟧ = {π^i : i ≤ ω, π ∈ F⟦Ttl⟧}
+F⟦Ttl₀·Ttl₁⟧ = {π₀·π₁ : π₀ ∈ F⟦Ttl₀⟧, π₁ ∈ F⟦Ttl₁⟧}
+
+F⟦pat⟧ρ = {d : ρ′ = matches(pat, d, ρ)}
+F⟦〈pat〉T⟧ρ = {dπ : ρ′ = matches(pat, d, ρ), π ∈ F⟦T⟧ρ′}
+...rest similar...
+
+P⟦ε⟧ = {ε}
+P⟦pat⟧ = P⟦pat⟧∅
+P⟦〈pat〉T⟧ = P⟦〈pat〉T⟧∅
+P⟦T,ρ⟧ = P⟦T⟧ρ
+P⟦Ttl₀·Ttl₁⟧ = P⟦Ttl₀⟧ ∪ {π₀·π₁ : π₀ ∈ F⟦Ttl₀⟧, π₁ ∈ F⟦Ttl₁⟧}
+P⟦Ttl*⟧ = {π*π′ : π* ∈ F⟦Ttl*⟧, π′ ∈ P⟦Ttl⟧}
+P⟦∪ Ttls⟧ = ⋃{Ttl ∈ Ttls} P⟦Ttl⟧
+P⟦∩ Ttls⟧ = ⋂{Ttl ∈ Ttls} P⟦Ttl⟧
+
+P⟦pat⟧ρ = {ε} ∪ F⟦pat⟧ρ
+P⟦〈pat〉T⟧ρ = {ε} ∪ {dπ : ρ′ = matches(pat, d, ρ), π ∈ P⟦T⟧ρ′}
+...rest similar...
+
+TO PROVE (likely in order):
+Lemma ∀ T,ρ. prefixes(P⟦T⟧ρ) = P⟦T⟧ρ
+Lemma ∀ Ttl. prefixes(P⟦Ttl⟧) = P⟦Ttl⟧
+
+Lemma F⟦∂_d T,ρ⟧ = {π : dπ ∈ F⟦T⟧ρ}
+Lemma P⟦∂_d T,ρ⟧ = {π : dπ ∈ P⟦T⟧ρ}
+Lemma F⟦ð_d Ttl⟧ = {π : dπ ∈ F⟦Ttl⟧}
+Lemma P⟦ð_d Ttl⟧ = {π : dπ ∈ P⟦Ttl⟧}
+Theorem π ∈ F⟦Ttl⟧ ⇔ ν?(ð_π Ttl)
+Theorem π ∈ P⟦Ttl⟧ ⇔ ð_π Ttl ≠ ∅
+
 We exclude ε from bad prefixes since it's in every prefix.
 ¬p(Π) = {π ∉ Π\{ε} : (∃ π′ ∈ Π. π < π′) ∨ (∀ π′ ∈ Π\{ε}. π′ ≮ π}
+
+The following properties/proofs are outdated. 2013/06/30
 
 Lemma: ν?(T,ρ) ⇔ ε ∈ F⟦T⟧_ρ
 Induction on T:
@@ -656,7 +706,6 @@ Ind T ≡ (· T₀ T₁)
   ;; Expect all the following combinations to be satisfied. Not otherwise
   (define expectations (set '(2 . 1) '(3 . 0) '(3 . 1) '(3 . 2) '(3 . 3)))
 
-  (define ρ₀ #hasheq())
   (for ([T (in-list (list Tcon0 Tcon1 Tcon2 Tcon3 Tcon4))]
         [Ti (in-naturals)])
     (define TM (mkPMSM T))
