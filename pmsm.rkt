@@ -2,19 +2,31 @@
 (require racket/unit)
 (require racket/trace)
 
+(define ∅ (set))
 (struct -unmapped ()) (define unmapped (-unmapped))
 
 ;; Temporal contracts
 (struct ¬ (T) #:transparent)
-(struct !ev (A) #:transparent)
 (struct · (T₀ T₁) #:transparent)
 (struct kl (T) #:transparent)
 (struct bind (B T) #:transparent)
 (struct ∪ (Ts) #:transparent)
 (struct ∩ (Ts) #:transparent)
 (struct -ε () #:transparent) (define ε (-ε))
-(define (tcon? x)
-  (or (¬? x) (·? x) (!ev? x) (event? x) (kl? x) (bind? x) (∪? x) (∩? x)))
+(define T⊥ (∪ ∅)) ;; empty contract
+(define Σ̂* (∩ ∅))
+(define (∂? x)
+  (or (¬? x) (·? x) (event? x) (kl? x) (bind? x) (∪? x) (∩? x)))
+(define (ð? x)
+  (match x
+    [(or (cons (? ∂?) (? hash?))
+         (¬ (? ð?))
+         (· (? ð?) (? ð?))
+         (kl (? ð?))
+         (== ε eq?))
+     #t]
+    [(or (∪ Ts) (∩ Ts)) (for/and ([T (in-set Ts)]) (ð? T))]
+    [_ #f]))
 
 ;; Pattern-matching state machines (PMSMs)
 ;; δ : Map[Q, Map[Pattern, Set[Q]]]
@@ -29,13 +41,10 @@
 (struct constructed (c data) #:transparent)
 (struct !constructed (c data) #:transparent)
 
-(define ∅ (set))
-;; Top level
-(struct tl (T t) #:transparent)
-;; #f is the empty machine
-
 (define (call nf pa) (constructed 'call (list nf pa)))
-(define (ret nf pa) (constructed 'call (list nf pa)))
+(define (ret nf pv) (constructed 'call (list nf pv)))
+(define (!call nf pa) (!constructed 'call (list nf pa)))
+(define (!ret nf pv) (!constructed 'ret (list nf pv)))
 (define-match-expander call: (λ (stx) (syntax-case stx ()
                                        [(_ nf pa) #'(constructed 'call (list nf pa))])))
 (define-match-expander ret: (λ (stx) (syntax-case stx ()
@@ -48,11 +57,11 @@
 (struct □ (x) #:transparent)
 
 (define ρ₀ #hasheq())
-(define Tcon0 (¬ (cons (call Any Any) ρ₀)))
-(define Tcon1 (¬ (· (cons (call Any Any) ρ₀) (cons (kl Any) ρ₀))))
-(define Tcon2 (¬ (cons (call Any 0) ρ₀)))
-(define Tcon3 (· (cons (kl (!ev (call values Any))) ρ₀)
-                 (· (cons (call values Any) ρ₀) (cons (call values 0) ρ₀))))
+(define Tcon0 (¬ (call Any Any)))
+(define Tcon1 (¬ (· (call Any Any) (kl Any))))
+(define Tcon2 (¬ (call Any 0)))
+(define Tcon3 (· (kl (!call values Any))
+                 (· (call values Any) (call values 0))))
 (define Tcon4 (¬ (¬ Tcon3)))
 (define π0 (list (call values 0)))
 (define π1 (list (call values 1)))
@@ -60,9 +69,9 @@
 (define π3 (append π2 (list (call values 0))))
 (define π4 (append π2 (list (call values 1))))
 ;; Expect all the following combinations to be satisfied.
-;; 2,1 2,3 2,4
+;; 2,1
 ;; 3,0 3,1 3,2 3,3
-;; 4,0 4,1 4,2
+;; 4,0 4,1 4,2 4,3
 
 ;; 3-valued logic
 (struct -must ()) (define must (-must))
@@ -95,12 +104,16 @@
 ;; valuations with updated bindings
 (struct mres (t ρ) #:transparent)
 
-(define Σ̂* (kl Any))
+;; Top level
+(struct tl (T t) #:transparent)
+(define M⊥ #f) ;; #f is the empty machine
 (define Σ* (tl Σ̂* must))
 
 (define/match (·simpl T₀ T₁)
   [((== ε eq?) T₁) T₁]
   [(T₀ (== ε eq?)) T₀]
+  [((== T⊥ eq?) _) T⊥]
+  [(_ (== T⊥ eq?)) T⊥]
   ;; Right-associate
   [((· T₀₀ T₀₁) T₁) (·simpl T₀₀ (·simpl T₀₁ T₁))]
   ;; No simplifications
@@ -116,7 +129,7 @@
 ;(trace flat-collect);
 (define (∪simpl Ts)
   (define Ts′ (flat-collect ∪? ∪-Ts Ts))
-  (cond [(set-empty? Ts′) #f]
+  (cond [(set-empty? Ts′) T⊥]
         [(= (set-count Ts′) 1) (set-first Ts′)]
         [else (∪ Ts′)]))
 
@@ -135,7 +148,8 @@
   (and r₀ r₁
        (match* (r₀ r₁)
          [((mres t₀ ρ₀) (mres t₁ ρ₁))
-          (mres (t₀ . op . t₁) (ρ₀ . ◃ . ρ₁))])))
+          (mres (t₀ . op . t₁) (ρ₀ . ◃ . ρ₁))]
+         [(_ _) (error 'opres "Oops0 ~a ~a" r₀ r₁)])))
 (define ⊓ (opres ∧))
 
 (define (⨅ S f)
@@ -168,7 +182,8 @@
     [(· T₀ T₁) (and (ν? T₀) (ν? T₁))]
     [(∪ Ts) (for/or ([T (in-set Ts)]) (ν? T))]
     [(∩ Ts) (for/and ([T (in-set Ts)]) (ν? T))]
-    [(¬ T) (not (ν? T))]
+    [(¬ T) #t #;(not (ν? T))
+     ] ;; FIXME: tests pass if this is #f. What's up with negation?
     [(cons T ρ) (ν? T)]
     [_ #f])) ;; bind, event, nonevent
 
@@ -177,17 +192,12 @@
   [(T) (¬ T)])
 
 (define/match (flip B)
-  [((call: nf xa)) (!ev (call nf Any))]
-  [((ret: nf xv)) (!ev (ret nf Any))])
+  [((call: nf xa)) (!call nf Any)]
+  [((ret: nf xv)) (!ret nf Any)])
 
 (define/match (C T)
   [((== ε eq?)) (set Any)]
-  [((or (== Any eq?) #f)) (set Any #f)]
-  [((!ev A))
-   (match A
-     [(== Any eq?) (set Any #f)]
-     [(or (constructed kind data) (!constructed kind data))
-      (set (constructed kind data) (!constructed kind data))])]
+  [((or (== Any eq?) #f)) (set Any)]
   [((or (constructed kind pats) (!constructed kind pats)))
    (set (constructed kind pats) (!constructed kind pats))]
   [((or (∪ Ts) (∩ Ts))) (C⋀ Ts)]
@@ -199,6 +209,7 @@
   [((bind B T)) (set-union (C T) (set B (flip B)))]
   [((cons T ρ)) (C T)]
   [(_) (error 'C "bad Tcon ~a" T)])
+(trace C)
 
 (define/match (res-∧ r₀ r₁)
   [(#f _) #f]
@@ -221,6 +232,7 @@
                    ([t #f])
                    ([!pat (in-list !pats)]
                     [pat (in-list pats)])
+                 ;; !pat?
                  (match (evt-intersect !pat pat)
                    [#f t]
                    [(mres t′ _) (U∨ t t′)]))
@@ -276,6 +288,7 @@
     [((? !constructed?) (? !constructed?)) (mres may (set A A′))]
     ;; Anything else is concrete, so do not intersect unless equal (already checked)
     [(_ _) #f]))
+(trace evt-intersect)
 
 ;; Could A and A′ possibly intersect? Let's ask!
 (define (evt-overlap A A′)
@@ -299,9 +312,7 @@
 (define-signature weak-eq^ (≃))
 (define-signature TCon-deriv^ (matches ∂ run mkPMSM))
 
-;; Single step for PMSM
-(define (step M states input)
-  (match-define (PMSM q₀ ≃ ary δ) M)
+(define (matches≃ ≃)
   (define (matches P A γ)
     (define (matches1 P) (matches P A γ))
     (define (matches2 P A) (matches P A γ))
@@ -326,6 +337,12 @@
       [v (match (≃ v A)
            [#f #f]
            [t (mres t γ)])]))
+  matches)
+
+;; Single step for PMSM
+(define (step M states input)
+  (match-define (PMSM q₀ ≃ ary δ) M)
+  (define matches (matches≃ ≃))
   (for/fold ([S ∅]) ([state (in-set states)])
     (match state
       [(State q γ _)
@@ -336,7 +353,8 @@
             #:when res)
          (match res
            [(mres t γ′) (for/fold ([S S]) ([next (in-set nexts)])
-                          (set-add S (State next γ′ t)))]))])))
+                          (set-add S (State next γ′ t)))]))]
+      [_ (error 'step "oops2 ~a" state)])))
 
 ;; What is the current state of the machine? Must or may?
 (define (valuation states)
@@ -355,205 +373,278 @@
    (define-syntax-rule (weak-if t ρ)
      (let ([t′ t])
        (and t′ (mres t′ ρ))))
+   (define matches (matches≃ ≃))
 
-   (define (matches P A ρ)
-     (define (matches1 P) (matches P A ρ))
-     (match P
-       [(? set?) (⨅ P matches1)] ;; Match all patterns in the set.
-       [(!ev A′)
-        (match (matches1 A′)
-          [#f (mres must ρ)]
-          [(mres (== must eq?) _) #f]
-          [_ (mres may ρ)])]
-       ;; Recursively match components
-       [(call: nf pa)
-        (match A
-          [(call: fv av) (⊓ (matches nf fv ρ) (matches pa av ρ))]
-          [_ #f])]
-       [(ret: nf pv)
-        (match A
-          [(ret: fv vv) (⊓ (matches nf fv ρ) (matches pv vv ρ))]
-          [_ #f])]
-       [(== Any eq?) (mres must ρ)]
-       [($ x) (match (hash-ref ρ x unmapped)
-                [(== unmapped eq?) #f]
-                [v (weak-if (≃ v A) ρ)])]
-       [(□ x) (mres must (hash-set ρ x A))]
-       [v (weak-if (≃ v A) ρ)]))
+   ;; Negation differs because it waits until we have a /full/ match.
+   ;; Thus, we do a nullability check to see if it is satisfied.
+   ;; If a may state, we stay may only if the contract is nullable.
+   ;; FIXME: Need a may fail (#f)
+   (define (¬p rec form T)
+     (match (rec T)
+       [(== M⊥ eq?) Σ*]
+       [(tl T′ (== must eq?))
+        (if (ν? T′)
+            M⊥
+            (form (negate T′) must))]
+       [(tl T′ t′) (form (negate T′) (if (ν? T′) may must))]
+       [M (error '¬p "oops3 ~a" M)]))
 
-   (define (∂ A Tt)
-     (match Tt
-       [#f #f]
-       [(== Σ* eq?) Σ*]
-       [(tl T t)
-        (let ∂* ([A A] [T T])
-          (define (∂1 T) (∂* A T))
-          (match T
-            [(· T₀ T₁)
-             (if (ν? T₀)
-                 (match (∂1 T₀)
-                   [#f (∂1 T₁)] ;; Might be able to pass T₀ from nullability
-                   [(tl T₀′ t′)
-                    (match (∂1 T₁)
-                      [#f (tl (·simpl T₀′ T₁) t′)]
-                      ;; Both derivatives matched.
-                      [(tl T₁′ t″) (tl (∪simpl (set (·simpl T₀′ T₁) T₁′)) (∨ t′ t″))])]
-                   [v (error '∂ "Oops0 ~a" v)])
-                 (match (∂1 T₀)
-                   [#f #f]
-                   [(tl T′ t′) (tl (·simpl T′ T₁) t′)]
-                   [v (error '∂ "Oops1 ~a" v)]))]
+   (define (·p rec form T₀ T₁)
+     (if (ν? T₀)
+         (match (rec T₀)
+           [(== M⊥ eq?) (rec T₁)] ;; Might be able to pass T₀ from nullability
+           [(tl T₀′ t′)
+            (match (rec T₁)
+              [(== M⊥ eq?) (form (·simpl T₀′ T₁) t′)]
+              ;; Both derivatives matched.
+              [(tl T₁′ t″) (form (∪simpl (set (·simpl T₀′ T₁) T₁′)) (∨ t′ t″))]
+              [M (error '·p "oops4 ~a" M)])]
+           [M (error '·p "oops5 ~a" M)])
+         (match (rec T₀)
+           [(== M⊥ eq?) M⊥]
+           [(tl T′ t′) (form (·simpl T′ T₁) t′)]
+           [M (error '·p "oops6 ~a" M)])))
 
-            ;; Negation differs because it waits until we have a /full/ match.
-            ;; Thus, we do a nullability check to see if it is satisfied.
-            ;; If a may state, we stay may only if the contract is nullable.
-            [(¬ T)
-             (match (∂1 T)
-               [#f Σ*]
-               [(tl T′ (== must eq?))
-                (and (not (ν? T′))
-                     (tl (negate T′) must))]
-               [(tl T′ t′) (tl (negate T′) t′)] ;; FIXME: Need a may fail (#f)
-               [v (error '∂ "Oops2 ~a" v)])]
+   (define (klp rec form T′ T)
+     (match (rec T′)
+       [(== M⊥ eq?) M⊥]
+       [(tl T″ t′) (form (·simpl T″ T) t′)]
+       [M (error 'klp "oops7 ~a" M)]))
 
-            [(cons (kl T′) ρ)
-             (match (∂1 (cons T′ ρ))
-               [#f #f]
-               [(tl T″ t′) (tl (·simpl T″ T) t′)]
-               [v (error '∂ "Oops3 ~a" v)])]
+   ;; Match some
+   (define (∪p rec form Ts)
+     (let/ec break
+       (define-values (t′ Ts′)
+         (for/fold ([t must] [Ts′ ∅]) ([T (in-set Ts)])
+           (match (rec T)
+             [(== Σ* eq?) (break Σ*)]
+             [(== M⊥ eq?) (values t Ts′)] ;; shortcut
+             [(tl T′ t′) (values (∨ t t′) (set-add Ts′ T′))]
+             [M (error '∪p "oops8 ~a" M)])))
+       (if (set-empty? Ts′)
+           M⊥
+           (form (∪simpl Ts′) t′))))
 
-            ;; dseq
-            [(cons (bind B T) ρ)
-             (match (matches B A ρ)
-               [#f #f]
-               [(mres t′ ρ′) (tl (cons T ρ′) t′)]
-               [v (error '∂ "Oops4 ~a" v)])]
+   ;; Match all
+   (define (∩p rec form Ts)
+     (let/ec break
+       (define-values (t′ Ts′)
+         (for/fold ([t must] [Ts′ ∅]) ([T (in-set Ts)])
+           (match (rec T)
+             [(== M⊥ eq?) (break M⊥)]
+             [(== Σ* eq?) (values t Ts′)] ;; shortcut
+             [(tl T′ t′) (values (∧ t t′) (set-add Ts′ T′))]
+             [M (error '∩p "oops9 ~a" M)])))
+       (if (set-empty? Ts′)
+           Σ*
+           (form (∩ Ts′) t′))))
+   
+   ;; Top level temporal contracts with distributed ρs.
+   (define (ð A T)
+     (define (ð1 T) (ð A T))
+     (match T
+       [(== Σ̂* eq?) (tl T must)]
+       [(or (== T⊥ eq?) (== ε eq?)) M⊥]
+       [(cons T ρ) (∂ A T ρ)]
+       [(· T₀ T₁) (·p ð1 tl T₀ T₁)]
+       [(¬ T) (¬p ð1 tl T)]
+       [(kl T′) (klp ð1 tl T′ T)]
+       [(∪ Ts) (∪p ð1 tl Ts)]
+       [(∩ Ts) (∩p ð1 tl Ts)]
+       [T (error 'ð "Bad top-level Tcon ~a" T)]))
 
-            ;; Match some
-            [(∪ Ts)
-             (let/ec break
-               (define-values (t′ Ts′)
-                 (for/fold ([t must] [Ts′ ∅]) ([T (in-set Ts)])
-                   (match (∂1 T)
-                     [(== Σ* eq?) (break Σ*)]
-                     [#f (values t Ts′)] ;; shortcut
-                     [(tl T′ t′) (values (∨ t t′) (set-add Ts′ T′))]
-                     [v (error '∂ "Oops5 ~a" v)])))
-               (if (set-empty? Ts′)
-                   #f
-                   (tl (∪simpl Ts′) t′)))]
+   (define (∂ A T ρ)
+     (define (∂1 T) (∂ A T ρ))
+     (define (tlρ T t) (tl (cons T ρ) t))
+     (match T
+       [(== Σ̂* eq?) (tl T must)]
+       [(or (== T⊥ eq?) (== ε eq?)) M⊥]
+       [(· T₀ T₁) (·p ∂1 tlρ T₀ T₁)]
+       [(¬ T) (¬p ∂1 tlρ T)]
+       [(kl T′) (klp ∂1 tlρ T′ T)]
+       [(∪ Ts) (∪p ∂1 tlρ Ts)]
+       [(∩ Ts) (∩p ∂1 tlρ Ts)]
+       ;; dseq
+       [(bind B T)
+        (match (matches B A ρ)
+          [(== M⊥ eq?) M⊥]
+          [(mres t′ ρ′) (tl (cons T ρ′) t′)]
+          [M (error '∂ "oops10 ~a" M)])]
+       ;; Event/unevent
+       [Aor!A (match (matches Aor!A A ρ)
+                [(== M⊥ eq?) M⊥]
+                [(mres t ρ′) (tl ε t)]
+                [M (error '∂ "oops11 ~a" M)])]))
 
-            ;; Match all
-            [(∩ Ts)
-             (let/ec break
-               (define-values (t′ Ts′)
-                 (for/fold ([t must] [Ts′ ∅]) ([T (in-set Ts)])
-                   (match (∂1 T)
-                     [#f (break #f)]
-                     [(== Σ* eq?) (values t Ts′)] ;; shortcut
-                     [(tl T′ t′) (values (∧ t t′) (set-add Ts′ T′))]
-                     [v (error '∂ "Oops6 ~a" v)])))
-               (tl (∩ Ts′) t′))]
+#|
+F⟦¬ T⟧_ρ = P⟦¬ T⟧_ρ = ¬p(F⟦T⟧_ρ)
+We exclude ε from bad prefixes since it's in every prefix.
+¬p(Π) = {π ∉ Π\{ε} : (∃ π′ ∈ Π. π < π′) ∨ (∀ π′ ∈ Π\{ε}. π′ ≮ π}
 
-            ;; Was done, now too many.
-            [(== ε eq?) #f]
+Lemma: ν?(T,ρ) ⇔ ε ∈ F⟦T⟧_ρ
+Induction on T:
+ε: Trivial
+kl T′: Trivial
+¬ T: Trivial
+bind, event, nonevent: Trivial
+T₀ · T₁:
+  IH₀ ν?(T₀,ρ) ⇔ ε ∈ F⟦T₀⟧_ρ
+  IH₁ ν?(T₁,ρ) ⇔ ε ∈ F⟦T₁⟧_ρ
+  (⇒): Both hold, so ε in both by IH, so in ∩ by def.
+  (⇐): ε in both by def ∩, so both nullable by IH and thus nullable by def ν?
+∪ Ts:
+  IH ∀ T ∈ Ts. ν?(T,ρ) ⇔ ε ∈ F⟦T⟧_ρ
+  (⇒): Some T is nullable, so ε ∈ that T's denotation by IH. Thus in union.
+  (⇐): ε in union, so some denotation has it. Thus that sub-contract is nullable.
+∩ Ts: Similar
+Qed.
 
-            ;; Event/unevent
-            [(cons Aor!A ρ) (match (matches Aor!A A ρ)
-                              [#f #f]
-                              [(mres t ρ′) (tl ε t)])]
+Def: ∂_ε T = T
+     ∂_Aπ T = ∂_π (∂_A T)
 
-            [Aor!A
-             (error '∂ "Missing ρ ~a" Aor!A)]))]))
+Lemma: F⟦T⟧_ρ ⊆ P⟦T⟧_ρ
+Proof: Induction on T.
+
+Lemma:
+ (1) ν?(∂_A T,ρ) ⇒ A ∈ F⟦T⟧_ρ
+ (2) ∂_A T,ρ ≠ ∅ ∧ ¬ν?(∂_A T,ρ) ⇒ ∃ π ∈ F⟦T⟧. A < π
+Proof: Induction on T
+Base T ≡ pat:
+ Case matches(pat, A, ρ) = #f:
+  Vacuous
+ Case matches(pat, A, ρ) ≡ ρ′:
+  (1) True by definition of F⟦_⟧_ and ∂.
+  (2) Vacuous.
+Base T ≡ ε: Vacously true since ∂_A ε,ρ = ∅ and ¬ν?(∅)
+Ind T ≡ (· T₀ T₁):
+ ∂_A T,ρ = ∪ {∂_A T₀,ρ, ν?(T₀)·∂_A T₁,ρ}
+ Thus if ν?(∂_A T₀,ρ) or ν?(T₀) and ν?(∂_A T₁,ρ) then (1) by IH and def. F⟦_⟧.
+ (2) ¬ν?(∂_A T,ρ) thus ¬ν? (T₀) ∨ ¬ν(T₁)
+    By cases on this ∨:
+    Case ¬ν?(T₀):
+     In this case, ∂_A T,ρ = ∂_A T₀,ρ.
+     Since ∂_A (T,ρ) ≠ ∅, ∂_A (T₀,ρ) ≠ ∅
+     Suppose ¬ν?(∂_A T₀,ρ)
+      then by IH, ∃ π ∈ F⟦T₀⟧. A < π.
+Ind T ≡ ¬ T′:
+ ∂_A ¬ T′,ρ = ν?(∂_A T′,ρ) → ∅, ¬ ∂_A T′,ρ
+ Since ν?(∂_A T,ρ), ¬ν?(∂_A T′,ρ) and ν?(¬ ∂_A T′,ρ)
+ ???
+Ind T ≡ T′*:
+Ind T ≡ (∪ Ts):
+Ind T ≡ (∩ Ts):
+Ind T ≡ 〈pat〉T′:
+
+Nullability doesn't matter unless T is a negation.
+Lemma:
+∂_A T,ρ = T′,ρ′ ⇒ A·P⟦T′⟧_ρ′ ⊆ P⟦T⟧_ρ
+∂_A T,ρ = ∅ ⇒ P⟦T⟧_ρ ∩ {Aπ : π ∈ Traces} = ∅
+
+Theorem:
+∀ π,T,ρ.
+  ν?(∂_π T,ρ) ⇔ π ∈ F⟦T⟧_ρ ∧
+  ∂_π T, ρ ≠ ∅ ⇔ π ∈ P⟦T⟧_ρ
+
+Proof:
+Induction on π
+Base ε: ν?(T,ρ) ⇔ ε ∈ F⟦T⟧_ρ
+ Above lemma:
+Ind T ≡ (· T₀ T₁)
+ Case (ν? T₀):
+  Case (∂_A T₁) = #f:
+   
+  Case (∂_A T₁) ≡ T₀′:
+ Case ¬(ν? T₀):
+ν?(∂_π′ T, ρ) ⇔ π′ ∈ F⟦T⟧_ρ
+|#
 
    ;; Approximate derivative that defers binding to dynamics.
    (define (∂̂ A T)
      (define (∂̂1 T) (∂̂ A T))
-     (cond
-      [(eq? T Σ̂*) Σ̂*]
-      [T
-       (match T
-         [(· T₀ T₁)
-          (if (ν? T₀)
-              (match (∂̂1 T₀)
-                [#f (∂̂1 T₁)] ;; Might be able to pass T₀ from nullability
-                [T₀′
-                 (match (∂̂1 T₁)
-                   [#f (·simpl T₀′ T₁)]
-                   ;; Both derivatives matched.
-                   [T₁′ (∪simpl (set (·simpl T₀′ T₁) T₁′))])])
-              (match (∂̂1 T₀)
-                [#f #f]
-                [T′ (·simpl T′ T₁)]))]
+     (match T
+       [(or (== Σ̂* eq?) (== T⊥ eq?)) T]
+       [(· T₀ T₁)
+        (if (ν? T₀)
+            (match (∂̂1 T₀)
+              [(== T⊥ eq?) (∂̂1 T₁)] ;; Might be able to pass T₀ from nullability
+              [T₀′
+               (match (∂̂1 T₁)
+                 [(== T⊥ eq?) (·simpl T₀′ T₁)]
+                 ;; Both derivatives matched.
+                 [T₁′ (∪simpl (set (·simpl T₀′ T₁) T₁′))])])
+            (·simpl (∂̂1 T₀) T₁))]
          
-         [(¬ T)
-          (match (∂̂1 T)
-            [#f Σ̂*]
-            [T′ (and (not (ν? T′)) (negate T′))])]
+       [(¬ T)
+        (match (∂̂1 T)
+          [(== T⊥ eq?) Σ̂*]
+          [T′ (if (ν? T′)
+                  T⊥
+                  (negate T′))])]
          
-         [(kl T′)
-          (match (∂̂1 T′)
-            [#f #f]
-            [T″ (·simpl T″ T)])]
+       [(kl T′)
+        (match (∂̂1 T′)
+          [(== T⊥ eq?) T⊥]
+          [T″ (·simpl T″ T)])]
          
-         ;; dseq
-         [(bind B T)
-          (and (evt-overlap B A) T)]
+       ;; dseq
+       [(bind B T)
+        (if (evt-overlap B A)
+            T
+            T⊥)]
          
-         ;; Match some
-         [(∪ Ts)
-          (let/ec break
-            (define Ts′
-              (for/fold ([Ts′ ∅]) ([T (in-set Ts)])
-                (match (∂̂1 T)
-                  [(== Σ̂* eq?) (break Σ̂*)]
-                  [#f Ts′] ;; shortcut
-                  [T′ (set-add Ts′ T′)])))
-            (∪simpl Ts′))]
+       ;; Match some
+       [(∪ Ts)
+        (let/ec break
+          (define Ts′
+            (for/fold ([Ts′ ∅]) ([T (in-set Ts)])
+              (match (∂̂1 T)
+                [(== Σ̂* eq?) (break Σ̂*)]
+                [(== T⊥ eq?) Ts′] ;; shortcut
+                [T′ (set-add Ts′ T′)])))
+          (∪simpl Ts′))]
 
-         ;; Match all
-         [(∩ Ts)
-          (let/ec break
-            (define Ts′
-              (for/fold ([Ts′ ∅]) ([T (in-set Ts)])
-                (match (∂̂1 T)
-                  [#f (break #f)]
-                  [(== Σ̂* eq?) Ts′] ;; shortcut
-                  [T′ (set-add Ts′ T′)])))
-            (∩simpl Ts′))]
+       ;; Match all
+       [(∩ Ts)
+        (let/ec break
+          (define Ts′
+            (for/fold ([Ts′ ∅]) ([T (in-set Ts)])
+              (match (∂̂1 T)
+                [(== T⊥ eq?) (break T⊥)]
+                [(== Σ̂* eq?) Ts′] ;; shortcut
+                [T′ (set-add Ts′ T′)])))
+          (∩simpl Ts′))]
 
-         ;; Was done, now too many.
-         [(== ε eq?) #f]
+       ;; Was done, now too many.
+       [(== ε eq?) T⊥]
 
-         [(cons T ρ) (∂̂1 T)] ;; Kill bindings
-
-         ;; Event/unevent
-         [Aor!A (and (evt-overlap Aor!A A)
-                     ε)])]
-      [else #f]))
+       ;; Event/unevent
+       [Aor!A (if (evt-overlap Aor!A A)
+                  ε
+                  T⊥)]))
 
    (define (run* Tt π)
      (match π
        ['() Tt]
-       [(cons A π)
-        (match (∂ A Tt)
-          [#f #f]
-          [Tt′ (run* Tt′ π)])]))
+       [(cons A π) 
+        (match Tt
+          [(tl T t) (run* (ð A T) π)]
+          [(== M⊥ eq?) M⊥]
+          [M (error 'run* "oops12 ~a" M)])]))
    (define run run*)
 
    (define (goto q)
      (define (inner S Q δ)
        (define qc (∂̂ S q)) ;; qc is simplified on the fly like ≈ in Owens/Reppy/Turon
        (cond
-        [qc
+        ;; No match ⇒ no transition
+        [(eq? qc T⊥) (values Q δ)]
+        [else
          (define δ′ (δ-extend δ q S qc))
          (cond
           [(set-member? Q qc) (values Q δ′)]
           [else
            (define Q′ (set-add Q qc))
-           (explore Q′ δ′ qc)])]
-        ;; No match ⇒ no transition
-        [else (values Q δ)]))
+           (explore Q′ δ′ qc)])]))
      inner)
 
    (define (explore Q δ q)
@@ -563,17 +654,7 @@
 ;;   (trace explore goto)
 
    (define (mkPMSM T)
-     (define q₀
-       (let remρ ([T T])
-         (match T
-           [(¬ T) (¬ (remρ T))]
-           [(∪ Ts) (∪ (for/set ([T (in-set Ts)]) (remρ T)))]
-           [(∩ Ts) (∩ (for/set ([T (in-set Ts)]) (remρ T)))]
-           [(· T₀ T₁) (· (remρ T₀) (remρ T₁))]
-           [(kl T) (kl (remρ T))]
-           [(bind B T) (bind B (remρ T))]
-           [(cons T ρ) (remρ T)]
-           [T T])))
+     (define q₀ T)
      (define-values (Q δ) (explore (set q₀) #hash() q₀))
      (PMSM (State q₀ #hasheq() must) ≃ #f δ))) ;; XXX ary unnecessary
 
@@ -590,11 +671,13 @@
      ([T (in-list (list Tcon0 Tcon1 Tcon2 Tcon3 Tcon4))]
       [Ti (in-naturals)])
    (define TM (mkPMSM T))
+   (printf "T~a:%" Ti) (pretty-print TM) (newline)
    (for/fold ([acc acc]) ([π (in-list (list π0 π1 π2 π3 π4))]
                           [πi (in-naturals)])
+     (printf "~a,~a~%" Ti πi)
      (cons 
       (list (format "~a,~a" Ti πi)
-            (run (tl T must) π)
+            (run (tl (cons T ρ₀) must) π)
             (step* TM (set (PMSM-q₀ TM)) π))
       acc))))
 
