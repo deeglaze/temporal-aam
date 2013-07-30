@@ -40,7 +40,11 @@
 (struct State (q γ t) #:transparent)
 (struct constructed (c data) #:transparent)
 (struct !constructed (c data) #:transparent)
+(struct -Any () #:transparent) (define Any (-Any))
+(struct $ (x) #:transparent)
+(struct □ (x) #:transparent)
 
+;; Niceties for writing temporal contracts using the general language of patterns.
 (define (call nf pa) (constructed 'call (list nf pa)))
 (define (ret nf pv) (constructed 'call (list nf pv)))
 (define (!call nf pa) (!constructed 'call (list nf pa)))
@@ -49,29 +53,9 @@
                                        [(_ nf pa) #'(constructed 'call (list nf pa))])))
 (define-match-expander ret: (λ (stx) (syntax-case stx ()
                                        [(_ nf pv) #'(constructed 'ret (list nf pv))])))
-(struct -Any () #:transparent) (define Any (-Any))
 (define/match (event? x)
   [((constructed (or 'call 'ret) (list _ _))) #t]
   [(_) #f])
-(struct $ (x) #:transparent)
-(struct □ (x) #:transparent)
-
-(define ρ₀ #hasheq())
-(define Tcon0 (¬ (call Any Any)))
-(define Tcon1 (¬ (· (call Any Any) (kl Any))))
-(define Tcon2 (¬ (call Any 0)))
-(define Tcon3 (· (kl (!call values Any))
-                 (· (call values Any) (call values 0))))
-(define Tcon4 (¬ (¬ Tcon3)))
-(define π0 (list (call values 0)))
-(define π1 (list (call values 1)))
-(define π2 (list (call add1 0) (call values 1)))
-(define π3 (append π2 (list (call values 0))))
-(define π4 (append π2 (list (call values 1))))
-;; Expect all the following combinations to be satisfied.
-;; 2,1
-;; 3,0 3,1 3,2 3,3
-;; 4,0 4,1 4,2 4,3
 
 ;; 3-valued logic
 (struct -must ()) (define must (-must))
@@ -144,14 +128,6 @@
   (for/fold ([ρ ρ₀]) ([(k v) (in-hash ρ₁)])
     (hash-set ρ k v)))
 
-(define ((opres op) r₀ r₁)
-  (and r₀ r₁
-       (match* (r₀ r₁)
-         [((mres t₀ ρ₀) (mres t₁ ρ₁))
-          (mres (t₀ . op . t₁) (ρ₀ . ◃ . ρ₁))]
-         [(_ _) (error 'opres "Oops0 ~a ~a" r₀ r₁)])))
-(define ⊓ (opres ∧))
-
 (define (⨅ S f)
   (let/ec break
     (define-values (t ρ)
@@ -209,7 +185,6 @@
   [((bind B T)) (set-union (C T) (set B (flip B)))]
   [((cons T ρ)) (C T)]
   [(_) (error 'C "bad Tcon ~a" T)])
-(trace C)
 
 (define/match (res-∧ r₀ r₁)
   [(#f _) #f]
@@ -288,7 +263,6 @@
     [((? !constructed?) (? !constructed?)) (mres may (set A A′))]
     ;; Anything else is concrete, so do not intersect unless equal (already checked)
     [(_ _) #f]))
-(trace evt-intersect)
 
 ;; Could A and A′ possibly intersect? Let's ask!
 (define (evt-overlap A A′)
@@ -310,7 +284,7 @@
                  [else (C∧ (C T′) (combo Ts′))]))]))
 
 (define-signature weak-eq^ (≃))
-(define-signature TCon-deriv^ (matches ∂ run mkPMSM))
+(define-signature TCon-deriv^ (run mkPMSM))
 
 (define (matches≃ ≃)
   (define (matches P A γ)
@@ -665,22 +639,37 @@ Ind T ≡ (· T₀ T₁)
 
 (define-values/invoke-unit/infer (export TCon-deriv^) (link concrete@ TCon-deriv@))
 
-(printf "Big test~%")
-(reverse
- (for/fold ([acc '()])
-     ([T (in-list (list Tcon0 Tcon1 Tcon2 Tcon3 Tcon4))]
-      [Ti (in-naturals)])
-   (define TM (mkPMSM T))
-   (printf "T~a:%" Ti) (pretty-print TM) (newline)
-   (for/fold ([acc acc]) ([π (in-list (list π0 π1 π2 π3 π4))]
-                          [πi (in-naturals)])
-     (printf "~a,~a~%" Ti πi)
-     (cons 
-      (list (format "~a,~a" Ti πi)
-            (run (tl (cons T ρ₀) must) π)
-            (step* TM (set (PMSM-q₀ TM)) π))
-      acc))))
+(module+ test
+  (require rackunit)
 
+  (define Tcon0 (¬ (call Any Any)))
+  (define Tcon1 (¬ (· (call Any Any) (kl Any))))
+  (define Tcon2 (¬ (call Any 0)))
+  (define Tcon3 (· (kl (!call values Any))
+                   (· (call values Any) (call values 0))))
+  (define Tcon4 (¬ (¬ Tcon3)))
+  (define π0 (list (call values 0)))
+  (define π1 (list (call values 1)))
+  (define π2 (list (call add1 0) (call values 1)))
+  (define π3 (append π2 (list (call values 0))))
+  (define π4 (append π2 (list (call values 1))))
+  ;; Expect all the following combinations to be satisfied. Not otherwise
+  (define expectations (set '(2 . 1) '(3 . 0) '(3 . 1) '(3 . 2) '(3 . 3)))
+
+  (define ρ₀ #hasheq())
+  (for ([T (in-list (list Tcon0 Tcon1 Tcon2 Tcon3 Tcon4))]
+        [Ti (in-naturals)])
+    (define TM (mkPMSM T))
+    (for ([π (in-list (list π0 π1 π2 π3 π4))]
+          [πi (in-naturals)])
+      (test-case
+       (format "T~a, π~a" Ti πi)
+       (check (λ (Tt M)
+                 (if (set-member? expectations (cons Ti πi))
+                     (and Tt M)
+                     (not (or Tt M))))
+              (run (tl (cons T ρ₀) must) π)
+              (step* TM (set (PMSM-q₀ TM)) π))))))
 
 #|
 The proper denotational semantics is Jay's with a more disciplined prefixes definition.
