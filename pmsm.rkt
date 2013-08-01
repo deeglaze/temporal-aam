@@ -91,8 +91,9 @@
 
 ;; Top level
 (struct tl (T t) #:transparent)
-(define M⊥ #f) ;; #f is the empty machine
+(define M⊥ (tl T⊥ must))
 (define Σ* (tl Σ̂* must))
+(define Mε (tl ε must))
 
 (define/match (·simpl T₀ T₁)
   [((== ε eq?) T₁) T₁]
@@ -359,7 +360,7 @@
        [(== M⊥ eq?) Σ*]
        [(tl T′ (== must eq?))
         (if (ν? T′)
-            M⊥
+            Mε
             (form (negate T′) must))]
        [(tl T′ t′) (form (negate T′) (if (ν? T′) may must))]
        [M (error '¬p "oops3 ~a" M)]))
@@ -489,23 +490,131 @@ P⟦pat⟧ρ = {ε} ∪ F⟦pat⟧ρ
 P⟦〈pat〉T⟧ρ = {ε} ∪ {dπ : ρ′ = matches(pat, d, ρ), π ∈ P⟦T⟧ρ′}
 ...rest similar...
 
+Emptiness checker (without considering matching):
+μ?(ε) = ⊥
+μ?(pat) = ⊥ ;; (might by impossible to match, but we can't tell)
+μ?(〈pat〉T) = ⊥
+μ?(T*) = ⊥
+μ?(T·T′) = μ?(T) ∨ μ?(T′)
+μ?(¬ T) = ⊥ (because of ε)
+μ?(∪ Ts) = ⋀{T ∈ Ts} μ?(T)
+μ?(∩ Ts) = ⋁{T ∈ Ts} μ?(T)
+μ?(T,ρ) = μ?(T)
+
+Theorem μ?(T) ⇒ F⟦T⟧ = ∅
+Proof by induction on T
+Base T=ε: Vacuous
+Base T≡pat: Vacuous
+Ind T≡〈pat〉T: Vacuous
+Ind T≡T′·T″:
+ Case μ?(T′): By IH and definition of F⟦_⟧
+ Case μ?(T″): By IH and definition of F⟦_⟧
+Ind T≡T′*:
+ Vacuous
+Ind T≡¬ T′:
+  Vacuous
+Ind T≡∪ Ts:
+  Since by IH ∀ T′ ∈ Ts. F⟦T′⟧ = ∅,
+   F⟦T⟧ = ∅
+Ind T≡∩ Ts:
+  There is some T′ ∈ Ts s.t. μ?(T′) and thus F⟦T⟧ = ∅
+Ind T≡T′,ρ: By IH.
+
 TO PROVE (likely in order):
 Lemma ∀ T,ρ. prefixes(P⟦T⟧ρ) = P⟦T⟧ρ
 Lemma ∀ Ttl. prefixes(P⟦Ttl⟧) = P⟦Ttl⟧
 
-Lemma F⟦∂_d T,ρ⟧ = {π : dπ ∈ F⟦T⟧ρ}
+Note: the following propositions assume ≃ is concrete, and thus
+machine versus tcon representations are not needed.
+
+Remark:
+¬p(Σ*) = {ε}
+¬p(∅) = Σ*
+
+ð_A ¬ T := ν?(ð_A T) → T⊥, ¬ ð_A T
+But... ¬p(ð_A ↑ F⟦T⟧) =? F⟦ð_A ¬ T⟧
+
+Def [prefix]
+ε₀: : ∀ π. ε ≤ π
+p: ∀ π ≤ π′ ⇒ dπ ≤ dπ′
+
+Lemma [prefix cancellation] π·π′ ≤ π·π″ ⇔ π′ ≤ π″
+Proof in prefix.agda
+
+Lemma [deriv spec] F⟦∂_d T,ρ⟧ = {π : dπ ∈ F⟦T⟧ρ}
+Proof: Induction on T
+Base T=ε: By computation
+Base T≡pat:
+ Case ρ′ = matches(pat, d, ρ):
+   ∂_d T,ρ = ε
+   Thus F⟦∂_d pat,ρ⟧ = {ε}
+   F⟦pat⟧ρ = {d′ : ρ′ = matches(pat, d′, ρ)}
+   Thus {π : dπ ∈ F⟦T⟧ρ} = {ε}
+ Case #f = matches(pat, d, ρ):
+   ∂_d T,ρ = T⊥
+   ⟦T⊥⟧ = ∅
+   d ∉ F⟦pat⟧ρ, thus {π : dπ ∈ F⟦T⟧ρ} = ∅
+Ind T≡¬ T′:
+ Case ν?(∂_d T′,ρ):
+  ∂_d T,ρ = T⊥
+  F⟦∂_d T,ρ⟧ = ∅
+  By case assumption and IH, since ε ∈ F⟦∂_d T′,ρ⟧ by [nullable], d ∈ F⟦T′⟧ρ.
+  F⟦T⟧ρ = {π : ∀ π′ ∈ F⟦T′⟧ρ \ {ε}. π′ ≰ π}
+  It must be the case that {π : dπ ∈ F⟦T⟧ρ} = ∅.
+ Case ¬ν?(∂_d T′,ρ):
+  By nullable, ε ∉ F⟦∂_d T′,ρ⟧.
+  By IH, {π : dπ ∈ F⟦T′⟧ρ} = F⟦∂_d T′,ρ⟧
+  Thus d ∉ F⟦T′⟧ρ.
+  By IH, F⟦∂_d T′,ρ⟧ = {π : dπ ∈ F⟦T′⟧ρ}
+  F⟦¬ ∂_d T′,ρ⟧ = ¬p({π : dπ ∈ F⟦T′⟧ρ})
+  WTS: ¬p({π : dπ ∈ F⟦T′⟧ρ}) = {π : dπ ∈ F⟦¬ T′⟧ρ}
+  rw: {π : dπ ∈ F⟦¬ T′⟧ρ} = {π : dπ ∈ ¬p(F⟦T′⟧ρ)}
+  (⊆):
+  H: π ∈ ¬p({π : dπ ∈ F⟦T′⟧ρ})
+  Hinv: ∀ π′ ∈ {π : dπ ∈ F⟦T′⟧ρ} \ {ε}. π′ ≰ π
+   Case π = ε:
+    WTS d ∈ ¬p(F⟦T′⟧ρ).
+    thus WTS ∀ π′ ∈ F⟦T′⟧ρ \ {ε}. π′ ≰ d
+    By case hypothesis, d is the only π′ that could be ≤, and it's not in the set.
+   Case else:
+    WTS ∃ π′ ∈ ¬p(F⟦T′⟧ρ). d ≤ π′
+    thus WTS ∃ π″. ∀ π′ ∈ F⟦T′⟧ρ. π′ ≰ dπ″
+    π is such a π″ since if π′ is some dπ‴, then by prefix cancellation and Hinv, π‴ ≰ π.
+  (⊇):
+  H: π ∈ {π : dπ ∈ {π : ∀ π′ ∈ F⟦T′⟧ρ \ {ε}. π′ ≰ π}}
+  Hinv: dπ ∈ {π : ∀ π′ ∈ F⟦T′⟧ρ \ {ε}. π′ ≰ π}
+  Hinvv: ∀ π′ ∈ F⟦T′⟧ρ \ {ε}. π′ ≰ dπ
+  WTS: π ∈ ¬p({π : dπ ∈ F⟦T′⟧ρ})
+  thus WTS: ∀ π′ ∈ {π : dπ ∈ F⟦T′⟧ρ} \ {ε}. π′ ≰ π
+  So for arbitrary π′ ∈ {π : dπ ∈ F⟦T′⟧ρ} \ {ε},
+   we know dπ′ ∈ F⟦T′⟧ρ
+   By Hinvv and prefix cancellation, π′ ≰ π
+Other cases follow by induction.
+
 Lemma P⟦∂_d T,ρ⟧ = {π : dπ ∈ P⟦T⟧ρ}
 Lemma F⟦ð_d Ttl⟧ = {π : dπ ∈ F⟦Ttl⟧}
 Lemma P⟦ð_d Ttl⟧ = {π : dπ ∈ P⟦Ttl⟧}
+Proofs: Simple inductions that build off [deriv spec]
+
 Theorem π ∈ F⟦Ttl⟧ ⇔ ν?(ð_π Ttl)
-Theorem π ∈ P⟦Ttl⟧ ⇔ ð_π Ttl ≠ ∅
+Proof: Induction on π and above lemma.
 
-We exclude ε from bad prefixes since it's in every prefix.
-¬p(Π) = {π ∉ Π\{ε} : (∃ π′ ∈ Π. π < π′) ∨ (∀ π′ ∈ Π\{ε}. π′ ≮ π}
+Theorem π ∈ P⟦Ttl⟧ ⇔ ¬μ?(ð_π Ttl)
+Proof: Induction on π:
+ (⇒): Base ε: By induction on Ttl.
+      Ind π≡dπ′: thus by above lemma π′ ∈ P⟦ð_d Ttl⟧
+       By IH, ð_π′ (ð_d Ttl) ≠ T⊥, and by def ð_π, the property holds.
+ (⇐): Base ε: H: ¬μ?(Ttl)
+       By induction on Ttl.
+      Ind π≡dπ′:
+       ¬μ?(ð_π′(ð_d Ttl))
+       By IH, π′ ∈ P⟦ð_d Ttl⟧ thus by above lemma, π ∈ P⟦ð_d Ttl⟧
 
-The following properties/proofs are outdated. 2013/06/30
+We exclude ε from bad prefixes since it's in every prefix, and we need at least one event
+to detect a bad trace.
+¬p(Π) = {π : ∀ π′ ∈ Π\{ε}. π′ ≰ π}
 
-Lemma: ν?(T,ρ) ⇔ ε ∈ F⟦T⟧_ρ
+Lemma [nullable]: ν?(T,ρ) ⇔ ε ∈ F⟦T⟧_ρ
 Induction on T:
 ε: Trivial
 kl T′: Trivial
@@ -529,57 +638,17 @@ Def: ∂_ε T = T
 Lemma: F⟦T⟧_ρ ⊆ P⟦T⟧_ρ
 Proof: Induction on T.
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Now that we know derivatives are correct, we need to know the translation to
+;; PMSMs is correct.
 Lemma:
- (1) ν?(∂_A T,ρ) ⇒ A ∈ F⟦T⟧_ρ
- (2) ∂_A T,ρ ≠ ∅ ∧ ¬ν?(∂_A T,ρ) ⇒ ∃ π ∈ F⟦T⟧. A < π
-Proof: Induction on T
-Base T ≡ pat:
- Case matches(pat, A, ρ) = #f:
-  Vacuous
- Case matches(pat, A, ρ) ≡ ρ′:
-  (1) True by definition of F⟦_⟧_ and ∂.
-  (2) Vacuous.
-Base T ≡ ε: Vacously true since ∂_A ε,ρ = ∅ and ¬ν?(∅)
-Ind T ≡ (· T₀ T₁):
- ∂_A T,ρ = ∪ {∂_A T₀,ρ, ν?(T₀)·∂_A T₁,ρ}
- Thus if ν?(∂_A T₀,ρ) or ν?(T₀) and ν?(∂_A T₁,ρ) then (1) by IH and def. F⟦_⟧.
- (2) ¬ν?(∂_A T,ρ) thus ¬ν? (T₀) ∨ ¬ν(T₁)
-    By cases on this ∨:
-    Case ¬ν?(T₀):
-     In this case, ∂_A T,ρ = ∂_A T₀,ρ.
-     Since ∂_A (T,ρ) ≠ ∅, ∂_A (T₀,ρ) ≠ ∅
-     Suppose ¬ν?(∂_A T₀,ρ)
-      then by IH, ∃ π ∈ F⟦T₀⟧. A < π.
-Ind T ≡ ¬ T′:
- ∂_A ¬ T′,ρ = ν?(∂_A T′,ρ) → ∅, ¬ ∂_A T′,ρ
- Since ν?(∂_A T,ρ), ¬ν?(∂_A T′,ρ) and ν?(¬ ∂_A T′,ρ)
- ???
-Ind T ≡ T′*:
-Ind T ≡ (∪ Ts):
-Ind T ≡ (∩ Ts):
-Ind T ≡ 〈pat〉T′:
+  ρ′ = matches (evt-intersect pat pat′) d ρ
+⇔ (ρ″ = matches pat d ρ) ∧ (ρ‴ = matches pat′ d ρ) ∧ (ρ′ = (ρ″ ◃ ρ‴))
+Proof: TODO
 
-Nullability doesn't matter unless T is a negation.
-Lemma:
-∂_A T,ρ = T′,ρ′ ⇒ A·P⟦T′⟧_ρ′ ⊆ P⟦T⟧_ρ
-∂_A T,ρ = ∅ ⇒ P⟦T⟧_ρ ∩ {Aπ : π ∈ Traces} = ∅
+∀ π π′ d Ttl. π·d·π′ ∈ P⟦Ttl⟧ ⇒ ∃ pat ∈ C(Ttl). matches(pat, d, ???) = ???
 
-Theorem:
-∀ π,T,ρ.
-  ν?(∂_π T,ρ) ⇔ π ∈ F⟦T⟧_ρ ∧
-  ∂_π T, ρ ≠ ∅ ⇔ π ∈ P⟦T⟧_ρ
-
-Proof:
-Induction on π
-Base ε: ν?(T,ρ) ⇔ ε ∈ F⟦T⟧_ρ
- Above lemma:
-Ind T ≡ (· T₀ T₁)
- Case (ν? T₀):
-  Case (∂_A T₁) = #f:
-   
-  Case (∂_A T₁) ≡ T₀′:
- Case ¬(ν? T₀):
-ν?(∂_π′ T, ρ) ⇔ π′ ∈ F⟦T⟧_ρ
+Theorem π ∈ P⟦Ttl⟧ ⇒ step* (mkPMSM Ttl) π ≠ M⊥
 |#
 
    ;; Approximate derivative that defers binding to dynamics.
