@@ -5,6 +5,8 @@
 % Switches for verbosity
 \newcommand*{\ifproof}[1]{#1}
 
+\newcommand*{\dfm}{\citeauthor{ianjohnson:dfm:icfp2011}}
+
 % Metavariables
 \newcommand*{\matchstate}{\mu}
 \newcommand*{\mconstructor}{c}
@@ -37,6 +39,7 @@
 \newcommand*{\mname}{n}
 \newcommand*{\mtoplevelname}{\ell}
 \newcommand*{\mevent}{A}
+\newcommand*{\mbevent}{B}
 \newcommand*{\mconstant}{c}
 \newcommand*{\mvpat}{p}
 \newcommand*{\mfnpat}{f}
@@ -70,6 +73,17 @@
 \newcommand*{\emptytestack}{\epsilon}
 \newcommand*{\cons}[2]{#1{\tt :}#2}
 
+\newcommand*{\mbmachine}{M_\mbindenv}
+\newcommand*{\machnull}{M_\varnothing}
+\newcommand*{\macheps}{M_\epsilon}
+\newcommand*{\mvaluation}{t}
+\newcommand*{\truev}[1]{\checkmark_{#1}}
+\newcommand*{\maybev}[1]{?_{#1}}
+\newcommand*{\rejecting}{\times}
+\newcommand*{\machtop}[2]{{#1}^{#2}}
+\newcommand*{\mquality}{\zeta}
+\newcommand*{\forprefix}{P}
+\newcommand*{\forfull}{F}
 
 \newcommand*{\toplevel}{\Lambda}
 
@@ -79,6 +93,8 @@
 \newcommand*{\convertcons}{\mathit{convert}}
 \newcommand*{\toltl}[5]{\llparenthesis #2 \rrparenthesis_{#3,\,#4}^{#1}(#5)}
 \newcommand*{\stacktoltl}[3]{\llparenthesis #2 \rrparenthesis_{#3}^{#1}}
+
+\newcommand*{\matches}{\mathit{matches}}
 
 \newcommand*{\weakif}{\mathit{weak\text{-}if}}
 \newcommand*{\nnf}{{\mathcal N}}
@@ -145,13 +161,18 @@
 \newcommand*{\sbind}[1]{{\tt ?} #1}
 \newcommand*{\sref}[1]{{\tt \$} #1}
 
-\newcommand*{\stOr}[2]{#1 \cup #2}
-\newcommand*{\stAnd}[2]{#1 \cap #2}
+\newcommand*{\semneg}[1]{\neg #1}
+\newcommand*{\semseq}{\mathrel{\denote{\cdot}}}
+\newcommand*{\stOr}[1]{\cup #1}
+\newcommand*{\stAnd}[1]{\cap #1}
 \newcommand*{\stseq}[2]{#1 \cdot #2}
 \newcommand*{\stmany}[1]{#1^*}
-\newcommand*{\stwrap}[3]{{\tt wrap}(#1,\, #2)\ #3}
+
+\newcommand*{\stbind}[2]{\langle #1\rangle\ #2}
+
 \newcommand*{\stcall}[3]{\scallev{#1}{{\tt ?}#2}\ #3}
 \newcommand*{\stret}[3]{\sretev{#1}{{\tt ?}#2}\ #3}
+
 \newcommand*{\stnot}[1]{\neg #1}
 \newcommand*{\sddd}{{\tt ...}}
 \newcommand*{\stfail}{\bot}
@@ -164,6 +185,7 @@
 \newcommand*{\scallev}[2]{{\tt call}(#1,\, #2)}
 \newcommand*{\sretev}[2]{{\tt ret}(#1,\, #2)}
 \newcommand*{\swrapev}[2]{{\tt wrap}(#1,\, #2)}
+\newcommand*{\sany}{{\tt Any}}
 \newcommand*{\swc}{\_} 
 
 \DeclarePairedDelimiter\compileaux{\llfloor}{\rrfloor}
@@ -177,9 +199,12 @@
 \newcommand*{\multistep}[2]{\overset{#1}{\to\!\!\!\!\!\to}}
 
 \newcommand*{\denote}[1]{[\![ #1 ]\!]}
-\newcommand*{\denotetcon}[3]{[\![ #1 ]\!]^{#2}_{#3}}
-\newcommand*{\denotetconfull}[3]{[\![\![ #1 ]\!]\!]^{#2}_{#3}}
-\newcommand*{\denoteevent}[3]{\llparenthesis #1 \rrparenthesis_{#2}^{#3}}
+\newcommand*{\denotetcon}[1]{P[\![ #1 ]\!]}
+\newcommand*{\denotetconfull}[1]{F[\![ #1 ]\!]}
+\newcommand*{\denotetcone}[2]{P[\![ #1 ]\!]_{#2}}
+\newcommand*{\denotetconfulle}[2]{F[\![ #1 ]\!]_{#2}}
+
+\newcommand*{\denoteevent}[2]{\llparenthesis #1 \rrparenthesis_{#2}}
 \newcommand*{\denotevpat}[2]{\llparenthesis #1 \rrparenthesis_{#2}}
 \newcommand*{\aptopcall}[2]{{\tt call}^{\toplevel}(#1,\,#2)}
 \newcommand*{\apvcall}[2]{{\tt call}(#1,\,#2)}
@@ -222,10 +247,16 @@
 \newcommand*{\combinepatalone}{\bowtie}
 \newcommand*{\combinefalone}{\triangleleft}
 
-\newcommand{\mfail}{\mathbf{fail}}
-\newcommand{\smatch}[2]{{#1}_{#2}}
+\newcommand*{\mfail}{\mathbf{fail}}
+\newcommand*{\smatch}[2]{{#1}_{#2}}
 
-\newcommand{\prefixof}[2]{#1 \text{ is a prefix of } #2}
+\newcommand*{\prefixof}[2]{#1 \text{ is a prefix of } #2}
+
+\newcommand*{\negateM}{\sim\!}
+\newcommand*{\unionM}{\doublecup}
+\newcommand*{\intersectM}{\doublecap}
+\newcommand*{\seqM}{\mathit{seq}}
+\newcommand*{\derive}[2]{\partial_{#1}{#2}}
 
 % Spaces
 \newcommand*{\Prog}{\mathit{Program}}
@@ -234,6 +265,7 @@
 \newcommand*{\SContract}{\mathit{Structural}}
 \newcommand*{\TContract}{\mathit{Temporal}}
 \newcommand*{\Event}{\mathit{Event}}
+\newcommand*{\BEvent}{\mathit{BEvent}}
 \newcommand*{\VPat}{\mathit{VarPattern}}
 \newcommand*{\Constant}{\mathit{Constant}}
 \newcommand*{\PreValue}{\mathit{PreValue}}
@@ -262,8 +294,15 @@
 
 \newcommand*{\QState}{\mathit{QState}}
 \newcommand*{\MatchState}{\mathit{MState}}
+\newcommand*{\Machine}{\mathit{Machine}}
+\newcommand*{\BMachine}{\mathit{BMachine}}
+\newcommand*{\Quality}{\mathit{Quality}}
+\newcommand*{\machcombo}[1]{\mathbf{cmb}(#1)}
+\newcommand*{\machbind}[2]{\mathbf{bnd}(#1,\, #2)}
 
 \newcommand*{\Valuation}{\mathit{Valuation}}
+\newcommand*{\StepMachine}{\mathit{StepMach}}
+\newcommand*{\interpT}[4]{\llparenthesis #1 \rrparenthesis^{#2, #3}_{#4}}
 
 
 % Imports for the paper

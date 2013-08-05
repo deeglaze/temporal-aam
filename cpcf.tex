@@ -49,8 +49,8 @@ The realm of temporal contract verification is similar: to use a model-checker, 
 %%
 Our contributions in this paper are as follows:
 \begin{itemize}
- \item{an extension to \citeauthor{ianjohnson:dfm:icfp2011}'s temporal contract semantics;}
- \item{a new automaton model that we use to implement the monitor for this new semantics; and}
+ \item{an alternative to \citeauthor{ianjohnson:dfm:icfp2011}'s temporal contract semantics;}
+ \item{a notion of derivative for regular expressions with back-references}
  \item{a sound abstraction to computably verify temporal contract satisfaction}
 \end{itemize}
 %%
@@ -129,10 +129,6 @@ Our techniques should smoothly integrate with theirs when considering partial pr
 
 \input{langsem}
 %%
-\section{Pattern-matching state machines}
-\FloatBarrier
-
-\input{pmsm}
 
 \section{Abstract semantics}
 
@@ -140,9 +136,9 @@ We use the AAM approach to soundly approximate our concrete semantics.
 %
 This first requires a CESK-like machine to transform, but there are known ways to systematically transform Felleisen-style reduction semantics into corresponding CESK machines ~\citep{?}.
 %
-The important aspect of the abstraction process is not this transformation, but the fact that the space of values becomes \emph{finite}, meaning the space of PMSM machine configurations is finite.
+The important aspect of the abstraction process is not this transformation, but the fact that the space of values becomes \emph{finite}, meaning the space of temporal contract derivatives is finite.
 %
-Therefore, the only aspects of PMSMs that we need to tamper with are allowing binding to sets of values, and the notion of equality, to weaken it to be conservative with our abstractions.
+Therefore, the only aspects of THOcons that we need to tamper with are allowing binding to sets of values, and the notion of equality, to weaken it to be conservative with our abstractions.
 %
 In our semantics with just closures, conses, booleans and integers, we consider:
 \begin{itemize}

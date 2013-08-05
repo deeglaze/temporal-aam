@@ -7,7 +7,7 @@ Since we consider monitor constructions as a more basic notion of equality, we a
 %
 Thus, as values flow through contract boundaries, they are considered on different timelines.
 %
-\citeauthor{ianjohnson:dfm:icfp2011} formalized their semantics in terms of a nondeterministic machine that defined its interactions on all event streams, and thus their machine was on a single timeline.
+\dfm formalized their semantics in terms of a nondeterministic machine that defined its interactions on all event streams, and thus their machine was on a single timeline.
 %
 The semantics of temporal contracts that we propose uses pointer-equality of monitors for comparisons of non-primitive data.
 %
@@ -15,115 +15,87 @@ Our semantics makes interaction between temporal contract monitors explicit, all
 %%
 
 %%
-We denote temporal contracts as sets of event traces that satisfy the contract, all parameterized by which timeline the events affect.
+A denotational semantics for temporal contracts is difficult to get right, since their behavior is implicitly prefix-closed.
 %
-The semantics is close to \citeauthor{ianjohnson:dfm:icfp2011}'s definition, and given in \autoref{fig:tcontract-denotation}.
+Liveness-looking properties have a hidden, insidious behavior with negation: contracts that state anything about how a trace may not end would allow just such traces since extensions to such bad traces are acceptable, and prefix closure will throw the ``bad traces'' back into what is acceptable.
 %
+For example, $\mevent\mevent \in \prefixes(\denotetcon{\stnot{\mevent}}{\mtimeline}{\menv})$, and because of prefix closure, $\mevent \in \prefixes(\denotetcon{\stnot{\mevent}}{\mtimeline}{\menv})$!
+%
+Temporal contract satisfaction should not be contingent on future observations; an effective monitor should blame \emph{as soon as} a contract is not satisfied.
+%
+We thus have a different semantics for temporal contracts that ping-pongs between \emph{full traces} and \emph{partial traces}; a negated temporal contract will reject all full traces of the given contract, as well as any extension of such traces.
+%
+This semantics of negation does not satisfy double-negation elimination (DN), but we find that to be an acceptable trade-off; we do not need DN in order to implement or verify temporal contracts.
+%
+We claim that this semantics is what \dfm meant their system to mean, as it matches up with the expectations of their prose and the test cases in their implementation.
+%
+Furthermore, our implementation catches more ``bad'' behavior than their monitoring system, meaning we have not just formalized their implementation.
+%%
+
+%%
+The denotational semantics in \autoref{fig:tcontract-denotation} lends itself nicely to online monitoring via a derivative parsing approach.
+%
+For each event $\mevent$ we come across on a timeline $\mtimeline$, we set $\mTMons(\mtimeline)$ to $\derive{\mevent}{\mTMons(\mtimeline)}$, as long as the derivative isn't empty.
+%
+We can show that the partial trace semantics is prefix-closed (\autoref{thm:prefix-closed}), and thus we can pinpoint the cause of an error as soon as it is sent to the monitor - a necessary condition for effective blame management in this realm.
+%%
+
+%%
 We made the design choice to require a function contract monitor wrapping for named values to consider their calls or returns as events --- this choice is reflected in the denotation of events in \autoref{fig:event-denotation}.
 %
 The reason for this is that control should flow back to the timeline considered in order for an event to affect that timeline.
 %
 It is easy enough to amend the structural contracts to reflect the fact that a binding is considered a function in the temporal contract.
 
+\begin{theorem}[Prefix closure]
+  $\prefixes(\denotetcone{\mtcon}{\menv}) = \denotetcone{\mtcon}{\menv}$
+\end{theorem}
+
 \FloatBarrier
 \begin{figure}
-  \begin{align*}
-   \denotetcon{\mevent}{\mtimeline}{\menv} &=
-   \denoteevent{\mevent}{\menv}{\mtimeline}
+ \begin{align*}
+   \denotetcone{\stOr{\mtcon \ldots}}{\menv} &= \bigcup\denotetcone{\mtcon}{\menv}\ldots
 \\
-   \denotetcon{\stseq{\mtcon_0}{\mtcon_1}}{\mtimeline}{\menv} &=
-%   \prefixes(\denotetcon{\mtcon_0}{\mtimeline}{\menv}) \cup
-   \setbuild{\mtrace_0 \cdot \mtrace_1}{\mtrace_0 \in \denotetcon{\mtcon_0}{\mtimeline}{\menv}, \mtrace_1 \in \denotetcon{\mtcon_1}{\mtimeline}{\menv}}
+    \denotetcone{\stAnd{\mtcon \ldots}}{\menv} &= \bigcap\denotetcone{\mtcon}{\menv}\ldots
 \\
-   \denotetcon{\stnot{\mtcon}}{\mtimeline}{\menv} &=
-  %  \setbuild{\mtrace}{\mtrace \in \Traces^\mtimeline, \\
-  %                    &\phantom{= \{ \mtrace : } \forall \mtrace' \in \denotetcon{\mtcon}{\mtimeline}{\menv}. \mtrace' \text{ is not a prefix of } \mtrace}
-   \Traces^\mtimeline \setminus \denotetcon{\mtcon}{\mtimeline}{\menv} % DISCONTINUOUS!
+    \denotetcone{\stmany{\mtcon}}{\menv} &= \denotetconfulle{\stmany{\mtcon}}{\menv} \semseq \denotetcone{\mtcon}{\menv}
 \\
-   \denotetcon{\stOr{\mtcon_0}{\mtcon_1}}{\mtimeline}{\menv} &=
-   \denotetcon{\mtcon_0}{\mtimeline}{\menv} \cup \denotetcon{\mtcon_1}{\mtimeline}{\menv}
+    \denotetcone{\stnot{\mtcon}}{\menv} &= \semneg{\denotetconfulle{\mtcon}{\menv}}
 \\
-   \denotetcon{\stAnd{\mtcon_0}{\mtcon_1}}{\mtimeline}{\menv} &=
-   \denotetcon{\mtcon_0}{\mtimeline}{\menv} \cap \denotetcon{\mtcon_1}{\mtimeline}{\menv}
+    \denotetcone{\stseq{\mtcon_0}{\mtcon_1}}{\menv} &= \denotetcone{\mtcon_0}{\menv} \cup \denotetconfulle{\mtcon_0}{\menv}\semseq \denotetcone{\mtcon_1}{\menv}
 \\
-   \denotetcon{\stmany{\mtcon}}{\mtimeline}{\menv} &=
-   \setbuild{\mtrace^i}{i \le \omega, \mtrace \in \denotetcon{\mtcon}{\mtimeline}{\menv}}
+    \denotetcone{\stbind{\mevent}{\mtcon}}{\menv} &= \setof{\epsilon} \cup \setbuild{\mevent' \mtrace}{\menv' = \matches(\mevent, \mevent', \menv), \mtrace \in \denotetcone{\mtcon}{\menv'}}
 \\
-   \denotetcon{\sddd}{\mtimeline}{\menv} &=
-   \Traces^\mtimeline
+    \denotetcone{\epsilon}{\menv} &= \setof{\epsilon}
 \\
-   \denotetcon{\stfail}{\mtimeline}{\menv} &= \emptyset
+    \denotetcone{\mevent}{\menv} &= \setof{\epsilon} \cup \denotetconfulle{\mevent}{\menv}
+\\[2pt]
+    \denotetconfulle{\mtcon,\menv}{\menv} &= \denotetconfulle{\mtcon}{\menv}
 \\
-   \denotetcon{\stcall{\mname}{\mvar}{\mtcon}}{\mtimeline}{\menv} &=
-   \setbuild{\mtrace \cdot \mtrace'}
-            {\mtrace \in \denoteevent{\scallev{\mname}{\mval}}{\mtimeline}{\menv},
-             \mtrace' \in \denotetcon{\mtcon}{\mtimeline}{\menv[\mvar \mapsto \mval]}}
+    \denotetconfulle{\stOr{\mtcon \ldots}}{\menv} &= \bigcup\denotetconfulle{\mtcon}{\menv}\ldots
 \\
-   \denotetcon{\stret{\mname}{\mvar}{\mtcon}}{\mtimeline}{\menv} &=
-   \setbuild{\mtrace\cdot \mtrace'}
-            {\mtrace \in \denoteevent{\sretev{\mname}{\mval}}{\mtimeline}{\menv},
-             \mtrace' \in \denotetcon{\mtcon}{\mtimeline}{\menv[\mvar' \mapsto \mval]}}
-  \end{align*}
-  We use prefix closure to allow the progression of execution, but also cut out discontinuities.
-  \begin{align*}
-    \prefixes(\Pi) &= \setbuild{\mtrace}{\exists \mtrace' \in \Pi. \mtrace \text{ is a prefix of } \mtrace'}
-  \end{align*}
-  \caption{Denotation of Temporal Contracts}
+    \denotetconfulle{\stAnd{\mtcon \ldots}}{\menv} &= \bigcap\denotetconfulle{\mtcon}{\menv}\ldots
+\\
+    \denotetconfulle{\stnot{\mtcon}}{\menv} &= \semneg{\denotetconfulle{\mtcon}{\menv}}
+\\
+    \denotetconfulle{\stseq{\mtcon_0}{\mtcon_1}}{\menv} &= \denotetconfulle{\mtcon_0}{\menv} \semseq \denotetconfulle{\mtcon_1}{\menv}
+\\
+    \denotetconfulle{\stmany{\mtcon}}{\menv} &= \setbuild{\mtrace^i}{i \le \omega, \mtrace \in \denotetconfulle{\mtcon}{\menv}}
+\\
+    \denotetconfulle{\stbind{\mevent}{\mtcon}}{\menv} &= \setbuild{\mevent' \mtrace}{\menv' = \matches(\mevent, \mevent', \menv), \mtrace \in \denotetconfulle{\mtcon}{\menv'}}
+\\
+    \denotetconfulle{\epsilon}{\menv} &= \setof{\epsilon}
+\\
+    \denotetconfulle{\mevent}{\menv} &= \setbuild{\mevent'}{\menv' = \matches(\mevent, \mevent', \menv)}
+\\[2pt]
+    \semneg{\Pi} &= \setbuild{\mtrace}{\forall \mtrace' \in \Pi\setminus\setof{\epsilon}. \mtrace' \not\le \mtrace}
+\\
+    \Pi \semseq \Pi' &= \setbuild{\mtrace \cdot \mtrace'}{\mtrace \in \Pi, \mtrace' \in \Pi'}
+ \end{align*}
+  \caption{Denotational Semantics of Temporal Contracts}
   \label{fig:tcontract-denotation}
 \end{figure}
 
-\begin{figure}
-  \begin{align*}
-    \denoteevent{\scallev{\mvar}{\mvpat}}{\mtimeline}{\menv} &= \\
-    &\left\{\begin{array}{ll}
-           \setbuild{\apvcall{\menv(\mvar)}{\mval}}{\mval \in \vpatToData(\mvpat, \menv)} &\text{ if } \timelineis{\menv(\mvar)}{\mtimeline} \\
-           \emptyset & \text{ otherwise}
-           \end{array}\right.
-\\
-    \denoteevent{\scallev{\mtoplevelname}{\mvpat}}{\mtimeline}{\menv} &=
-      \setbuild{\apvcall{\mval}{\mval'}}{
-        \begin{array}{l}
-\mval' \in \vpatToData(\mvpat, \menv),\\
- \labelis{\mval}{\mtoplevelname} \text{ and } \timelineis{\mval}{\mtimeline}
-\end{array}
-}
-\\
-   \vpatToData(\swc, \menv) &= \Value
-\\
-   \vpatToData(\mvar, \menv) &= \setof{\menv(\mvar)}
-\\
-   \vpatToData(\mtoplevelname, \menv) &= \setbuild{\mval}{\mval \equiv \bclos{\mtoplevelname}{\swc}{\swc}{\swc}{\swc}{\swc}{\swc}{\swc}}
-\\
-   \vpatToData(\mconstant, \menv) &= \setof{\mconstant}
-  \end{align*}
-  where $\timelineis{\bclos{\swc}{\swc}{\swc}{\swc}{\mtimeline}{\swc}{\swc}{\swc}}{\mtimeline}$ \\
-  and $\labelis{\bclos{\mtoplevelname}{\swc}{\swc}{\swc}{\swc}{\swc}{\swc}{\swc}}{\mtoplevelname}$ \\
-  (Return events are similar to calls)
-  \caption{Denotation of events}
-  \label{fig:event-denotation}
-\end{figure}
-
-Negation differs from what one might expect due to the prefix closure at the top level.
 %
-Say we defined negation to be
-\begin{equation*}
-  \denotetcon{\stnot{\mtcon}}{\mtimeline}{\menv} = \Traces^\mtimeline \setminus \denotetcon{\mtcon}{\mtimeline}{\menv}\text.
-\end{equation*}
-In this case, $\mevent\mevent' \in \prefixes(\denotetcon{\stnot{\mevent}}{\mtimeline}{\menv})$, and because of prefix closure, $\mevent \in \prefixes(\denotetcon{\stnot{\mevent}}{\mtimeline}{\menv})$!
+We say $\mexp$ satisfies its temporal contract if its event trace filtered by the timeline ($\denote{\mexp}_\mtimeline$) is in the denotation of the temporal contract for that timeline ($\denotetcon{\mtcon})$, where $\bot$ is an empty environment of temporal bindings).
 %
-Temporal contract monitors should blame the faulty party as soon as the contract has been violated, and thus any trace with a faulty prefix should be rejected.
-%%
-
-%%
-Each temporal contract monitor redex evaluation creates a new timeline --- a new slice of program events that must adhere to permissible events that the denotation of the temporal contract defines.
-%
-Say $\mtimeline$ is the timeline for a contract $\mtcon$ on an expression $\mexp$.
-%
-We say $\mexp$ satisfies its temporal contract if its event trace filtered by the timeline ($\denote{\mexp}_\mtimeline$) is in the denotation of the temporal contract for that timeline ($\prefixes(\denotetcon{\mtcon}{\mtimeline}{\bot})$, where $\bot$ is an empty environment of temporal bindings).
-%
-For this to be a contract system and not just a notion of correctness, however, we need some machinery to monitor the progression of the event trace and check to see that it meets our specification.
-%
-The contracts could be interpreted with some simple combinators, but there is no guarantee that the space of combinators is finite, which is important for our analysis.
-%
-We introduce a simple generalization of finite state machines (FSMs) that is not necessarily finite-state in order to match against events and bind values for later equality checking: \emph{pattern-matching state machines} (\emph{PMSM}s).
-
