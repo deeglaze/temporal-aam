@@ -16,17 +16,17 @@
   \begin{align*}
  \mtcon \in \TContract &::=
       \mevent \alt \snonevent{\mevent}
- \alt \stseq{\mtcon}{\mtcon}
  \alt \stnot{\mtcon}
- \alt \stOr{\mtcon}{\mtcon}
- \alt \stAnd{\mtcon}{\mtcon}
+ \alt \stOr{\mtcon\ldots}
+ \alt \stAnd{\mtcon\ldots}
+ \alt \stseq{\mtcon}{\mtcon}
  \alt \stmany{\mtcon} \\
-&\alt \sddd \alt \stfail
- \alt \stcall{\mname}{\mvar}{\mtcon}
- \alt \stret{\mname}{\mvar}{\mtcon}
+&\alt \epsilon
+ \alt \stbind{\mbevent}{\mtcon}
 \\
-\mevent \in \Event &::= \scallev{\mname}{\mvpat} \alt \sretev{\mname}{\mvpat} \\
-\mvpat \in \VPat &::= \mconstant \alt \mname \alt \swc \\
+\mevent \in \Event &::= \scallev{\mname}{\mvpat} \alt \sretev{\mname}{\mvpat} \alt \sany \\
+\mbevent \in \BEvent &::= \scallev{\mname}{{\tt ?} \mvar} \alt \sretev{\mname}{{\tt ?} \mvar} \\
+\mvpat \in \VPat &::= \mconstant \alt \mname \alt \scons(\mvpat,\mvpat) \alt \snegpat{\mvpat} \alt \swc \\
 \mvar \in \Var &\quad\text{an infinite set} \\
 \mname \in \Name &::= \mvar \alt \mtoplevelname
   \end{align*}
@@ -42,7 +42,9 @@ The syntax is presented in \autoref{fig:tcontract-syntax}.
 %%
 
 %%
-Temporal contracts ($\mtcon$) include events ($\mevent$) (for $\mevent$ction), negated events ($\snonevent{\mevent}$), concatenation ($\stseq{\mtcon}{\mtcon}$) (often represented using juxtaposition), negated contracts ($\stnot{\mtcon}$), Kleene closure of events ($\stmany{\mtcon}$), union ($\stOr{\mtcon}{\mtcon}$), intersection ($\stAnd{\mtcon}{\mtcon}$), the universal temporal contract ($\sddd$), the empty temporal contract ($\stfail$), and higher-order binding events ($\stcall{\mname}{\mvar}$ and $\stret{\mname}{\mvar}$).
+Temporal contracts ($\mtcon$) include events ($\mevent$) (for $\mevent$ction), negated events ($\snonevent{\mevent}$), concatenation ($\stseq{\mtcon}{\mtcon}$) (often represented using juxtaposition), negated contracts ($\stnot{\mtcon}$), Kleene closure of events ($\stmany{\mtcon}$), union ($\stOr{\mtcon\ldots}$), intersection ($\stAnd{\mtcon\ldots}$), the empty temporal contract ($\epsilon$), and higher-order binding events ($\stcall{\mname}{\mvar}$ and $\stret{\mname}{\mvar}$).
+%
+We consider the universal contract $\sddd$ as a macro for $\stAnd{\setof{}}$, and the fail contract $\bot$ as a macro for $\stOr{\setof{}}$.
 %
 The difference between $\snonevent{\mevent}$ and $\stnot{\mtcon}$ is that the first must be an event and force time to step forward once, whereas the second may match arbitrarily many events.
 %%

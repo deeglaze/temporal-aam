@@ -19,7 +19,7 @@ A denotational semantics for temporal contracts is difficult to get right, since
 %
 Liveness-looking properties have a hidden, insidious behavior with negation: contracts that state anything about how a trace may not end would allow just such traces since extensions to such bad traces are acceptable, and prefix closure will throw the ``bad traces'' back into what is acceptable.
 %
-For example, $\mevent\mevent \in \prefixes(\denotetcon{\stnot{\mevent}}{\mtimeline}{\menv})$, and because of prefix closure, $\mevent \in \prefixes(\denotetcon{\stnot{\mevent}}{\mtimeline}{\menv})$!
+For example, $\mevent\mevent \in \prefixes(\denote{\stnot{\mevent}}_{\menv})$, and because of prefix closure, $\mevent \in \prefixes(\denote{\stnot{\mevent}}_{\menv})$!
 %
 Temporal contract satisfaction should not be contingent on future observations; an effective monitor should blame \emph{as soon as} a contract is not satisfied.
 %
@@ -35,19 +35,19 @@ Furthermore, our implementation catches more ``bad'' behavior than their monitor
 %%
 The denotational semantics in \autoref{fig:tcontract-denotation} lends itself nicely to online monitoring via a derivative parsing approach.
 %
-For each event $\mevent$ we come across on a timeline $\mtimeline$, we set $\mTMons(\mtimeline)$ to $\derive{\mevent}{\mTMons(\mtimeline)}$, as long as the derivative isn't empty.
+For each event $\mevent$ we come across on a timeline $\mtimeline$, we set $\mTMons(\mtimeline)$ to $\derive{\mevent}{\mTMons(\mtimeline)}$, as long as the derivative isn't failing.
 %
-We can show that the partial trace semantics is prefix-closed (\autoref{thm:prefix-closed}), and thus we can pinpoint the cause of an error as soon as it is sent to the monitor - a necessary condition for effective blame management in this realm.
+We can show that the partial trace semantics is prefix-closed (\autoref{thm:prefix-closed}), and thus we can pinpoint the cause of an error as soon as it is sent to the monitor --- a necessary condition for effective blame management in this realm.
 %%
 
 %%
-We made the design choice to require a function contract monitor wrapping for named values to consider their calls or returns as events --- this choice is reflected in the denotation of events in \autoref{fig:event-denotation}.
+We made the design choice to require a function contract monitor wrapping for named values to consider their calls or returns as events.
 %
 The reason for this is that control should flow back to the timeline considered in order for an event to affect that timeline.
 %
 It is easy enough to amend the structural contracts to reflect the fact that a binding is considered a function in the temporal contract.
 
-\begin{theorem}[Prefix closure]
+\begin{theorem}[Prefix closure]\label{thm:prefix-closed}
   $\prefixes(\denotetcone{\mtcon}{\menv}) = \denotetcone{\mtcon}{\menv}$
 \end{theorem}
 
@@ -88,7 +88,7 @@ It is easy enough to amend the structural contracts to reflect the fact that a b
 \\
     \denotetconfulle{\mevent}{\menv} &= \setbuild{\mevent'}{\menv' = \matches(\mevent, \mevent', \menv)}
 \\[2pt]
-    \semneg{\Pi} &= \setbuild{\mtrace}{\forall \mtrace' \in \Pi\setminus\setof{\epsilon}. \mtrace' \not\le \mtrace}
+    \semneg{\Pi} &= \setbuild{\mtrace}{\forall \mtrace' \in \Pi\setminus\setof{\epsilon}. \mtrace' \nleq \mtrace}
 \\
     \Pi \semseq \Pi' &= \setbuild{\mtrace \cdot \mtrace'}{\mtrace \in \Pi, \mtrace' \in \Pi'}
  \end{align*}
@@ -96,6 +96,140 @@ It is easy enough to amend the structural contracts to reflect the fact that a b
   \label{fig:tcontract-denotation}
 \end{figure}
 
+\begin{figure}
+  \begin{align*}
+    \derivee{\mevent}{\epsilon}{\menv} &= \bot
+\\
+    \derivee{\mevent}{\mevent'}{\menv} &= \left\{
+      \begin{array}{ll}
+        \epsilon & \text{if } \menv' = \matches(\mevent', \mevent, \menv) \\
+        \bot & \text{otherwise}
+      \end{array}\right.
+\\
+    \derivee{\mevent}{\stbind{\mevent'}{\mtcon}}{\menv} &=
+    \left\{\begin{array}{ll}
+      \mtcon,\menv' & \text{if } \menv' = \matches(\mevent', \mevent, \menv) \\
+      \bot & \text{otherwise}
+    \end{array}\right.
+\\
+    \derivee{\mevent}{\stseq{\mtcon_0}{\mtcon_1}}{\menv} &= \stOr{\setof{\derivee{\mevent}{\mtcon_0}{\menv},\ \stseq{\nullable(\mtcon_0)}{\derivee{\mevent}{\mtcon_1}{\menv}}}}
+\\
+    \derivee{\mevent}{\stOr{\mtcon\ldots}}{\menv} &= \stOr{\derivee{\mevent}{\mtcon}{\menv}\ldots}
+\\
+    \derivee{\mevent}{\stAnd{\mtcon\ldots}}{\menv} &= \stAnd{\derivee{\mevent}{\mtcon}{\menv}\ldots}
+\\
+    \derivee{\mevent}{\stmany{\mtcon}}{\menv} &= \stseq{\derivee{\mevent}{\mtcon}{\menv}}{\stmany{\mtcon}}
+\\
+    \derivee{\mevent}{\stnot{\mtcon}}{\menv} &= \nullable(\derivee{\mevent}{\mtcon}{\menv}) \to \bot, \stnot{\derivee{\mevent}{\mtcon}{\menv}}
+\\[2pt]
+    \nullable(\epsilon) &= \nullable(\stmany{\mtcon}) = \nullable(\stnot{\mtcon}) = \epsilon
+\\
+    \nullable(\stbind{\mevent}{\mtcon}) &= \nullable(\mevent) = \bot
+\\
+    \nullable(\stOr{\mtcon\ldots}) &= \bigvee{\nullable(\mtcon)\ldots}
+\\
+    \nullable(\stAnd{\mtcon\ldots}) &= \bigwedge{\nullable(\mtcon)\ldots}
+\\
+    \nullable(\stseq{\mtcon_0}{\mtcon_1}) &= \nullable(\mtcon_0)\wedge \nullable(\mtcon_1)
+\\
+    \nullable(\mtcon,\menv) &= \nullable(\mtcon)
+  \end{align*}
+  \caption{Derivatives of Temporal Contracts}
+  \label{fig:tcon-deriv}
+\end{figure}
+
 %
-We say $\mexp$ satisfies its temporal contract if its event trace filtered by the timeline ($\denote{\mexp}_\mtimeline$) is in the denotation of the temporal contract for that timeline ($\denotetcon{\mtcon})$, where $\bot$ is an empty environment of temporal bindings).
+We say $\mexp$ satisfies a temporal contract $\mtcon$ if its event trace filtered by the timeline to which the contract is attached ($\denote{\mexp}_\mtimeline$) is in the denotation of the temporal contract ($\denotetcon{\mtcon}$).
 %
+
+\begin{theorem}[Full]
+ $\denotetconfull{\derivee{\mevent}{\mtcon}{\menv}} = \setbuild{\mtrace}{\mevent\mtrace \in \denotetconfulle{\mtcon}{\menv}}$
+\end{theorem}
+
+\begin{theorem}[Partial]
+ $\denotetcon{\derivee{\mevent}{\mtcon}{\menv}} = \setbuild{\mtrace}{\mevent\mtrace \in \denotetcone{\mtcon}{\menv}}$
+\end{theorem}
+
+\begin{theorem}[Top level full]
+ $\denotetconfull{\derive{\mevent}{\mtcon}} = \setbuild{\mtrace}{\mevent\mtrace \in \denotetconfull{\mtcon}}$
+\end{theorem}
+
+\begin{theorem}[Top level partial]
+ $\denotetcon{\derive{\mevent}{\mtcon}} = \setbuild{\mtrace}{\mevent\mtrace \in \denotetcon{\mtcon}}$
+\end{theorem}
+
+The latter three fall out of the first from simple inductions.
+%
+The first theorem depends on the following lemma
+
+\begin{lemma}[Nullability]\label{lem:nullability}
+  $\nullable(\mtcon) = \epsilon \iff \epsilon \in \denotetconfulle{\mtcon}{\menv}$
+\end{lemma}
+and has a straightforward proof except in the $\neg$ case, which requires some tricky reasoning.
+%
+\begin{byCases}
+  \case{\mtcon \equiv \stnot{\mtcon'}}{
+    \begin{byCases}
+      \case{H : \nullable(\derivee{\mevent}{\mtcon'}{\menv}) = \epsilon}{
+        \begin{pfsteps*}
+          \item{$\denotetconfull{\derivee{\mevent}{\mtcon}{\menv}} = \emptyset$} \BY{computation}
+          \item{$\epsilon \in \denotetconfull{\derivee{\mevent}{\mtcon'}{\menv}}$}
+            \BY{$H$, lemma \ref{lem:nullability}} \pflabel{deriveeps}
+          \item{$\mevent \in \denotetconfulle{\mtcon'}{\menv}$} \BY{IH, \pfref{deriveeps}}
+        \end{pfsteps*}
+        To show $\setbuild{\mtrace}{\mevent\mtrace \in \denotetconfulle{\mtcon}{\menv}} = \emptyset$, we suppose $\mtrace \in \semneg{\denotetconfulle{\mtcon'}{\menv}}$ and show $\mtrace \nequiv \mevent\mtrace'$:
+        \begin{byCases}
+          \case{\mtrace \equiv \mevent\mtrace'}{
+            Since $\mevent \in \denotetconfulle{\mtcon'}{\menv}$, by definition of $\neg$, contradiction.}
+          \otherwise{$\mtrace$ not prefixed by $\mevent$}
+        \end{byCases}}
+      \case{H : \nullable(\derivee{\mevent}{\mtcon'}{\menv}) = \bot}{
+\newcommand{\lhs}{\semneg{\setbuild{\mtrace}{\mevent\mtrace \in \denotetconfulle{\mtcon'}{\menv}}}}
+\newcommand{\rhs}{\semneg{\denotetconfulle{\mtcon'}{\menv}}}
+        \begin{pfsteps*}
+          \item{$\epsilon \notin \denotetconfull{\derivee{\mevent}{\mtcon'}{\menv}}$}
+             \BY{lemma \ref{lem:nullability}} \pflabel{derivenoeps}
+          \item{$\setbuild{\mtrace}{\mevent\mtrace \in \denotetconfulle{\mtcon'}{\menv}} = \denotetconfull{\derivee{\mevent}{\mtcon'}{\menv}}$} \BY{IH} \pflabel{IH}
+          \item{$\mevent \notin \denotetconfulle{\mtcon'}{\menv}$} \BY{\pfref{derivenoeps}, \pfref{IH}}
+          \item{Goal is $\lhs = \setbuild{\mtrace}{\mevent\mtrace \in \rhs}$} \BY{computation}
+        \end{pfsteps*}
+        We prove this goal by bi-containment:
+        \begin{byCases}
+          \case{\mathit{Hs} : \mtrace \in \lhs}{
+            \begin{pfsteps*}
+              \item{$\forall \mtrace' \in \setbuild{\mtrace}{\mevent\mtrace \in \denotetconfulle{\mtcon'}{\menv}}\setminus\setof{\epsilon}. \mtrace' \nleq \mtrace$}
+                  \BY{$\mathit{Hs}$ and inversion} \pflabel{Hinv}
+               \item{Suppose $\mtrace' \in \denotetconfulle{\mtcon'}{\menv}$} \pflabel{let}
+               \item{$\mtrace' \nleq \mevent\mtrace$}
+                 \BY{\pfref{Hinv}, \pfref{let}, prefix cancellation} \pflabel{concl}
+               \item{$\mtrace \in \rhs$} \BY{\pfref{concl}}
+            \end{pfsteps*}}
+          \case{\mathit{Hs} : \mtrace \in \rhs}{
+            \begin{pfsteps*}
+              \item{$\forall \mtrace' \in \denotetconfulle{\mtcon'}{\menv}\setminus\setof{\epsilon}. \mtrace' \nleq \mevent\mtrace$}
+                \BY{$\mathit{Hs}$, inversion} \pflabel{Hsinv1}
+              \item{Suppose $\mtrace' \in \setbuild{\mtrace}{\mevent\mtrace \in \denotetconfulle{\mtcon'}{\menv}} \setminus\setof{\epsilon}$} \pflabel{let}
+              \item{$\mevent\mtrace' \in \denotetconfulle{\mtcon'}{\menv}$} \BY{\pfref{let}} \pflabel{in}
+              \item{$\mtrace' \nleq \mtrace$} \BY{\pfref{Hsinv1}, \pfref{in}, prefix cancellation} \pflabel{concl}
+              \item{$\mtrace \in \lhs$} \BY{\pfref{concl}}
+            \end{pfsteps*}}
+        \end{byCases}}
+    \end{byCases}}
+\end{byCases}
+%z
+
+An additional property we need to have is that we can tell when a contract is empty, so that we can blame appropriately.
+\begin{theorem}
+  $\mtrace \in \denotetcon{\mtcon} \iff \neg\flatempty(\mtcon)$
+\end{theorem}
+%
+Depends on
+\begin{lemma}[Flat emptiness]
+  $\flatempty(\mtcon) \implies \denotetconfull{\mtcon} = \emptyset$
+\end{lemma}
+Where $\flatempty$ is defined similarly to $\nullable$, but every base case is $\bot$, and the $\vee$ and $\wedge$ are swapped (thus $\top$ can only come from an empty $\cup$ --- the failing contract).
+%
+Our implementation reduces temporal contracts at construction time, so that the following invariant holds of represented contracts:
+\begin{equation*}
+ \flatempty(\mtcon) \iff \mtcon = \bot
+\end{equation*}

@@ -7,15 +7,15 @@ When this is the case, one might hope to rely on software contracts~\cite{dvanho
 %
 A proposed system of \emph{temporal contracts}~\citep{ianjohnson:dfm:icfp2011} provide a linguistic mechanism to describe temporal properties that usually are checked extra-linguistically via model-checking an abstraction of the program.
 %
-Example temporal properties are, ``a file can only be closed if it has been opened'' and, ``if function A is given a function B, then B may not be called once A returns.''
+Example temporal properties are, ``a file can only be closed if it has been opened'' and, ``if function A is given a function B, then that B may not be called once A returns.''
 %
-Such invariants are important for interfaces that have set-up and tear-down protocols to follow.
+Such invariants are important for interfaces that have set-up and tear-down protocols to follow, or even pure interfaces that have particular compositions of calls needed to construct some object.
 %%
 
 %%
 There are downsides to software contracts, however.
 %
-If a contract is violated, a blame exception is thrown or the program simply terminates with the error.
+If a contract is violated, a blame exception is thrown or the process simply terminates with the error.
 %
 Contracts do not ensure correctness --- they help the process of constructing correct programs.
 %
@@ -33,7 +33,7 @@ We propose a framework that is composable with techniques to verify functional c
 %
 The technique uses the Abstracting Abstract Machines (AAM) approach~\citet{dvanhorn:VanHorn2010Abstracting} to check for reachability of a temporal contract blame.
 %
-The language for temporal contracts closely mimics linear temporal logic (LTL), but distinguishes itself in a way that makes LTL model-checking prohibitive on top of the initial cost of constructing a model to feed an LTL model-checker.
+The language for temporal contracts is an extension of regular expressions with back-references, as many desirable properties are difficult to express in LTL with back-references (DLTL ~\cite{ianjohnson:jlo})\footnote{A feeling expressed by DLTL's inventor~\citep{boddenadmission}}.
 %
 Temporal contracts can talk about value flow and use over time via binding in the specification --- this is not something that LTL can locally express.
 %
@@ -41,7 +41,7 @@ The semantics of temporal contracts also is geared towards checking safety prope
 %
 AAM was originally targeted towards describing flow analyses, but is robust enough to apply to model-checking safety properties of higher-order programs.
 %
-It is well-known that control-flow analysis can be stated in terms of model-checking, but this observation is misleading; one must use quadratically many model-checking queries to discover what a monovariant flow analysis can discover in one run.
+It is well-known that control-flow analysis can be stated in terms of model-checking, but this observation is misleading; one must use quadratically many model-checking queries to discover what a monovariant flow analysis can discover in one run, and significantly more if polyvariant (most spurious and ignored by a control-flow analysis).
 %
 The realm of temporal contract verification is similar: to use a model-checker, we would have to run a data-flow analysis up front in order to collect values that might be used as bindings, enumerate all possible binding/reference insantiations of the temporal contract, and then translate those contracts into LTL queries --- much more work than just running the program abstractly and reporting reachable blame states.
 %
@@ -65,14 +65,29 @@ Model-checking and contract verification (proving functional correctness) are hu
 %
 The main separating factor between this work and related work is that all model-checking literature so far has treated the specification of temporal properties as \emph{extra-linguistic}, meaning there is no mechanism in the object language that could monitor for the properties.
 %
-Contracts are defined by their behavior of witnessing program execution, and thus do not have the same guarantees that a static type system has, such as, ``this function \emph{always} returns an integer when given an integer.''
-%
-In that vein, temporal contracts can never guarantee liveness properties of a program.
-%
-\citet{ianjohnson:dthf:complete} show that contracts that simulate types will never violate the guarantee that well-typed programs will never be blamed in a gradually-typed system.
-%
-Likewise, if we interpret temporal contracts in a stricter fashion --- sequenced events \emph{must} happen --- then in the abstract we can verify liveness properties.
 %%
+
+%%
+\paragraph{Runtime verification:}
+Monitoring sequences of events at runtime is a growing area of research with its own conference (RV).
+%
+This area has similarities to temporal contracts due to their runtime monitoring and languages for describing execution traces, but none have the concept of blame or a static story.
+%
+Indeed, the name ``verification'' is a misnomer, as runtime monitoring cannot prove the absence of bugs for all executions, a property we attribute to formal verification.
+%
+The notion of an event is reminiscent of aspect-oriented programming's notion of a \emph{join-point}, and thus we see several systems built on AspectJ that offer a domain-specific language for running \emph{advice} when the event trace matches a specified pattern, e.g. Tracematches and J-LO ~\citep{ianjohnson:Allan05addingtrace, ianjohnson:jlo}.
+%
+Tracematches use a language similar to temporal contracts, but do not support negation; they also have a different purpose: execute advice at more specific times based on the program history, and not to offer a high-level specification system with blame that contracts provide.
+%
+J-LO on the other hand offers a monitoring system based on LTL propositions with binding constructs that tracks the satisfaction of the LTL proposition with the assumption that future portions of the proposition hold.
+%
+If the \emph{now} portion of the proposition fails to hold, the monitor raises a failure (not a blame).
+%
+J-LO is closer to temporal contracts in its goal, but not its language, whereas tracematches match the language and not the goal.
+%
+In both cases, the only static analysis is on the specification itself in order to improve runtime performance, and not on the monitored program's adherence to the specification.
+%
+Both systems are also tied to Java's class structure, so they cannot express properties of higher-order behavior or refinements on values.
 
 %%
 \paragraph{First-order model-checking:}
@@ -85,17 +100,20 @@ Java and C++ both have several high-quality model-checking tools \citep{ianjohns
 %
 Bandera~\citep{ianjohnson:bandera} is a sophisticated tool-chain that uses several static analysis techniques to extract a finite model from a Java program to feed to various back-end model-checkers.
 %
-Similar to our approach, Bandera employs control-flow analysis in order to produce compact models, but unsimilarly, the checking mechanisms are not in the control-flow analysis itself.
+Similar to our approach, Bandera employs flow analysis in order to produce compact models, but unsimilarly, it does not synthesize checkers for runtime monitoring the expressed properties, nor does it natively support higher-order functions.
 %%
 
 %%
-A technique that specifically targets higher-order languages, higher-order recursion schemes (HORS)~\citep{ianjohnson:Knapik:2002:HPT:646794.704852}, assumes a call-by-name semantics for the language it checks.
+A technique that specifically targets higher-order languages, higher-order recursion schemes (HORS)~\citep{ianjohnson:Knapik:2002:HPT:646794.704852}, is rooted in simply-typed, call-by-name lambda terms, but has model-checking solutions that have been extended to call-by-value ~\citep{?} and untyped ~\citep{?} languages, through heavy type-theoretic machinery.
 %
-The current techniques for the initial abstraction of a program to HORS is not generally applicable to untyped or impure languages, since it creates the recursion schemes from the simple types of a given program.
+Model-checking an untyped HORS is undecidable, and they make various approximations biased towards to soundly model-check programs in traditional type systems rather than traditional untyped languages.
 %
-HORS can be applied for call-by-value order if the program is first transformed into CPS, since then the intended evaluation order is encoded into call-by-name.
+Our technique is lighter weight and more transparently correct since it follows from a systematic transformation of a standard semantics.
 %
-This still does not address the need for simple types, and does not apply for languages that cannot be expressed in CPS.
+Additionally, the AAM approach makes extensions to more difficult language features straightforward, whereas in HORS one would need to CPS, double CPS, or perform a functional encoding of a new form of data, all of which impose additional proof obligations/points-of-failure for the analysis implementor.
+%
+Finally, HORS do not synthesize runtime monitors or have a notion of blame.
+
 
 \paragraph{Static contract verification:}
 In the world of statically verifying software contracts, there is much more work.
@@ -134,9 +152,9 @@ Our techniques should smoothly integrate with theirs when considering partial pr
 
 We use the AAM approach to soundly approximate our concrete semantics.
 %
-This first requires a CESK-like machine to transform, but there are known ways to systematically transform Felleisen-style reduction semantics into corresponding CESK machines ~\citep{?}.
+This first requires a CESK-like machine to transform, but there are known ways to systematically transform Felleisen-style reduction semantics into corresponding CESK machines ~\citep{dvanhorn:Danvy-Nielsen:RS-04-26}.
 %
-The important aspect of the abstraction process is not this transformation, but the fact that the space of values becomes \emph{finite}, meaning the space of temporal contract derivatives is finite.
+The important aspect of the abstraction process is not this transformation, but the fact that the space of values becomes \emph{finite}, meaning the space of temporal contract derivatives is finite (a simple coinduction).
 %
 Therefore, the only aspects of THOcons that we need to tamper with are allowing binding to sets of values, and the notion of equality, to weaken it to be conservative with our abstractions.
 %
@@ -148,9 +166,11 @@ In our semantics with just closures, conses, booleans and integers, we consider:
  \item and all other possibilities to be ``\emph{never}-equal''.
 \end{itemize}
 %
-This notion of equality lifts over sets of values in the obvious way.
+Then, any time a temporal contract is in a \emph{may} state, we blame conservatively.
 %
-There are several different techniques that we could apply in order to improve the precision of the analysis:
+Since timelines can be abstractly allocated more than once, each time we send an event to the monitor, we have to both step and not step the contract, which can kill precision and performance.
+%
+We thus strongly recommend at least the first of the following techniques to improve the precision of the analysis:
 \begin{itemize}
 \item{use abstract counting ~\citep{dvanhorn:Might:2006:GammaCFA} to improve equality checking of allocated data;}
 \item{use abstract garbage collection~\citep{dvanhorn:Might:2006:GammaCFA} to remove dead temporal monitors;}
@@ -159,22 +179,28 @@ There are several different techniques that we could apply in order to improve t
 \item{use a polyvariant allocation strategy such as $m$-CFA ~\citep{dvanhorn:Might2010Resolving} or polymorphic splitting~\citep{dvanhorn:wright-jagannathan-toplas98}.}
 \end{itemize}
 %
-We leave this exploration and evaluation of possibilities to future work.
+We built and evaluated all these but the last.
 %%
 
 \section{Evaluation}
 %%
 
 %%
-Our examples didn't take hours to check!
+We built temporal higher-order contracts into our existing framework for analyzing a subset of Scheme \footnote{Model available online \url{http://github.com/dvanhorn/oaam/tree/thocon}}.
 %
-Our model is available online \footnote{\url{http://github.com/ianj/temporal-aam}}.
+The sort example is verified if we don't use \texttt{(listof integer?)} twice in the contract.
+%
+This gives us strong motivation to improve the analysis precision to a pushdown abstraction, which can verify the example.
+%
+If we call sort twice, we can't verify it without abstract garbage collection.
 %%
 
 %%
-\section{Conclusion}
+\section{Conclusion and future work}
 %%
 
 %%
-Shit works.
+Shit works, but we want to make better shit.
+%
+Particularly the blame story needs better understanding, with deotonic logic.
 %%
