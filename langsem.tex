@@ -84,11 +84,6 @@ At this point we would like to note that our usage of labels differs slightly fr
 \\
 \mscon &::= \ldots
 \alt \sown*{\sflat{\mexp}}{\mmlab}
-\\
-\sOwn{\mexp}{\mmlab} = \sown{ \ldots \sown{\mexp}{\mmlab} \ldots }{\mmlab}
-&\quad\text{where $\forall$ labels $k$ and terms $\mexp^\prime$, $\mexp \neq \sown{\mexp^\prime}{k}$}
-\\
-\sown*{\sflat{\mexp}}{\mmlab} &\quad\text{denotes the set of responsible parties $\overline{\mmlab}$}
 \end{align*}
 \caption{Value space}
 \label{fig:values}
@@ -113,15 +108,7 @@ The expression $\sown{\mexp}{\mmlab}$ denotes that the $\mexp$ is \emph{owned} \
 We also extend our definition of structural contracts to include ownership of flat contracts ($\sown*{\sflat{\mexp}}{\mmlab}$).
 
 %
-\NB We provide a brief explanation of some notation at the bottom of the figure.
-%
-Of particular note, we use $\sOwn{\mexp}{\mmlab}$ to denote that $\mexp$ may have no ownership annotations, but if it has one then it is $\ell$ for all such annotations.
-%
-Our concept and usage of ownership is identical to that of \citet{ianjohnson:dthf:complete}, which we recommend reading to fully understand this topic; as it is orthogonal to our work, we do not delve into it in much detail in this paper.
-%
-
-%
-Values ($\mval$) are conventional except for ownership ($\sown{\mval}{\mmlab}$) and blessed closures ($\bclos{\mmlab}{\mscon}{\mmlab}{\mmlab}{\mtimeline}{\mscon}{\mmlab}{\maddr}$).
+Values ($\mval$) are conventional except for blessed closures ($\bclos{\mmlab}{\mscon}{\mmlab}{\mmlab}{\mtimeline}{\mscon}{\mmlab}{\maddr}$).
 %
 Though we've discussed timelines ($\mtimeline$) (cf. \autoref{sec:temporal-semantics}), we show here that our representation for them is either as an address ($\maddr$) or the top level ($\toplevel$).
 %
@@ -152,7 +139,6 @@ The former maps addresses to sets of values and the latter maps timelines to PMS
 &\alt \sret{\ell}{\mtimeline}{\mctx*}
  \alt \sret{\ell^\prime}{\mtimeline}{\mctx{\ell}} \\
 &\alt \sown{\mctx*}{\ell}
- \alt \sOwn{\mctx{\ell}}{\ell^\prime}
 \\
 \mctx* \in \ECtx* &::=
       \hole
@@ -163,7 +149,7 @@ The former maps addresses to sets of values and the latter maps timelines to PMS
  \alt \vcons{\mval}{\mctx*} \\
 &\alt \scall{\mmlab}{\mtimeline}{\mctx*}
  \alt \sret{\mmlab}{\mtimeline}{\mctx*} \\
-\ECtx* &\subset \ECtx^\mmlab
+\ECtx* &\subset \ECtx
 \\
 \mstate \in \State &= \chevron{\mctx{\mmlab}, \msto, \mTMons} \quad\text{machine state}
 \\

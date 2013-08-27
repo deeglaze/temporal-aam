@@ -36,7 +36,7 @@
 
 Temporal contracts provide a declarative language for monitoring the temporal ordering of events that pass through module boundaries.
 %
-We analyze a slightly different presentation than ~\citeauthor{ianjohnson:dfm:icfp2011}'s temporal contracts that allows more precise specification of value use.
+We present and analyze a slightly different formulation than ~\citeauthor{ianjohnson:dfm:icfp2011}'s temporal contracts that allows for more precise specification of value-use.
 %
 The syntax is presented in \autoref{fig:tcontract-syntax}.
 %%
@@ -101,7 +101,7 @@ We leave call/return matching to future work, as it is not necessary to verify t
 \end{align*}
 
 %%
-This example gives contract for a hypothetical $sort$ function which takes two arguments: a comparator and a list (of positive numbers).
+This example presents the contract for a hypothetical $sort$ function which takes two arguments: a comparator and a list (of positive numbers).
 %
 The notation ``$\mathit{name}\ :\ Domain\ \to\ Range$'' describes a function contract where the argument satisfies the $Domain$ contract and the result satisfies the $Range$ contract.
 %
@@ -109,7 +109,7 @@ The ``$\mathit{name}\ :$'' prefix denotes the name of the function, for use in t
 %%
 
 %%
-$SortContract$ is also has a temporal component, given by the ``where'' clauses following its structural (function) contract.
+$SortContract$'s temporal component, given by the ``where'' clauses following its structural (arrow) contract.
 %
 The first of these clauses states that a second call to $sort$ may not occur (hence the negation of the trace) if there is no intervening return from $sort$ ($\stmany{\snonevent{\ret{sort}}}$).
 %
@@ -146,11 +146,11 @@ A file handle, in turn, is a record of functions which interact with the file: $
 %%
 
 %%
-The temporal contract is interesting: it is not phrased in terms of a negation, but rather an affirmation.
+The temporal contract is what is interesting: it is not phrased in terms of a negation, but rather an affirmation.
 %
 Its goal is to state that a user of the file is forbidden from making use of the file handle (through the use of its component functions) after the user has $close$d the file.
 %
-It is phrased such that there is no ``$\sddd$'' at the end of its trace; thus this means that the last reference one can make to such a monitored record is returning from $close$; after that, it cannot be used.
+It is phrased such that there is no ``$\sddd$'' at the end of its trace; this means that the last reference one can make to such a monitored record is returning from $close$; after that, it cannot be used.
 %
 %TODO: Do we need to define prefix-closure?
 Note that this is not a \emph{liveness property}; this does not mean that a return from $close$ \emph{must} happen, as traces are \emph{prefix-closed}.
@@ -263,16 +263,16 @@ In \autoref{fig:tcp} we show the contract for a hypothetical TCP connection modu
 %
 A client of this module may $open$ a $\tcpsock$ for initiating a connection or may $listen$ to a $\tcpsock$ for passively connecting.
 %
-A $\tcpc$ is defined similarly to our file system example: it is a record of functions which interact with the connection: $send$, $recv$, $timeout$, and $close$.
+A $\tcpc$ is defined similarly to our file system example; it is a record of functions which interact with the connection: $send$, $recv$, $timeout$, and $close$.
 %
-Notably, $send$ and $recv$ interact with data in the form of $\tcpdata$, which can be one of the special packets used in the TCP protocol or can simply be some amount of user data ($\tcpstyle{Data}(\_)$).
+Notably, $send$ and $recv$ interact with data of the form $\tcpdata$, which can be one of the special packets used in the TCP protocol or can simply be some amount of user data ($\tcpstyle{Data}(\_)$).
 %
 %TODO: maybe express timing out in a better manner?
-The $timeout$ function is simply internally used by the module to set timeouts for interactions with the other end of the TCP connection; clients do not directly use it and it is included solely for the ability to reason over timeouts in the temporal contract.
+The $timeout$ function is unimporatant to our discussion; it is used internally by the module to set timeouts for interactions with the other end of the TCP connection; clients do not directly use it and it is included solely for the ability to reason over timeouts in the temporal contract.
 %%
 
 %%
-A socket on the ``sending'' end of the TCP connection (having used $open$) is obligated to use the connection according to the temporal component of $\tcpsendc$.
+A socket on the ``sending'' end of the TCP connection (having used $open$) is obliged to use the connection according to the temporal component of $\tcpsendc$.
 %
 Likewise, a socket on the ``receiving'' end of the TCP connection (having used $listen$) is constrained by $\tcprecvc$.
 %
@@ -280,7 +280,7 @@ The contracts are very involved, but they implement a simplified version of the 
 %
 Note that the temporal clause in each contract is phrased in the affirmative, as in \autoref{sec:file}; however, unlike that example, this property is indeed a (restricted) kind of \emph{liveness property}.
 %
-It states that the client uses the socket in a manner consistent with the TCP protocol and can expect the other end to as well.
+It states that the client uses the socket in a manner consistent with the TCP protocol and can expect the other end to likewise adhere.
 %
 The key difference between this property and a traditional liveness property is that it speaks of a liveness property with respect to \emph{a particular contract-monitoring} of a $\tcpc$; prefix-closure is still present at the top level (cf. \autoref{fig:tcontract-denotation}) and thus the protocol noted in the temporal contract may not occur if no $\tcpc$ is used.
 %%

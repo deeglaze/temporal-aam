@@ -17,7 +17,7 @@ Our semantics makes interaction between temporal contract monitors explicit, all
 %%
 A denotational semantics for temporal contracts is difficult to get right, since their behavior is implicitly prefix-closed.
 %
-Liveness-looking properties have a hidden, insidious behavior with negation: contracts that state anything about how a trace may not end would allow just such traces since extensions to such bad traces are acceptable, and prefix closure will throw the ``bad traces'' back into what is acceptable.
+Liveness-looking properties have a hidden, insidious behavior with negation: contracts that state anything about how a trace may not end would allow just such traces since extensions to such ``bad traces'' are acceptable, and prefix closure will throw the ``bad traces'' back into what is acceptable.
 %
 For example, $\mevent\mevent \in \prefixes(\denote{\stnot{\mevent}}_{\menv})$, and because of prefix closure, $\mevent \in \prefixes(\denote{\stnot{\mevent}}_{\menv})$!
 %
@@ -25,11 +25,11 @@ Temporal contract satisfaction should not be contingent on future observations; 
 %
 We thus have a different semantics for temporal contracts that ping-pongs between \emph{full traces} and \emph{partial traces}; a negated temporal contract will reject all full traces of the given contract, as well as any extension of such traces.
 %
-This semantics of negation does not satisfy double-negation elimination (DN), but we find that to be an acceptable trade-off; we do not need DN in order to implement or verify temporal contracts.
+This semantics of negation does not satisfy double-negation elimination (DNE), but we find that to be an acceptable trade-off; we do not need DNE in order to implement or verify temporal contracts.
 %
-We claim that this semantics is what \dfm meant their system to mean, as it matches up with the expectations of their prose and the test cases in their implementation.
+We claim that this semantics is what \dfm intended their system to mean, as it matches up with the expectations of their prose and the test cases in their implementation.
 %
-Furthermore, our implementation catches more ``bad'' behavior than their monitoring system, meaning we have not just formalized their implementation.
+Furthermore, our implementation catches more ``bad'' behavior than their monitoring system, meaning we have not simply formalized their implementation; rather, we have formalized a more complete system and implemented it.
 %%
 
 %%
