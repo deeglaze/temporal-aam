@@ -16,12 +16,12 @@
   \begin{align*}
  \mtcon \in \TContract &::=
       \mevent \alt \snonevent{\mevent}
+ \alt \epsilon
  \alt \stnot{\mtcon}
- \alt \stOr{\mtcon\ldots}
- \alt \stAnd{\mtcon\ldots}
  \alt \stseq{\mtcon}{\mtcon}
  \alt \stmany{\mtcon} \\
-&\alt \epsilon
+&\alt \stOr{\mtcon\ldots}
+ \alt \stAnd{\mtcon\ldots}
  \alt \stbind{\mbevent}{\mtcon}
 \\
 \mevent \in \Event &::= \scallev{\mname}{\mvpat} \alt \sretev{\mname}{\mvpat} \alt \sany \\
@@ -168,7 +168,7 @@ Instead, the property is a \emph{safety property}, though expressed in the affir
 \newcommand*{\tcprecvc}{\mathit{TCPRecvContract}}
 \newcommand*{\tcpdata}{\mathit{TCPData}}
 \newcommand*{\tcpstyle}[1]{\texttt{#1}}
-\FloatBarrier
+%\FloatBarrier
 \begin{figure}
  \newcommand*{\send}[1]{\scallev{send}{#1}}
  \newcommand*{\rcv}[1]{\sretev{recv}{#1}}

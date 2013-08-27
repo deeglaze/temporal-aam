@@ -51,7 +51,8 @@ The realm of temporal contract verification is similar: to use a model-checker, 
 %%
 Our contributions in this paper are as follows:
 \begin{itemize}
- \item{an alternative to \citeauthor{ianjohnson:dfm:icfp2011}'s temporal contract semantics;}
+% TODO: the qualification might need to be less pompous, but we do need to qualify...
+ \item{a more complete alternative to \citeauthor{ianjohnson:dfm:icfp2011}'s temporal contract semantics;}
  \item{a notion of derivative for regular expressions with back-references}
  \item{a sound abstraction to computably verify temporal contract satisfaction}
 \end{itemize}
@@ -113,7 +114,7 @@ Our technique is lighter weight and more transparently correct since it follows 
 %
 Additionally, the AAM approach makes extensions to more complex language features straightforward, whereas in HORS one would need to CPS, double CPS, or perform a functional encoding of a new form of data; all of which impose additional proof obligations/points-of-failure for the analysis implementor.
 %
-Finally, HORS do not synthesize runtime monitors or have a notion of blame.
+Finally, HORS do not synthesize runtime monitors or have a notion of blame, unlike our system.
 
 
 \paragraph{Static contract verification:}
@@ -125,7 +126,7 @@ There have been many successful efforts in the realm of first-order contract ver
 %
 If an external theorem prover can prove that the flat contracts always hold, the dynamic checks can be safely removed.
 %
-\citet{dvanhorn:Xu2012Hybrid} describe a higher-order contract verification system for OCaml by inlining all contract monitors and relying on a system of simplifications further enhanced by an SMT solver to optimize away dynamic checks.
+\citet{dvanhorn:Xu2012Hybrid} describes a higher-order contract verification system for OCaml by inlining all contract monitors and relying on a system of simplifications further enhanced by an SMT solver to optimize away dynamic checks.
 %
 \citet{dvanhorn:TobinHochstadt2012Higherorder} use AAM on a module semantics with higher-order contracts and is the most related to this work. However, whereas their work focuses on a concrete semantics for handling unknown values and an external theorem prover to show contract containment, our work focuses on an orthogonal issue of temporal contract monitoring and uses model-checking techniques.
 %
@@ -136,7 +137,7 @@ Our techniques should smoothly integrate with theirs when considering partial pr
 \section{Overview of temporal higher-order contracts}
 %%
 
-\FloatBarrier
+%\FloatBarrier
 \input{overview}
 %%
 \section{Semantics of Temporal Contracts} \label{sec:temporal-semantics}
