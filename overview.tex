@@ -26,7 +26,7 @@
 \\
 \mevent \in \Event &::= \scallev{\mname}{\mvpat} \alt \sretev{\mname}{\mvpat} \alt \sany \\
 \mbevent \in \BEvent &::= \scallev{\mname}{{\tt ?} \mvar} \alt \sretev{\mname}{{\tt ?} \mvar} \\
-\mvpat \in \VPat &::= \mconstant \alt \mname \alt \scons(\mvpat,\mvpat) \alt \snegpat{\mvpat} \alt \swc \\
+\mvpat \in \VPat &::= \mconstant \alt \sbind{\mvar} \alt \mname \alt \scons(\mvpat,\mvpat) \alt \snegpat{\mvpat} \alt \sany \alt \snone \\
 \mvar \in \Var &\quad\text{an infinite set} \\
 \mname \in \Name &::= \mvar \alt \mtoplevelname
   \end{align*}

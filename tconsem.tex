@@ -17,7 +17,9 @@ Our semantics makes interaction between temporal contract monitors explicit, all
 %%
 A denotational semantics for temporal contracts is difficult to get right, since their behavior is implicitly prefix-closed.
 %
-Liveness-looking properties have a hidden, insidious behavior with negation: contracts that state anything about how a trace may not end would allow just such traces since extensions to such ``bad traces'' are acceptable, and prefix closure will throw the ``bad traces'' back into what is acceptable.
+Negation is the culprit: contracts that state anything about how a trace may not end would allow just such traces since extensions to such ``bad traces'' are acceptable, and prefix closure will throw the ``bad traces'' back into what is acceptable.
+%
+%Additionally, if one writes a contract more carefully to reject extensions of bad traces, there isn't an obvious operational interpretation that allows early failure.
 %
 For example, $\mevent\mevent \in \prefixes(\denote{\stnot{\mevent}}_{\menv})$, and because of prefix closure, $\mevent \in \prefixes(\denote{\stnot{\mevent}}_{\menv})$!
 %
@@ -27,9 +29,9 @@ We thus have a different semantics for temporal contracts that ping-pongs betwee
 %
 This semantics of negation does not satisfy double-negation elimination (DNE), but we find that to be an acceptable trade-off; we do not need DNE in order to implement or verify temporal contracts.
 %
-We claim that this semantics is what \dfm intended their system to mean, as it matches up with the expectations of their prose and the test cases in their implementation.
+We claim that this semantics is what \dfm intended their system to mean, as it matches up with the expectations of their prose, the test cases in their implementation\footnote{The functional test cases, in particular, since our model does not handle Racket's object system.}, and additionally raises blame on programs that \dfm were surprised their implementation accepted.
 %
-Furthermore, our implementation catches more ``bad'' behavior than their monitoring system, meaning we have not simply formalized their implementation; rather, we have formalized a more complete system and implemented it.
+Since our semantics catches more ``bad'' behavior than their monitoring system, we have not simply formalized their implementation.
 %%
 
 %%
@@ -41,7 +43,7 @@ We can show that the partial trace semantics is prefix-closed (\autoref{thm:pref
 %%
 
 %%
-We made the design choice to require a function contract monitor wrapping for named values to consider their calls or returns as events.
+We made the design choice that call events for bound variables ($\scallev{\mvar,\mvpat}$) will only be sent to the temporal monitor if the value bound to $\mvar$ is itself contracted on the monitor's timeline.
 %
 The reason for this is that control should flow back to the timeline considered in order for an event to affect that timeline.
 %
@@ -52,91 +54,167 @@ It is easy enough to amend the structural contracts to reflect the fact that a b
 \end{theorem}
 
 %\FloatBarrier
-\begin{figure}
- \begin{align*}
-   \denotetcone{\stOr{\mtcon \ldots}}{\menv} &= \bigcup\denotetcone{\mtcon}{\menv}\ldots
-\\
-    \denotetcone{\stAnd{\mtcon \ldots}}{\menv} &= \bigcap\denotetcone{\mtcon}{\menv}\ldots
-\\
-    \denotetcone{\stmany{\mtcon}}{\menv} &= \denotetconfulle{\stmany{\mtcon}}{\menv} \semseq \denotetcone{\mtcon}{\menv}
-\\
-    \denotetcone{\stnot{\mtcon}}{\menv} &= \semneg{\denotetconfulle{\mtcon}{\menv}}
-\\
-    \denotetcone{\stseq{\mtcon_0}{\mtcon_1}}{\menv} &= \denotetcone{\mtcon_0}{\menv} \cup \denotetconfulle{\mtcon_0}{\menv}\semseq \denotetcone{\mtcon_1}{\menv}
-\\
-    \denotetcone{\stbind{\mevent}{\mtcon}}{\menv} &= \setof{\epsilon} \cup \setbuild{\mevent' \mtrace}{\menv' = \matches(\mevent, \mevent', \menv), \mtrace \in \denotetcone{\mtcon}{\menv'}}
-\\
-    \denotetcone{\epsilon}{\menv} &= \setof{\epsilon}
-\\
-    \denotetcone{\mevent}{\menv} &= \setof{\epsilon} \cup \denotetconfulle{\mevent}{\menv}
-\\[2pt]
-    \denotetconfulle{\mtcon,\menv}{\menv} &= \denotetconfulle{\mtcon}{\menv}
-\\
-    \denotetconfulle{\stOr{\mtcon \ldots}}{\menv} &= \bigcup\denotetconfulle{\mtcon}{\menv}\ldots
-\\
-    \denotetconfulle{\stAnd{\mtcon \ldots}}{\menv} &= \bigcap\denotetconfulle{\mtcon}{\menv}\ldots
-\\
-    \denotetconfulle{\stnot{\mtcon}}{\menv} &= \semneg{\denotetconfulle{\mtcon}{\menv}}
-\\
-    \denotetconfulle{\stseq{\mtcon_0}{\mtcon_1}}{\menv} &= \denotetconfulle{\mtcon_0}{\menv} \semseq \denotetconfulle{\mtcon_1}{\menv}
-\\
-    \denotetconfulle{\stmany{\mtcon}}{\menv} &= \setbuild{\mtrace^i}{i \le \omega, \mtrace \in \denotetconfulle{\mtcon}{\menv}}
-\\
-    \denotetconfulle{\stbind{\mevent}{\mtcon}}{\menv} &= \setbuild{\mevent' \mtrace}{\menv' = \matches(\mevent, \mevent', \menv), \mtrace \in \denotetconfulle{\mtcon}{\menv'}}
-\\
-    \denotetconfulle{\epsilon}{\menv} &= \setof{\epsilon}
-\\
-    \denotetconfulle{\mevent}{\menv} &= \setbuild{\mevent'}{\menv' = \matches(\mevent, \mevent', \menv)}
-\\[2pt]
-    \semneg{\Pi} &= \setbuild{\mtrace}{\forall \mtrace' \in \Pi\setminus\setof{\epsilon}. \mtrace' \nleq \mtrace}
-\\
-    \Pi \semseq \Pi' &= \setbuild{\mtrace \cdot \mtrace'}{\mtrace \in \Pi, \mtrace' \in \Pi'}
- \end{align*}
-  \caption{Denotational Semantics of Temporal Contracts}
-  \label{fig:tcontract-denotation}
-\end{figure}
+\newcommand*{\matchsemfigs}[4]{
+ \lncsorsigplan{\begin{figure}
+                 \begin{minipage}[b]{.50\linewidth}#1 #2\hrule height 0pt\end{minipage}
+                 \begin{minipage}[b]{.45\linewidth}#3 #4\hrule height 0pt\end{minipage}
+                \end{figure}}
+               {\begin{figure} #1 #2 \end{figure}
+                \begin{figure} #3 #4 \end{figure}}} 
+\matchsemfigs{  
+    \begin{align*}
+      \mvaluation &::= \may \alt \must \alt \bot \\
+      \menvs \subset \Env &::= \menv \ldots \\
+      \MatchResult &::= \menvs_\mvaluation \\
+      \menvs_\bot &= \emptyset_\bot \\
+      \mdata \in \Qualified &= S \alt \mconstant \alt \mconstructor(\mdata \ldots) \\
+      S \subset \Qualified &
+      \\[2pt]
+      \may \oplus \_ &= \_ \oplus \may = \may \\
+      \bot \oplus \mvaluation &= \mvaluation
+      \\[2pt]
+      \must \wedge \must &= \must \\
+      \bot \wedge \_ &= \_ \wedge \bot = \bot \\
+      \may \wedge \_ &= \_ \wedge \may = \may
+      \\[2pt]
+      \neg \must &= \bot \\
+      \neg \may &= \may \\
+      \neg \bot &= \must
+    \\[2pt]
+    \menvs \bowtie \menvs' &= \setbuild{\combinef{\menv}{\menv'}}{\menv \in \menvs, \menv' \in \menvs'} \\
+    \combinef{\menv}{\menv'} &= \lambda x. x \in \dom(\menv') \to \menv'(x), \menv(x)
+    \end{align*}}
+  {\caption{Spaces and functions for matching}\label{fig:matchspace}}
+  {\begin{align*}
+%    \matches &: \Pattern \times \Qualified \times \Env \to \MatchResult \\
+    \matches(\sany, \_, \menv) &= \menv_\must \\
+    \matches(\snone, \_, \menv) &= \emptyset_\bot \\
+    \matches(\mtoplevelname,
+    \bclos{\mtoplevelname}{\mscon_D}{k}{j}{\mtimeline}{\mscon_R}{\mmlab^{\prime}}{\maddr},
+    \menv) &= \menv_\must \\
+    \matches(\snegpat{\mvpat}, \mdata, \menv) &= \menv_{\neg \mvaluation} \\
+    \text{where }& \matches(\mvpat, \mdata, \menv) = \menv'_\mvaluation \\
+    \matches(\sbind{\mvar}, \mdata, \menv) &= \menv[\mvar \mapsto \mdata]_\must \\
+    \matches(\mvar, \mdata, \menv) &= \menv_{\menv(\mvar) \simeq \mdata} \\
+    \matches(\mpat\equiv\mconstructor(\mvpat, \ldots), S, \menv) &= \Delta\setbuild{\matches(\mpat, \mdata, \menv)}{\mdata \in S} \\
+    \matches(\mconstructor(\mvpat, \ldots), \mconstructor(\mdata, \ldots), \menv) &= (\Bowtie \menvs \ldots)_{\bigwedge \mvaluation \ldots} \\
+    \text{where }& \menvs_\mvaluation \ldots = \matches(\mvpat, \mdata, \menv) \ldots \\
+    \matches(\mdata, \mdata', \menv) &= \menv_{\bigoplus\limits_{\mdata'' \in \mdata'}{{\mdata \simeq \mdata''}}} \\
+    \matches(\mpat, \mdata, \menv) &= \emptyset_\bot \quad
+    \text{otherwise}
+    \\[2pt]
+    \Delta S &= (\bigcup\limits_{\menvs_{\_} \in S}\menvs)_{\delta \setbuild{\mvaluation}{\menvs_\mvaluation \in S}} \\
+    \delta \setof{\mvaluation} &= \mvaluation \\
+    \delta S &= \may \quad \text{otherwise}
+  \end{align*}}{\caption{Semantics of matching}\label{fig:matchsem}}
 
-\begin{figure}
-  \begin{align*}
-    \derivee{\mevent}{\epsilon}{\menv} &= \bot
-\\
-    \derivee{\mevent}{\mevent'}{\menv} &= \left\{
-      \begin{array}{ll}
-        \epsilon & \text{if } \menv' = \matches(\mevent', \mevent, \menv) \\
-        \bot & \text{otherwise}
-      \end{array}\right.
-\\
-    \derivee{\mevent}{\stbind{\mevent'}{\mtcon}}{\menv} &=
-    \left\{\begin{array}{ll}
-      \mtcon,\menv' & \text{if } \menv' = \matches(\mevent', \mevent, \menv) \\
-      \bot & \text{otherwise}
-    \end{array}\right.
-\\
-    \derivee{\mevent}{\stseq{\mtcon_0}{\mtcon_1}}{\menv} &= \stOr{\setof{\derivee{\mevent}{\mtcon_0}{\menv},\ \stseq{\nullable(\mtcon_0)}{\derivee{\mevent}{\mtcon_1}{\menv}}}}
-\\
-    \derivee{\mevent}{\stOr{\mtcon\ldots}}{\menv} &= \stOr{\derivee{\mevent}{\mtcon}{\menv}\ldots}
-\\
-    \derivee{\mevent}{\stAnd{\mtcon\ldots}}{\menv} &= \stAnd{\derivee{\mevent}{\mtcon}{\menv}\ldots}
-\\
-    \derivee{\mevent}{\stmany{\mtcon}}{\menv} &= \stseq{\derivee{\mevent}{\mtcon}{\menv}}{\stmany{\mtcon}}
-\\
-    \derivee{\mevent}{\stnot{\mtcon}}{\menv} &= \nullable(\derivee{\mevent}{\mtcon}{\menv}) \to \bot, \stnot{\derivee{\mevent}{\mtcon}{\menv}}
-\\[2pt]
-    \nullable(\epsilon) &= \nullable(\stmany{\mtcon}) = \nullable(\stnot{\mtcon}) = \epsilon
-\\
-    \nullable(\stbind{\mevent}{\mtcon}) &= \nullable(\mevent) = \bot
-\\
-    \nullable(\stOr{\mtcon\ldots}) &= \bigvee{\nullable(\mtcon)\ldots}
-\\
-    \nullable(\stAnd{\mtcon\ldots}) &= \bigwedge{\nullable(\mtcon)\ldots}
-\\
-    \nullable(\stseq{\mtcon_0}{\mtcon_1}) &= \nullable(\mtcon_0)\wedge \nullable(\mtcon_1)
-\\
-    \nullable(\mtcon,\menv) &= \nullable(\mtcon)
-  \end{align*}
-  \caption{Derivatives of Temporal Contracts}
-  \label{fig:tcon-deriv}
-\end{figure}
+\newcommand*{\tconsemfigs}[4]{
+ \lncsorsigplan{\begin{figure}
+                 \begin{minipage}[b]{.55\linewidth}#1 #2\hrule height 0pt\end{minipage}
+                 \begin{minipage}[b]{.40\linewidth}#3 #4\hrule height 0pt\end{minipage}
+                \end{figure}}
+               {\begin{figure}#1 #2\end{figure}
+                \begin{figure}#3 #4\end{figure}}}
+\tconsemfigs{
+    \begin{align*}
+      \denotetconbothe{\stOr{\mtcon \ldots}}{\menv} &=
+      \bigcup\denotetconbothe{\mtcon}{\menv}\ldots
+      \\
+      \denotetconbothe{\stAnd{\mtcon \ldots}}{\menv} &=
+      \bigcap\denotetconbothe{\mtcon}{\menv}\ldots
+      \\
+      \denotetconbothe{\epsilon}{\menv} &= \setof{\epsilon}
+      \\
+      \denotetconbothe{\stnot{\mtcon}}{\menv} &=
+      \semneg{\denotetconfulle{\mtcon}{\menv}}
+      \\[2pt]
+      \denotetcone{\stmany{\mtcon}}{\menv} &=
+      \denotetconfulle{\stmany{\mtcon}}{\menv} \semseq
+      \denotetcone{\mtcon}{\menv}
+      \\
+      \denotetcone{\stseq{\mtcon_0}{\mtcon_1}}{\menv} &=
+      \denotetcone{\mtcon_0}{\menv} \cup
+      \denotetconfulle{\mtcon_0}{\menv}\semseq
+      \denotetcone{\mtcon_1}{\menv}
+      \\
+     \denotetcone{\stbind{\mevent}{\mtcon}}{\menv} &=
+     \setof{\epsilon} \cup \{ \mevent' \mtrace :
+       \menv' = \matches(\mevent, \mevent', \menv),
+       \\&\phantom{= \setof{\epsilon} \cup \{ \mevent'\mtrace : \ }
+         \mtrace \in \denotetcone{\mtcon}{\menv'} \}
+     \\
+      \denotetcone{\mevent}{\menv} &= \setof{\epsilon} \cup
+      \denotetconfulle{\mevent}{\menv}
+      \\[2pt]
+      \denotetconfulle{\stseq{\mtcon_0}{\mtcon_1}}{\menv} &=
+      \denotetconfulle{\mtcon_0}{\menv} \semseq
+      \denotetconfulle{\mtcon_1}{\menv}
+      \\
+      \denotetconfulle{\stmany{\mtcon}}{\menv} &=
+      \setbuild{\mtrace^i}{i \le \omega, \mtrace \in
+        \denotetconfulle{\mtcon}{\menv}}
+      \\
+     \denotetconfulle{\stbind{\mevent}{\mtcon}}{\menv} &=
+     \setbuild{\mevent' \mtrace}{\menv' = \matches(\mevent, \mevent',
+       \menv), \mtrace \in \denotetconfulle{\mtcon}{\menv'}}
+     \\
+      \denotetconfulle{\mevent}{\menv} &= \setbuild{\mevent'}{\menv' =
+        \matches(\mevent, \mevent', \menv)}
+      \\[2pt]
+      \semneg{\Pi} &= \setbuild{\mtrace}{\forall \mtrace' \in
+        \Pi\setminus\setof{\epsilon}. \mtrace' \nleq \mtrace}
+      \\
+      \Pi \semseq \Pi' &= \setbuild{\mtrace \cdot \mtrace'}{\mtrace
+        \in \Pi, \mtrace' \in \Pi'}
+    \end{align*}}{\caption{Denotational Semantics of Temporal Contracts}\label{fig:tcontract-denotation}}
+  {\begin{align*}
+      \derivee{\mevent}{\epsilon}{\menv} &= \bot
+      \\
+      \derivee{\mevent}{\mevent'}{\menv} &= \left\{
+        \begin{array}{ll}
+          \epsilon & \text{if } \menv' = \matches(\mevent', \mevent, \menv) \\
+          \bot & \text{otherwise}
+        \end{array}\right.
+      \\
+      \derivee{\mevent}{\stbind{\mevent'}{\mtcon}}{\menv} &=
+      \left\{\begin{array}{ll}
+          \mtcon,\menv' & \text{if } \menv' = \matches(\mevent', \mevent, \menv) \\
+          \bot & \text{otherwise}
+        \end{array}\right.
+      \\
+      \derivee{\mevent}{\stseq{\mtcon_0}{\mtcon_1}}{\menv} &=
+      \stOr{\setof{\derivee{\mevent}{\mtcon_0}{\menv},\
+          \stseq{\nullable(\mtcon_0)}{\derivee{\mevent}{\mtcon_1}{\menv}}}}
+      \\
+      \derivee{\mevent}{\stOr{\mtcon\ldots}}{\menv} &=
+      \stOr{\derivee{\mevent}{\mtcon}{\menv}\ldots}
+      \\
+      \derivee{\mevent}{\stAnd{\mtcon\ldots}}{\menv} &=
+      \stAnd{\derivee{\mevent}{\mtcon}{\menv}\ldots}
+      \\
+      \derivee{\mevent}{\stmany{\mtcon}}{\menv} &=
+      \stseq{\derivee{\mevent}{\mtcon}{\menv}}{\stmany{\mtcon}}
+      \\
+      \derivee{\mevent}{\stnot{\mtcon}}{\menv} &=
+      \nullable(\derivee{\mevent}{\mtcon}{\menv}) \to \bot,
+      \stnot{\derivee{\mevent}{\mtcon}{\menv}}
+      \\[2pt]
+      \nullable(\epsilon) &= \nullable(\stmany{\mtcon}) =
+      \nullable(\stnot{\mtcon}) = \epsilon
+      \\
+      \nullable(\stbind{\mevent}{\mtcon}) &= \nullable(\mevent) = \bot
+      \\
+      \nullable(\stOr{\mtcon\ldots}) &=
+      \bigvee{\nullable(\mtcon)\ldots}
+      \\
+      \nullable(\stAnd{\mtcon\ldots}) &=
+      \bigwedge{\nullable(\mtcon)\ldots}
+      \\
+      \nullable(\stseq{\mtcon_0}{\mtcon_1}) &=
+      \nullable(\mtcon_0)\wedge \nullable(\mtcon_1)
+      \\
+      \nullable(\mtcon,\menv) &= \nullable(\mtcon)
+    \end{align*}}{\caption{Derivatives of Temporal Contracts}\label{fig:tcon-deriv}}
 
 % \begin{figure}
 %  \begin{minipage}[b]{0.45\linewidth}

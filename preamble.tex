@@ -4,6 +4,8 @@
 \usepackage{pfsteps}
 % Switches for verbosity
 \newcommand*{\ifproof}[1]{#1}
+\newcommand*{\lncsorsigplan}[2]{#1}
+
 
 \newcommand*{\dfm}{\citeauthor{ianjohnson:dfm:icfp2011}}
 
@@ -27,7 +29,7 @@
 \newcommand*{\ary}{\mathit{ary}}
 
 \newcommand*{\mbindenv}{\gamma}
-\newcommand*{\mbindstack}{\Gamma}
+\newcommand*{\menvs}{\Gamma}
 \newcommand*{\mres}{\mathit{result}}
 \newcommand*{\meqs}{I}
 
@@ -95,7 +97,7 @@
 \newcommand*{\toltl}[5]{\llparenthesis #2 \rrparenthesis_{#3,\,#4}^{#1}(#5)}
 \newcommand*{\stacktoltl}[3]{\llparenthesis #2 \rrparenthesis_{#3}^{#1}}
 
-\newcommand*{\matches}{\mathit{matches}}
+\newcommand*{\matches}{\mathit{m}}
 \newcommand*{\nullable}{\nu}
 \newcommand*{\flatempty}{\mu}
 
@@ -131,8 +133,10 @@
 
 
 % Syntax
-\newcommand*{\smay}[1]{{\tt may}(#1)}
-\newcommand*{\smust}[1]{{\tt must}(#1)}
+\newcommand*{\may}{{\tt may}}
+\newcommand*{\must}{{\tt must}}
+\newcommand*{\smay}[1]{\may(#1)}
+\newcommand*{\smust}[1]{\must(#1)}
 
 \newcommand*{\sSMon}[6]{\tuple*[^{#1,#2}_{#3}]{smon}{#4}{#5,\, #6}}
 \newcommand*{\sTMon}[6]{\tuple[^{#1,#2}_{#3}]{tmon}{#4,\,#5,\,#6}}
@@ -195,6 +199,7 @@
 \newcommand*{\sretev}[2]{{\tt ret}(#1,\, #2)}
 \newcommand*{\swrapev}[2]{{\tt wrap}(#1,\, #2)}
 \newcommand*{\sany}{{\tt Any}}
+\newcommand*{\snone}{{\tt None}}
 \newcommand*{\swc}{\_} 
 
 \DeclarePairedDelimiter\compileaux{\llfloor}{\rrfloor}
@@ -211,6 +216,7 @@
 \newcommand*{\denotetcon}[1]{P[\![ #1 ]\!]}
 \newcommand*{\denotetconfull}[1]{F[\![ #1 ]\!]}
 \newcommand*{\denotetcone}[2]{P[\![ #1 ]\!]_{#2}}
+\newcommand*{\denotetconbothe}[2]{B[\![ #1 ]\!]_{#2}}
 \newcommand*{\denotetconfulle}[2]{F[\![ #1 ]\!]_{#2}}
 
 \newcommand*{\denoteevent}[2]{\llparenthesis #1 \rrparenthesis_{#2}}
@@ -260,6 +266,7 @@
 \newcommand*{\smatch}[2]{{#1}_{#2}}
 
 \newcommand*{\prefixof}[2]{#1 \text{ is a prefix of } #2}
+\newcommand*{\dom}{\mathbf{dom}}
 
 \newcommand*{\negateM}{\sim\!}
 \newcommand*{\unionM}{\doublecup}
