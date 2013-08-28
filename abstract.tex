@@ -8,10 +8,4 @@ Contract violations during testing or even after deployment help correct both th
 %%
 Temporal higher-order contracts provide a language for specifying and dynamically monitoring adhereance to stateful protocols in a higher-order language.
 %
-%Just as higher-order function contracts internalize an extra-linguistic type-checking process to the dynamic semantics, we claim that temporal contracts internalize the extra-linguistic process of model-checking.
-%
-%To demonstrate, we propose taking a language with temporal higher-order contracts which uses a simple automaton --- the pattern-matching state machine (PMSM) --- for its dynamic semantics.
-%
-%We then abstract this into a finite model using abstracting abstract machines (AAM) and then reason over it for statically verifying the temporal constraints.
-%
-%This approach affords us a simple and direct proof of soundness.
+In this work, we present a semantics for these contracts; we do so by introducing a notion of derivative for regular expressions with back references, and a sound abstraction to computably verify temporal contract satisfaction.
