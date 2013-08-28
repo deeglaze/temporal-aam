@@ -2,12 +2,17 @@
 \usepackage{textcomp,wasysym}
 \usepackage{amsmath,stmaryrd}
 \usepackage{pfsteps}
+\usepackage{environ}
+
 % Switches for verbosity
 \newcommand*{\ifproof}[1]{#1}
-\newcommand*{\lncsorsigplan}[2]{#1}
 
+%\newcommand*{\iflong}[1]{#1}
+\newcommand*{\iflong}[1]{}
+\WithSuffix\newcommand\iflong*[2]{#2}
+\newcommand*{\iftwopage}[2]{#2}
 
-\newcommand*{\dfm}{\citeauthor{ianjohnson:dfm:icfp2011}}
+\newcommand*{\dfm}{\citeauthor{ianjohnson:dfm:icfp2011}~}
 
 % Metavariables
 \newcommand*{\matchstate}{\mu}
@@ -337,3 +342,5 @@
 \usepackage{placeins}
 
 \setlength{\abovecaptionskip}{1pt}
+\setlength{\floatsep}{12pt}
+\setlength{\textfloatsep}{12pt}
