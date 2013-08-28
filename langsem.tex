@@ -79,9 +79,6 @@ At this point we would like to note that our usage of labels differs slightly fr
 \\
 \maddr \in \Addr &\quad\text{an infinite set} \\
 \mstimeline \in \Timeline &::= \maddr \alt \toplevel
-\\
-\mscon &::= \ldots
-\alt \sown*{\sflat{\mexp}}{\mmlab}
 \end{align*}
 \caption{Value space}
 \label{fig:values}
@@ -127,8 +124,8 @@ The former maps addresses to sets of values and the latter maps timelines to PMS
  \alt \vcons{\mval}{\mctx{\mmlab}} \\
 &\alt \sSMon{\ell}{k}{j}{\mtimeline}{\mscon}{\mctx*} \\
 &\alt \sTMon{\ell}{k}{j}{\mscon}{\mtcon}{\mctx*} \\
-&\alt \schk*{k}{\ell}{\mtimeline}{\mctx*}{\mval} \\
-&\alt \sret{\ell}{\mtimeline}{\mctx*}
+&\alt \schk*{k}{\ell}{\mtimeline}{\mctx*}{\mval}
+\alt \sret{\ell}{\mtimeline}{\mctx*}
 \\
 \mctx* \in \ECtx* &::=
       \hole
@@ -168,18 +165,19 @@ $\begin{array}{@{}l @{\ }c@{\ } l@{} r}
 \mstate^\prime \chevron{\mctx{\mmlab^\prime}[\ldots], \msto^\prime, \mTMons^\prime}
 \name{rule-name}
 
+\iflong*{
 \\ \hline % If true
 \sif{ \sOwn{\strue}{\mmlab} }{\mexp_1}{\mexp_2}
 &\machstep&
 \mexp_1
 \name{if-true}
-
+%
 \\ % If false
 \sif{ \sOwn{\sfalse}{\mmlab} }{\mexp_1}{\mexp_2}
 &\machstep&
 \mexp_2
 \name{if-false}
-
+%
 \\ % Apply
 \sapp{ \sOwn{\slam{\mvar}{\mexp}}{\mmlab} }{ \sOwn{\mval}{\mmlab} }
 &\machstep&
@@ -187,6 +185,8 @@ $\begin{array}{@{}l @{\ }c@{\ } l@{} r}
 \name{apply}
 
 \\ % Temporal monitor
+}
+{\\ \hline}
 \sTMon{k}{\mmlab}{j}{\mscon}{\mtcon}{\mval}
 &\machstep&
 \sSMon{k}{\mmlab}{j}{\mtimeline}{\mscon}{\mval}
@@ -205,17 +205,19 @@ $\begin{array}{@{}l @{\ }c@{\ } l@{} r}
 &&\cwhere \mtimeline = \salloc{\mstate} \\
 &&\text{given } \mmlab = \toplevel 
 
+\iflong{
 \\ % Flat monitor
 \sSMon{k}{\mmlab}{j}{\mtimeline}{ \sown*{\sflat{\mexp}}{\mmlab^{\prime\prime}} }{ \sOwn{\mconstant}{\mmlab^{\prime\prime}} }
 &\machstep&
 \schk*{k}{j}{\mtimeline}{ \sapp{\mexp}{\mconstant} }{\mconstant}
 \name{smon-flat}
-
+%
 \\ % Cons monitor
 \sSMon{k}{\mmlab}{j}{\mtimeline}{ \sconsc{\mscon_A}{\mscon_D} }{ \sOwn{\vcons{\mval_A}{\mval_D}}{\mmlab} }
 &\machstep&
 \sown{\vcons{ \sSMon{k}{\mmlab}{j}{\mtimeline}{\mscon_A}{\mval_A} }{ \sSMon{k}{\mmlab}{j}{\mtimeline}{\mscon_D}{\mval_D} }}{\mmlab}
 \name{smon-cons}
+}
 
 \\ % Arrow monitor
 \sSMon{k}{\mmlab}{j}{\mtimeline}{ \sarr{\mmlab_\lambda}{\mscon_D}{\mscon_R} }{\mval}
@@ -232,17 +234,19 @@ $\begin{array}{@{}l @{\ }c@{\ } l@{} r}
 \sblame{k}{j} \qquad\text{given } \mval \neq \slam{\mvar}{\mexp}
 \name{smon-arrow-fail}
 
+\iflong{
 \\ % Check true
 \schk{k}{j}{ \sOwn{\strue}{j} }{\mval}
 &\machstep&
 \mval
 \name{chk-true}
-
+%
 \\ % Check false
 \schk{k}{j}{ \sOwn{\sfalse}{j} }{\mval}
 &\machstep&
 \sblame{k}{j}
 \name{chk-false}
+}
 
 \\ % Blessed application (call)
 \sapp{ \sOwn{\bclos{\mmlab_\lambda}{\mscon_D}{k}{j}{\mtimeline}{\mscon_R}{\mmlab^{\prime\prime}}{\maddr}}{\mmlab} }{ \sOwn{\mval}{\mmlab} }
@@ -289,7 +293,9 @@ $\begin{array}{@{}l @{\ }c@{\ } l@{} r}
 \end{figure*}
 
 %
-Our reduction relation given in \autoref{fig:reduction} makes use of the the single owner policy by reducing redexes only if the label of the hole matches the owner of the pieces of the redex.
+We give our reduction relation in \autoref{fig:reduction}.
+%
+In the interest of space, we only present and discuss the rules which we feel are most relevant to our discussion of temporal contracts.
 %
 We elide the rules for the primitive functions as they are standard and straightforward.
 %
@@ -307,10 +313,12 @@ Should the compilation of the temporal contract fail --- which would happen \eg 
 %
 The \namefmt{smon} rules handle the reduction of structural monitors.
 %
+\iflong{%
 Flat contracts (in \namefmt{smon-flat}) on constants are easily translated into a check on the contract.
 %
 Cons-list contracts (in \namefmt{smon-cons}) are also simple given our evaluation contexts: they are translated into an owned $\mathtt{cons}$, with each component appropriately wrapped by its respective structural contract: $\mscon_A$ for the \texttt{car} and $\mscon_D$ for the \texttt{cdr}.
 %
+}
 %
 Arrow contracts (in \namefmt{smon-arrow}), however, are more nuanced.
 %

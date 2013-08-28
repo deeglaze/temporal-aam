@@ -43,7 +43,9 @@ The semantics of temporal contracts is also geared towards checking safety prope
 %%
 AAM was originally targeted towards describing flow analyses, but is robust enough to apply to model-checking safety properties of higher-order programs.
 %
-It is well-known that control-flow analysis can be stated in terms of model-checking, but this observation is misleading; one must use quadratically many model-checking queries to discover what a monovariant flow analysis can discover in one run, and significantly more were it polyvariant (most spurious and ignored by a control-flow analysis).
+It is well-known that control-flow analysis can be stated in terms of model-checking, but this observation is misleading; one must use quadratically many model-checking queries to discover what a monovariant flow analysis can discover in one run.
+%
+One must use significantly more were it polyvariant, with most flows being spurious and ignored by a control-flow analysis.
 %
 The realm of temporal contract verification is similar: to use a model-checker, we would have to run a data-flow analysis up front in order to collect values that might be used as bindings, enumerate all possible binding/reference insantiations of the temporal contract, and then translate those contracts into LTL queries --- much more work than just running the program abstractly and reporting reachable blame states.
 %
@@ -73,11 +75,11 @@ The main separating factor between this work and related work is that all model-
 \paragraph{Runtime verification:}
 Monitoring sequences of events at runtime is a growing area of research with its own conference (RV).
 %
-This area has similarities to temporal contracts due to their runtime monitoring and languages for describing execution traces, but none have the concept of blame or a static story.
+This area has similarities to temporal contracts due to the use of runtime monitoring and of languages for describing execution traces, but nothing in the areas has the concept of blame or has a static story.
 %
 Indeed, the moniker ``verification'' is a misnomer, as runtime monitoring cannot prove the absence of bugs for all executions, a property we attribute to formal verification.
 %
-The notion of an event is reminiscent of aspect-oriented programming's notion of a \emph{join-point}, and thus we see several systems built on AspectJ \citep{aspectj} that offer a domain-specific language for running \emph{advice} when the event trace matches a specified pattern, e.g. Tracematches \citep{ianjohnson:Allan05addingtrace} and J-LO ~\citep{ianjohnson:jlo}.
+The notion of an event is reminiscent of aspect-oriented programming's notion of a \emph{join-point}, and thus we see several systems built on AspectJ \citep{aspectj} that offer a domain-specific language for running \emph{advice} when the event trace matches a specified pattern, \eg Tracematches \citep{ianjohnson:Allan05addingtrace} and J-LO ~\citep{ianjohnson:jlo}.
 %
 Tracematches use a language similar to temporal contracts but do not support negation; they also have a different purpose: execute advice at more specific times based on the program history, and not to offer a high-level specification system with blame that contracts provide.
 %
@@ -85,24 +87,18 @@ J-LO on the other hand offers a monitoring system based on LTL propositions with
 %
 If the \emph{now} portion of the proposition fails to hold, the monitor raises a failure (it does not blame).
 %
-J-LO is closer to temporal contracts in its goal, but not its language, whereas tracematches match the language and not the goal.
+J-LO's goal is closer to temporal contracts, but its language is not; conversely, tracematches match the language and not the goal.
 %
 In both cases, the only static analysis is on the specification itself in order to improve runtime performance, and not on the monitored program's adherence to the specification.
 %
 Both systems are also tied to Java's class structure, so they cannot express properties of higher-order behavior or refinements on values.
-
-%%
-\paragraph{First-order model-checking:}
-The SLAM project~\citep{ianjohnson:Ball:2002:SLP:503272.503274} for model-checking C assumes that all function pointers of the same type may alias.
-%
-For C programs that use callbacks heavily, this overapproximation leads to longer checking times due to more (spurious) paths to follow, and the imprecision inherent in any program approximation gets exacerbated by the additional pressure on abstract resources.
 
 \paragraph{Higher-order model-checking:}
 Java and C++ both have several high-quality model-checking tools \citep{ianjohnson:bandera, ianjohnson:java-pathfinder, ianjohnson:LLBMC}, some of which are bounded model-checkers; meaning they cannot fully verify temporal properties --- only present counter-examples (that may not be true counter-examples).
 %
 Bandera~\citep{ianjohnson:bandera} is a sophisticated tool-chain that uses several static analysis techniques to extract a finite model from a Java program to feed to various back-end model-checkers.
 %
-Similar to our approach, Bandera employs flow analysis in order to produce compact models, but unsimilarly, it does not synthesize checkers for runtime monitoring the expressed properties, nor does it natively support higher-order functions.
+Similar to our approach, Bandera employs flow analysis in order to produce compact models; conversely, it does not synthesize checkers for runtime monitoring the expressed properties, nor does it natively support higher-order functions.
 %%
 
 %%
@@ -112,13 +108,13 @@ Model-checking an untyped HORS is undecidable, and such model checkers make vari
 %
 Our technique is lighter weight and more transparently correct since it follows from a systematic transformation of a standard semantics.
 %
-Additionally, the AAM approach makes extensions to more complex language features straightforward, whereas in HORS one would need to CPS, double CPS, or perform a functional encoding of a new form of data; all of which impose additional proof obligations/points-of-failure for the analysis implementor.
+Additionally, the AAM approach makes extensions to more complex language features straightforward, whereas in HORS one would need to CPS, double CPS, or perform a functional encoding of a new form of data; all of which impose additional proof obligations and points-of-failure for the analysis implementor.
 %
 Finally, HORS do not synthesize runtime monitors or have a notion of blame, unlike our system.
 
 
 \paragraph{Static contract verification:}
-In the world of statically verifying software contracts, there is much more relevant work.
+In the world of static sotware contract verification, there is much more relevant work.
 %
 There have been many successful efforts in the realm of first-order contract verification~\citep{ianjohnson:fahndrich:contracts:2011,ianjohnson:vcc:2009}, but the techniques employed are inherently first-order: the only values are booleans.
 %
@@ -130,7 +126,7 @@ If an external theorem prover can prove that the flat contracts always hold, the
 %
 \citet{dvanhorn:TobinHochstadt2012Higherorder} use AAM on a module semantics with higher-order contracts and is the most related to this work. However, whereas their work focuses on a concrete semantics for handling unknown values and an external theorem prover to show contract containment, our work focuses on an orthogonal issue of temporal contract monitoring and uses model-checking techniques.
 %
-Our techniques should smoothly integrate with theirs when considering partial programs, and is left to future work.
+Our techniques should smoothly integrate with theirs when considering partial programs, and is left to future work (\cref{sec:conclusion}).
 %%
 
 %%
@@ -181,7 +177,7 @@ We thus strongly recommend at least the first of the following techniques to imp
 \item{use a polyvariant allocation strategy such as $m$-CFA ~\citep{dvanhorn:Might2010Resolving} or polymorphic splitting~\citep{dvanhorn:wright-jagannathan-toplas98}.}
 \end{itemize}
 %
-We built and evaluated all these but the last.
+We have built and evaluated all of these but the last.
 %%
 
 \section{Evaluation}
@@ -198,7 +194,7 @@ If we call sort twice, we can't verify it without abstract garbage collection.
 %%
 
 %%
-\section{Conclusion and future work}
+\section{Conclusion and future work} \label{sec:conclusion}
 %%
 
 %%

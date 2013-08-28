@@ -138,94 +138,6 @@ It is easy enough to amend the structural contracts to reflect the fact that a b
   \label{fig:tcon-deriv}
 \end{figure}
 
-% \begin{figure}
-%  \begin{minipage}[b]{0.45\linewidth}
-%  \begin{align*}
-%    \denotetcone{\stOr{\mtcon \ldots}}{\menv} &= \bigcup\denotetcone{\mtcon}{\menv}\ldots
-% \\
-%     \denotetcone{\stAnd{\mtcon \ldots}}{\menv} &= \bigcap\denotetcone{\mtcon}{\menv}\ldots
-% \\
-%     \denotetcone{\stmany{\mtcon}}{\menv} &= \denotetconfulle{\stmany{\mtcon}}{\menv} \semseq \denotetcone{\mtcon}{\menv}
-% \\
-%     \denotetcone{\stnot{\mtcon}}{\menv} &= \semneg{\denotetconfulle{\mtcon}{\menv}}
-% \\
-%     \denotetcone{\stseq{\mtcon_0}{\mtcon_1}}{\menv} &= \denotetcone{\mtcon_0}{\menv} \cup \denotetconfulle{\mtcon_0}{\menv}\semseq \denotetcone{\mtcon_1}{\menv}
-% \\
-%     \denotetcone{\stbind{\mevent}{\mtcon}}{\menv} &= \setof{\epsilon} \cup \setbuild{\mevent' \mtrace}{\menv' = \matches(\mevent, \mevent', \menv), \mtrace \in \denotetcone{\mtcon}{\menv'}}
-% \\
-%     \denotetcone{\epsilon}{\menv} &= \setof{\epsilon}
-% \\
-%     \denotetcone{\mevent}{\menv} &= \setof{\epsilon} \cup \denotetconfulle{\mevent}{\menv}
-% \\[2pt]
-%     \denotetconfulle{\mtcon,\menv}{\menv} &= \denotetconfulle{\mtcon}{\menv}
-% \\
-%     \denotetconfulle{\stOr{\mtcon \ldots}}{\menv} &= \bigcup\denotetconfulle{\mtcon}{\menv}\ldots
-% \\
-%     \denotetconfulle{\stAnd{\mtcon \ldots}}{\menv} &= \bigcap\denotetconfulle{\mtcon}{\menv}\ldots
-% \\
-%     \denotetconfulle{\stnot{\mtcon}}{\menv} &= \semneg{\denotetconfulle{\mtcon}{\menv}}
-% \\
-%     \denotetconfulle{\stseq{\mtcon_0}{\mtcon_1}}{\menv} &= \denotetconfulle{\mtcon_0}{\menv} \semseq \denotetconfulle{\mtcon_1}{\menv}
-% \\
-%     \denotetconfulle{\stmany{\mtcon}}{\menv} &= \setbuild{\mtrace^i}{i \le \omega, \mtrace \in \denotetconfulle{\mtcon}{\menv}}
-% \\
-%     \denotetconfulle{\stbind{\mevent}{\mtcon}}{\menv} &= \setbuild{\mevent' \mtrace}{\menv' = \matches(\mevent, \mevent', \menv), \mtrace \in \denotetconfulle{\mtcon}{\menv'}}
-% \\
-%     \denotetconfulle{\epsilon}{\menv} &= \setof{\epsilon}
-% \\
-%     \denotetconfulle{\mevent}{\menv} &= \setbuild{\mevent'}{\menv' = \matches(\mevent, \mevent', \menv)}
-% \\[2pt]
-%     \semneg{\Pi} &= \setbuild{\mtrace}{\forall \mtrace' \in \Pi\setminus\setof{\epsilon}. \mtrace' \nleq \mtrace}
-% \\
-%     \Pi \semseq \Pi' &= \setbuild{\mtrace \cdot \mtrace'}{\mtrace \in \Pi, \mtrace' \in \Pi'}
-%  \end{align*}
-%   \caption{Denotational Semantics of Temporal Contracts}
-%   \label{fig:tcontract-denotation}
-%  \end{minipage}
-%  \quad
-%  \begin{minipage}[b]{0.45\linewidth}
-%   \begin{align*}
-%     \derivee{\mevent}{\epsilon}{\menv} &= \bot
-% \\
-%     \derivee{\mevent}{\mevent'}{\menv} &= \left\{
-%       \begin{array}{ll}
-%         \epsilon & \text{if } \menv' = \matches(\mevent', \mevent, \menv) \\
-%         \bot & \text{otherwise}
-%       \end{array}\right.
-% \\
-%     \derivee{\mevent}{\stbind{\mevent'}{\mtcon}}{\menv} &=
-%     \left\{\begin{array}{ll}
-%       \mtcon,\menv' & \text{if } \menv' = \matches(\mevent', \mevent, \menv) \\
-%       \bot & \text{otherwise}
-%     \end{array}\right.
-% \\
-%     \derivee{\mevent}{\stseq{\mtcon_0}{\mtcon_1}}{\menv} &= \stOr{\setof{\derivee{\mevent}{\mtcon_0}{\menv},\ \stseq{\nullable(\mtcon_0)}{\derivee{\mevent}{\mtcon_1}{\menv}}}}
-% \\
-%     \derivee{\mevent}{\stOr{\mtcon\ldots}}{\menv} &= \stOr{\derivee{\mevent}{\mtcon}{\menv}\ldots}
-% \\
-%     \derivee{\mevent}{\stAnd{\mtcon\ldots}}{\menv} &= \stAnd{\derivee{\mevent}{\mtcon}{\menv}\ldots}
-% \\
-%     \derivee{\mevent}{\stmany{\mtcon}}{\menv} &= \stseq{\derivee{\mevent}{\mtcon}{\menv}}{\stmany{\mtcon}}
-% \\
-%     \derivee{\mevent}{\stnot{\mtcon}}{\menv} &= \nullable(\derivee{\mevent}{\mtcon}{\menv}) \to \bot, \stnot{\derivee{\mevent}{\mtcon}{\menv}}
-% \\[2pt]
-%     \nullable(\epsilon) &= \nullable(\stmany{\mtcon}) = \nullable(\stnot{\mtcon}) = \epsilon
-% \\
-%     \nullable(\stbind{\mevent}{\mtcon}) &= \nullable(\mevent) = \bot
-% \\
-%     \nullable(\stOr{\mtcon\ldots}) &= \bigvee{\nullable(\mtcon)\ldots}
-% \\
-%     \nullable(\stAnd{\mtcon\ldots}) &= \bigwedge{\nullable(\mtcon)\ldots}
-% \\
-%     \nullable(\stseq{\mtcon_0}{\mtcon_1}) &= \nullable(\mtcon_0)\wedge \nullable(\mtcon_1)
-% \\
-%     \nullable(\mtcon,\menv) &= \nullable(\mtcon)
-%   \end{align*}
-%   \caption{Derivatives of Temporal Contracts}
-%   \label{fig:tcon-deriv}
-%  \end{minipage}
-% \end{figure}
-
 %
 We say $\mexp$ satisfies a temporal contract $\mtcon$ if its event trace filtered by the timeline to which the contract is attached ($\denote{\mexp}_\mtimeline$) is in the denotation of the temporal contract ($\denotetcon{\mtcon}$).
 %
@@ -256,6 +168,8 @@ The first theorem depends on the following lemma
 and has a straightforward proof except in the $\neg$ case, which requires some tricky reasoning.
 %
 \begin{byCases}
+  \iftwopage{}
+  {\fontsize{8pt}{9pt}\selectfont}
   \case{\mtcon \equiv \stnot{\mtcon'}}{
     \begin{byCases}
       \case{H : \nullable(\derivee{\mevent}{\mtcon'}{\menv}) = \epsilon}{
