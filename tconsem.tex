@@ -23,7 +23,7 @@ Negation is the culprit: contracts that state anything about how a trace may not
 %
 For example, $\mevent\mevent \in \prefixes(\denote{\stnot{\mevent}}_{\menv})$, and because of prefix closure, $\mevent \in \prefixes(\denote{\stnot{\mevent}}_{\menv})$!
 %
-Temporal contract satisfaction should not---and indeed cannot---be contingent on future observations; an effective monitor should blame \emph{as soon as} a contract is not satisfied.
+Temporal contract failure should not be contingent on future observations; an effective monitor should blame \emph{as soon as} a contract is not satisfied.
 %
 We thus have a different semantics for temporal contracts that ping-pongs between \emph{full traces} and \emph{partial traces}; a negated temporal contract will reject all full traces of the given contract, as well as any extension of such traces.
 %
