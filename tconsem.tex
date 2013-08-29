@@ -108,6 +108,18 @@ It is easy enough to amend the structural contracts to reflect the fact that a b
     \delta S &= \may \quad \text{otherwise}
   \end{align*}}{\caption{Semantics of matching}\label{fig:matchsem}}
 
+We define our semantics of matching in anticipation of abstraction, where we do not always know when two values are equal.
+%
+When matching against a set of possible values, we might have a $\must$ match and a $\bot$ match, in which case the entire match should be considered $\may$ matching (this is the significance of the $\Delta$ metafunction).
+%
+The $\triangleleft$ operator extends the left environment with the bindings of the right, though the order doesn't matter considering that binding patterns may not bind the same variable twice.
+%
+Matching against sets of values makes it possible that we have several possible matches.
+%
+Thus $\matches$ returns a set of environments possible from matching a given pattern against some data.
+%
+At the leaves, when considering values of the language equal, $\matches$ appeals to a weak equality function, $\simeq$, where $\mval \simeq \mval' = \must$ implies $\mval = \mval'$ in the concrete semantics, and $\mval \simeq \mval' = \bot$ implies $\mval \neq \mval'$ in the concrete semantics.
+
 \newcommand*{\tconsemfigs}[4]{
  \iftwopage{\begin{figure}#1 #2\end{figure}
             \begin{figure}#3 #4\end{figure}}
@@ -216,7 +228,14 @@ It is easy enough to amend the structural contracts to reflect the fact that a b
       \nullable(\mtcon,\menv) &= \nullable(\mtcon)
     \end{align*}}{\caption{Derivatives of Temporal Contracts}\label{fig:tcon-deriv}}
 
+The semantics and derivatives here are simplified to the concrete case, for space.
 %
+The extension to support the approximate matching semantics uses the appropriate logical connectives across $\cup$, $\cap$ and $\neg$ to compute the overall valuation of the temporal contract following a derivation.
+%
+The polarity of $\vee$ flips when passing through a $\neg$ contract; positively, if some contract in a union must match, the contract must match regardless of other $\may$ matches, but negatively, if some contract in a union must match in the presence of $\may$ matches, then the contract only may match.
+%%
+
+%%
 We say $\mexp$ satisfies a temporal contract $\mtcon$ if its event trace filtered by the timeline to which the contract is attached ($\denote{\mexp}_\mtimeline$) is in the denotation of the temporal contract ($\denotetcon{\mtcon}$).
 %
 
