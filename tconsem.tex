@@ -23,7 +23,7 @@ Negation is the culprit: contracts that state anything about how a trace may not
 %
 For example, $\mevent\mevent \in \prefixes(\denote{\stnot{\mevent}}_{\menv})$, and because of prefix closure, $\mevent \in \prefixes(\denote{\stnot{\mevent}}_{\menv})$!
 %
-Temporal contract satisfaction should not be contingent on future observations; an effective monitor should blame \emph{as soon as} a contract is not satisfied.
+Temporal contract satisfaction should not---and indeed cannot---be contingent on future observations; an effective monitor should blame \emph{as soon as} a contract is not satisfied.
 %
 We thus have a different semantics for temporal contracts that ping-pongs between \emph{full traces} and \emph{partial traces}; a negated temporal contract will reject all full traces of the given contract, as well as any extension of such traces.
 %
@@ -55,12 +55,12 @@ It is easy enough to amend the structural contracts to reflect the fact that a b
 
 %\FloatBarrier
 \newcommand*{\matchsemfigs}[4]{
- \iftwopage{\begin{figure} #1 #2 \end{figure}
-            \begin{figure} #3 #4 \end{figure}}
-           {\begin{figure}
-             \begin{minipage}[b]{.50\linewidth}#1 #2\hrule height 0pt\end{minipage}
-             \begin{minipage}[b]{.45\linewidth}#3 #4\hrule height 0pt\end{minipage}
-            \end{figure}}} 
+ \iftwocolumn{\begin{figure} #1 #2 \end{figure}
+              \begin{figure} #3 #4 \end{figure}}
+             {\begin{figure}
+              \begin{minipage}[b]{.50\linewidth}#1 #2\hrule height 0pt\end{minipage}
+              \begin{minipage}[b]{.45\linewidth}#3 #4\hrule height 0pt\end{minipage}
+             \end{figure}}} 
 \matchsemfigs{  
     \begin{align*}
       \mvaluation &::= \may \alt \must \alt \bot \\
@@ -121,12 +121,12 @@ Thus $\matches$ returns a set of environments possible from matching a given pat
 At the leaves, when considering values of the language equal, $\matches$ appeals to a weak equality function, $\simeq$, where $\mval \simeq \mval' = \must$ implies $\mval = \mval'$ in the concrete semantics, and $\mval \simeq \mval' = \bot$ implies $\mval \neq \mval'$ in the concrete semantics.
 
 \newcommand*{\tconsemfigs}[4]{
- \iftwopage{\begin{figure}#1 #2\end{figure}
-            \begin{figure}#3 #4\end{figure}}
-           {\begin{figure}
-             \begin{minipage}[b]{.55\linewidth}#1 #2\hrule height 0pt\end{minipage}
-             \begin{minipage}[b]{.40\linewidth}#3 #4\hrule height 0pt\end{minipage}
-            \end{figure}}}
+ \iftwocolumn{\begin{figure}#1 #2\end{figure}
+              \begin{figure}#3 #4\end{figure}}
+             {\begin{figure}
+              \begin{minipage}[b]{.55\linewidth}#1 #2\hrule height 0pt\end{minipage}
+              \begin{minipage}[b]{.40\linewidth}#3 #4\hrule height 0pt\end{minipage}
+             \end{figure}}}
 \tconsemfigs{
     \begin{align*}
       \denotetconbothe{\stOr{\mtcon \ldots}}{\menv} &=
@@ -265,7 +265,7 @@ The first theorem depends on the following lemma
 and has a straightforward proof except in the $\neg$ case, which requires some tricky reasoning.
 %
 \begin{byCases}
-  \iftwopage{}
+  \iftwocolumn{}
   {\fontsize{8pt}{9pt}\selectfont}
   \case{\mtcon \equiv \stnot{\mtcon'}}{
     \begin{byCases}
