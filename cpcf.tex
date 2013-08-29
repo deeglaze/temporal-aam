@@ -43,7 +43,7 @@ The semantics of temporal contracts is also geared towards checking safety prope
 %%
 AAM was originally targeted towards describing flow analyses, but is robust enough to apply to model-checking safety properties of higher-order programs.
 %
-It is well-known that control-flow analysis can be stated in terms of model-checking, but this observation is misleading; one must use quadratically many model-checking queries to discover what a monovariant flow analysis can discover in one run.
+It is well-known that control-flow analysis can be stated in terms of model-checking, but this observation is misleading; one must use a quadratic number of model-checking queries to discover what a monovariant flow analysis can discover in one run.
 %
 One must use significantly more were it polyvariant, with most flows being spurious and ignored by a control-flow analysis.
 %
@@ -53,8 +53,7 @@ The realm of temporal contract verification is similar: to use a model-checker, 
 %%
 Our contributions in this paper are as follows:
 \begin{itemize}
-% TODO: the qualification might need to be less pompous, but we do need to qualify...
- \item{a more complete alternative to \citeauthor{ianjohnson:dfm:icfp2011}'s temporal contract semantics;}
+ \item{an alternative to \dfm's temporal contract semantics amenable to analysis yet faithful to their examples;}
  \item{a notion of derivative for regular expressions with back-references}
  \item{a sound abstraction to computably verify temporal contract satisfaction}
 \end{itemize}
@@ -75,13 +74,13 @@ The main separating factor between this work and related work is that all model-
 \paragraph{Runtime verification:}
 Monitoring sequences of events at runtime is a growing area of research with its own conference (RV).
 %
-This area has similarities to temporal contracts due to the use of runtime monitoring and of languages for describing execution traces, but nothing in the areas has the concept of blame or has a static story.
+This area has similarities to temporal contracts due to the use of runtime monitoring and of languages for describing execution traces, but nothing in the area has the concept of blame or has a static story.
 %
 Indeed, the moniker ``verification'' is a misnomer, as runtime monitoring cannot prove the absence of bugs for all executions, a property we attribute to formal verification.
 %
 The notion of an event is reminiscent of aspect-oriented programming's notion of a \emph{join-point}, and thus we see several systems built on AspectJ \citep{aspectj} that offer a domain-specific language for running \emph{advice} when the event trace matches a specified pattern, \eg Tracematches \citep{ianjohnson:Allan05addingtrace} and J-LO ~\citep{ianjohnson:jlo}.
 %
-Tracematches use a language similar to temporal contracts but do not support negation; they also have a different purpose: execute advice at more specific times based on the program history, and to not offer a high-level specification system with blame that contracts provide.
+Tracematches use a language similar to temporal contracts but do not support negation; they also have a different purpose: execute advice at more specific times based on the program history, and not to offer a high-level specification system with blame that contracts provide.
 %
 J-LO on the other hand offers a monitoring system based on LTL propositions with binding constructs that tracks the satisfaction of the LTL proposition with the assumption that future portions of the proposition hold.
 %
@@ -98,13 +97,15 @@ Java and C++ both have several high-quality model-checking tools \citep{ianjohns
 %
 Bandera~\citep{ianjohnson:bandera} is a sophisticated tool-chain that uses several static analysis techniques to extract a finite model from a Java program to feed to various back-end model-checkers.
 %
-Similar to our approach, Bandera employs flow analysis in order to produce compact models; conversely, it does not synthesize checkers for runtime monitoring the expressed properties, nor does it natively support higher-order functions.
+Similar to our approach, Bandera employs flow analysis in order to produce compact models; unsimilarly, it does not synthesize checkers for runtime monitoring the expressed properties, nor does it natively support higher-order functions.
+%
+A complete separation of model generation and model-checking also degrades precision, since the more in-depth constraint solving typical model-checkers do can help prune the control-flow space; our approach is amenable to integrated constraint solving and is left to future work.
 %%
 
 %%
 A technique that specifically targets higher-order languages, higher-order recursion schemes (HORS)~\citep{ianjohnson:Knapik:2002:HPT:646794.704852}, is rooted in simply-typed, call-by-name lambda terms, but has model-checking solutions that have been extended to call-by-value ~\citep{?} and untyped ~\citep{?} languages, through heavy type-theoretic machinery.
 %
-Model-checking an untyped HORS is undecidable, and such model checkers make various approximations biased towards to soundly model-check programs in traditional type systems rather than traditional untyped languages.
+Model-checking an untyped HORS is undecidable, and such model checkers make various approximations biased to soundly model-check programs in traditional type systems rather than traditional untyped languages.
 %
 Our technique is lighter weight and more transparently correct since it follows from a systematic transformation of a standard semantics.
 %
@@ -183,22 +184,64 @@ We have built and evaluated all of these but the last.
 \section{Evaluation}
 %%
 
+\begin{figure}
+  \input{benchmark-table}
+  \caption{Benchmark results. Numbers are run-time (ms) / number of spurious blames}
+  \label{fig:evaluation}
+\end{figure}
 %%
-We built temporal higher-order contracts into our existing framework for analyzing a subset of Scheme \footnote{Model available online \url{http://github.com/dvanhorn/oaam/tree/thocon}}.
+We built temporal higher-order contracts into our existing framework for analyzing a subset of Scheme \footnote{Model and benchmarks available online \url{http://github.com/dvanhorn/oaam/tree/thocon}}.
 %
 The sort example is verified if we don't use \texttt{(listof integer?)} twice in the contract.
 %
 This gives us strong motivation to improve the analysis precision to a pushdown abstraction, which can verify the example.
 %
-If we call sort twice, we can't verify it without abstract garbage collection.
+GC after the call to sort will collect the comparison function, and thus soundly remove the obligation to never call it; without GC, the obligation lingers, and any additional calls to sort will raise a spurious blame.
+
 %%
 
+%%
+The analysis results and run times for our benchmark programs are in \autoref{fig:evaluation}, categorized by the additional machinery.
+%
+In the figure, $-$ means regular, $\mu$ means abstract-counting, $\Gamma$ means abstract garbage collection, $\Xi$ means pushdown abstraction, and $\Gamma_\tau$ means abstract garbage collection that additionally collects temporal contracts.
+%
+Analyses without garbage collection used the global store widening to accelerate convergence.
 %%
 \section{Conclusion and future work} \label{sec:conclusion}
 %%
 
 %%
-Shit works, but we want to make better shit.
+We demonstrated that a linguistic construction for monitoring temporal properties of higher-order programs (temporal higher-order contracts) can be transparently abstracted to provide a sound verification algorithm, almost for free, given the AAM approach.
 %
-Particularly the blame story needs better understanding, with deotonic logic.
-%%
+Our preliminary evaluation provides evidence that this can be an effective approach to verification, given the right combination of existing analysis machinery.
+%
+The way forward is clear: build a quality temporal monitoring library and contract a large project to find weaknesses in the language of temporal contracts, and finally evaluate the verification algorithm on this ``more realistic'' example.
+%
+Potential weaknesses we can identify:
+\begin{itemize}
+\item{the blame story needs better understanding, with deotonic logic:
+%
+currently, the party that generates the event that causes a contract to fail gets blamed, and there is no way to express that some event must happen before the end of the monitor's lifetime.
+%
+The event-emitting party might be innocent, just working at the behest of a different party that is obliged not to violate the contract.
+%
+Instead of attaching a temporal contract to a single structural contract with the {\tt tmon} form, we instead allow structural contracts to \emph{emit} temporal contracts as obligations of a given party, and additionally blame for unfinished obligations at monitor collection time, or end of execution;
+}
+%
+\item{calls and returns don't match in the temporal contracts themselves:
+%
+the events are currently interpreted without a notion of matching, which could turn out to be too flat and limiting for proper specifications --- the implementation from \dfm allows labeling calls so that return events can refer to the matching call.
+%
+It is unclear whether an analysis can precisely match calls and returns in both the contracts and control-flow, due to the several stacks that apparently entails, but at least a ``good enough'' approximation should exist;
+}
+%
+\item{whole program analysis is intractible at scale:
+%
+we can verify on a per-module basis if we add temporal contracts to a semantics of partial programs, such as in \citet{dvanhorn:TobinHochstadt2012Higherorder}.
+%
+The primary difficulty there is a sound definition of {\tt havoc} in the presence of temporal contracts, which simulates all possible interactions with a module.
+}
+\end{itemize}
+%
+
+%
