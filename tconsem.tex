@@ -232,7 +232,9 @@ The semantics and derivatives here are simplified to the concrete case, for spac
 %
 The extension to support the approximate matching semantics uses the appropriate logical connectives across $\cup$, $\cap$ and $\neg$ to compute the overall valuation of the temporal contract following a derivation.
 %
-The polarity of $\vee$ flips when passing through a $\neg$ contract; positively, if some contract in a union must match, the contract must match regardless of other $\may$ matches, but negatively, if some contract in a union must match in the presence of $\may$ matches, then the contract only may match.
+Multiple possible matches lead to multiple possible derivations, and the temporal contract connectives are lifted over these sets of derivatives.
+%
+Thus, derivatation produces a set of possible derivations and a ternary value indicating how sure we are to not blame.
 %%
 
 %%
