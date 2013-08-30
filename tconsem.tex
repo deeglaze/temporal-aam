@@ -151,7 +151,7 @@ At the leaves, when considering values of the language equal, $\matches$ appeals
       \\
      \denotetcone{\stbind{\mevent}{\mtcon}}{\menv} &=
      \setof{\epsilon} \cup \{ \mevent' \mtrace :
-       \menv' = \matches(\mevent, \mevent', \menv),
+       \menv'_\must = \matches(\mevent, \mevent', \menv),
        \\&\phantom{= \setof{\epsilon} \cup \{ \mevent'\mtrace : \ }
          \mtrace \in \denotetcone{\mtcon}{\menv'} \}
      \\
@@ -167,10 +167,10 @@ At the leaves, when considering values of the language equal, $\matches$ appeals
         \denotetconfulle{\mtcon}{\menv}}
       \\
      \denotetconfulle{\stbind{\mevent}{\mtcon}}{\menv} &=
-     \setbuild{\mevent' \mtrace}{\menv' = \matches(\mevent, \mevent',
+     \setbuild{\mevent' \mtrace}{\menv'_\must = \matches(\mevent, \mevent',
        \menv), \mtrace \in \denotetconfulle{\mtcon}{\menv'}}
      \\
-      \denotetconfulle{\mevent}{\menv} &= \setbuild{\mevent'}{\menv' =
+      \denotetconfulle{\mevent}{\menv} &= \setbuild{\mevent'}{\menv'_\must =
         \matches(\mevent, \mevent', \menv)}
       \\[2pt]
       \semneg{\Pi} &= \setbuild{\mtrace}{\forall \mtrace' \in
@@ -184,13 +184,13 @@ At the leaves, when considering values of the language equal, $\matches$ appeals
       \\
       \derivee{\mevent}{\mevent'}{\menv} &= \left\{
         \begin{array}{ll}
-          \epsilon & \text{if } \menv' = \matches(\mevent', \mevent, \menv) \\
+          \epsilon & \text{if } \menv'_\must = \matches(\mevent', \mevent, \menv) \\
           \bot & \text{otherwise}
         \end{array}\right.
       \\
       \derivee{\mevent}{\stbind{\mevent'}{\mtcon}}{\menv} &=
       \left\{\begin{array}{ll}
-          \mtcon,\menv' & \text{if } \menv' = \matches(\mevent', \mevent, \menv) \\
+          \mtcon,\menv' & \text{if } \menv'_\must = \matches(\mevent', \mevent, \menv) \\
           \bot & \text{otherwise}
         \end{array}\right.
       \\
