@@ -44,7 +44,7 @@ The syntax is presented in \autoref{fig:tcontract-syntax}.
 %%
 Temporal contracts ($\mtcon$) include events ($\mevent$) (for $\mevent$ction), negated events ($\snonevent{\mevent}$), concatenation ($\stseq{\mtcon}{\mtcon}$) (often represented using juxtaposition), negated contracts ($\stnot{\mtcon}$), Kleene closure of events ($\stmany{\mtcon}$), union ($\stOr{\mtcon\ldots}$), intersection ($\stAnd{\mtcon\ldots}$), the empty temporal contract ($\epsilon$), and higher-order binding events ($\stcall{\mname}{\mvar}$ and $\stret{\mname}{\mvar}$).
 %
-We consider the universal contract $\sddd$ as a macro for $\stAnd{\setof{}}$, and the fail contract $\bot$ as a macro for $\stOr{\setof{}}$.
+We consider the fail contract $\bot$ as a macro for $\stOr{\setof{}}$; \dfm's universal contract $\sddd$ was intended to be interpreted greedily (though was not in the formal semantics), but greediness poses challenges to the derivative parsing approach we have taken, and leave the study of greediness to future work.
 %
 The difference between $\snonevent{\mevent}$ and $\stnot{\mtcon}$ is that the first must be an event and force time to step forward once, whereas the second may match arbitrarily many events.
 %%

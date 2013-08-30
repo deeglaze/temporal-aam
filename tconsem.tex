@@ -43,7 +43,7 @@ We can show that the partial trace semantics is prefix-closed (\autoref{thm:pref
 %%
 
 %%
-We made the design choice that call events for bound variables ($\scallev{\mvar,\mvpat}$) will only be sent to the temporal monitor if the value bound to $\mvar$ is itself contracted on the monitor's timeline.
+We made the design choice that call events for bound variables ($\scallev{\mvar}{\mvpat}$) will only be sent to the temporal monitor if the value bound to $\mvar$ is itself contracted on the monitor's timeline.
 %
 The reason for this is that control should flow back to the timeline considered in order for an event to affect that timeline.
 %

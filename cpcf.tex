@@ -235,6 +235,11 @@ the events are currently interpreted without a notion of matching, which could t
 It is unclear whether an analysis can precisely match calls and returns in both the contracts and control-flow, due to the several stacks that apparently entails, but at least a ``good enough'' approximation should exist;
 }
 %
+\item{some specifications are better suited to DLTL or state machines:
+%
+we may wish to mix and match ways in which we express properties, where a contract in a different language is considered primitive, and only continues when the contract is accepting (much like sequence contracts work now).
+}
+%
 \item{whole program analysis is intractible at scale:
 %
 we can verify on a per-module basis if we add temporal contracts to a semantics of partial programs, such as in \citet{dvanhorn:TobinHochstadt2012Higherorder}.
