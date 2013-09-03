@@ -12,7 +12,7 @@
 \WithSuffix\newcommand\iflong*[2]{#2}
 \newcommand*{\iftwocolumn}[2]{#2}
 
-\newcommand*{\dfm}{\citeauthor{ianjohnson:dfm:icfp2011}~}
+\newcommand{\dfm}{DFM}%\citeauthor{ianjohnson:dfm:icfp2011}~}
 
 % Metavariables
 \newcommand*{\matchstate}{\mu}
@@ -33,6 +33,8 @@
 \newcommand*{\npmsm}[2]{\langle #1,\ #2\rangle}
 \newcommand*{\ary}{\mathit{ary}}
 
+\newcommand*{\self}{\mathit{self}}
+
 \newcommand*{\mbindenv}{\gamma}
 \newcommand*{\menvs}{\Gamma}
 \newcommand*{\mres}{\mathit{result}}
@@ -43,6 +45,7 @@
 \newcommand*{\mcontract}{C}
 \newcommand*{\mscon}{S}
 \newcommand*{\mtcon}{T}
+\newcommand*{\mtcons}{{\mathcal T}}
 \newcommand*{\mname}{n}
 \newcommand*{\mtoplevelname}{\ell}
 \newcommand*{\mevent}{A}
@@ -74,6 +77,11 @@
 \newcommand*{\mframe}{\phi}
 \newcommand*{\mmsto}{\sigma_{\mathcal C}}
 
+\newcommand*{\good}{\mathit{good}}
+\newcommand*{\blame}{\mathit{blame}}
+\newcommand*{\alias}{\mathit{alias}}
+\newcommand*{\adhere}{\mathit{adhere}}
+
 \newcommand*{\mvariance}{\pm}
 \newcommand*{\varianceite}[3]{\text{if } #1 > 0 ? #2 : #3}
 
@@ -102,6 +110,7 @@
 \newcommand*{\toltl}[5]{\llparenthesis #2 \rrparenthesis_{#3,\,#4}^{#1}(#5)}
 \newcommand*{\stacktoltl}[3]{\llparenthesis #2 \rrparenthesis_{#3}^{#1}}
 
+\newcommand*{\inv}{\mathit{inv}}
 \newcommand*{\matches}{\mathit{m}}
 \newcommand*{\nullable}{\nu}
 \newcommand*{\flatempty}{\mu}
@@ -143,6 +152,8 @@
 \newcommand*{\smay}[1]{\may(#1)}
 \newcommand*{\smust}[1]{\must(#1)}
 
+\newcommand*{\snlam}[3]{\lambda^{#1} #2.\ #3}
+
 \newcommand*{\sSMon}[6]{\tuple*[^{#1,#2}_{#3}]{smon}{#4}{#5,\, #6}}
 \newcommand*{\sTMon}[6]{\tuple[^{#1,#2}_{#3}]{tmon}{#4,\,#5,\,#6}}
 \newcommand*{\schk}[4]{\tuple[^{#1}_{#2}]{chk}{#3,\, #4}}
@@ -157,10 +168,13 @@
 \WithSuffix\newcommand\sown*[2]{#1}
 \newcommand*{\hole}{[\,]}
 \newcommand*{\sblame}[2]{{\tt blame}^{#1}_{#2}}
+\newcommand*{\stblame}[2]{{\tt tblame}^{#1}_{#2}}
+\newcommand*{\mcev}{\mathit{ev}}
+\newcommand*{\scev}[5]{\tuple*[^{#1}_{#2}]{\mcev}{#3,#4}{#5}}
 %\newcommand*{\scall}[3]{\tuple*[^{#1}]{call}{#2}{#3}}
-\newcommand*{\scall}[3]{\tuple*[]{call}{#2}{#3}}
 %\newcommand*{\sret}[3]{\tuple*[^{#1}]{ret}{#2}{#3}}
-\newcommand*{\sret}[3]{\tuple*[]{ret}{#2}{#3}}
+\newcommand*{\scall}[5]{\tuple*[^{#1}_{#2}]{call}{#3,#4}{#5}}
+\newcommand*{\sret}[5]{\tuple*[^{#1}_{#2}]{ret}{#3,#4}{#5}}
 \newcommand*{\smachine}{\mathcal{M}}
 
 \newcommand*{\sdefine}[3][\ ]{\tuple[#1]{define}{#2,\, #3}}
@@ -200,6 +214,7 @@
 \newcommand*{\sflat}[1]{{\tt flat}(#1)}
 
 \newcommand*{\doneev}{{\tt End}}
+\newcommand*{\scevev}[2]{\mcev(#1,\, #2)}
 \newcommand*{\scallev}[2]{{\tt call}(#1,\, #2)}
 \newcommand*{\sretev}[2]{{\tt ret}(#1,\, #2)}
 \newcommand*{\swrapev}[2]{{\tt wrap}(#1,\, #2)}
@@ -287,9 +302,11 @@
 \newcommand*{\SContract}{\mathit{Structural}}
 \newcommand*{\TContract}{\mathit{Temporal}}
 \newcommand*{\Event}{\mathit{Event}}
+\newcommand*{\FunctionEvent}{\mathit{FEvent}}
 \newcommand*{\BEvent}{\mathit{BEvent}}
 \newcommand*{\VPat}{\mathit{VarPattern}}
 \newcommand*{\Constant}{\mathit{Constant}}
+\newcommand*{\Constructors}{\mathit{Constructors}}
 \newcommand*{\PreValue}{\mathit{PreValue}}
 \newcommand*{\PreMonitor}{\mathit{PreMonitor}}
 \newcommand*{\ModuleLabel}{\mathit{ModLabel}}

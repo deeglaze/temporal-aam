@@ -7,9 +7,9 @@ Since we consider monitor constructions as a more basic notion of equality, we a
 %
 Thus, as values flow through contract boundaries, they are considered on different timelines.
 %
-\dfm formalized their semantics in terms of a nondeterministic machine that defined its interactions on all event streams, and thus their machine was on a single timeline.
+\dfm{} formalized their semantics in terms of a nondeterministic machine that defined its interactions on all event streams, and thus their machine was on a single timeline.
 %
-The semantics of temporal contracts that we propose uses pointer-equality of monitors for comparisons of non-primitive data.
+The semantics of temporal contracts that we propose uses a weak equality for comparisons of non-primitive data, which we evaluate as structural equality up to closures, where we use pointer-equality.
 %
 Our semantics makes interaction between temporal contract monitors explicit, allowing us to verify whole programs.
 %%
@@ -21,15 +21,15 @@ Negation is the culprit: contracts that state anything about how a trace may not
 %
 %Additionally, if one writes a contract more carefully to reject extensions of bad traces, there isn't an obvious operational interpretation that allows early failure.
 %
-For example, $\mevent\mevent \in \prefixes(\denote{\stnot{\mevent}}_{\menv})$, and because of prefix closure, $\mevent \in \prefixes(\denote{\stnot{\mevent}}_{\menv})$!
+For example, the denotation of temporal contracts from \dfm{} allows $\mevent\mevent \in \prefixes(\denote{\stnot{\mevent}})$, and because of prefix closure, $\mevent \in \prefixes(\denote{\stnot{\mevent}})$!
 %
 Temporal contract failure should not be contingent on future observations; an effective monitor should blame \emph{as soon as} a contract is not satisfied.
 %
-We thus have a different semantics for temporal contracts that ping-pongs between \emph{full traces} and \emph{partial traces}; a negated temporal contract will reject all full traces of the given contract, as well as any extension of such traces.
+We thus have a different semantics for temporal contracts that alternates between \emph{full traces} and \emph{partial traces}; a negated temporal contract will reject all non-empty full traces of the given contract, as well as any extension of such traces.
 %
 This semantics of negation does not satisfy double-negation elimination (DNE), but we find that to be an acceptable trade-off; we do not need DNE in order to implement or verify temporal contracts.
 %
-We claim that this semantics is what \dfm intended their system to mean, as it matches up with the expectations of their prose, the test cases in their implementation\footnote{The functional test cases, in particular, since our model does not handle Racket's object system.}, and additionally raises blame on programs that \dfm were surprised their implementation accepted.
+We claim that this semantics is what \dfm{} intended their system to mean, as it matches up with the expectations of their prose, the test cases in their implementation\footnote{The functional test cases, in particular, since our model does not handle Racket's object system.}, and additionally raises blame on programs that \dfm{} were surprised their implementation accepted.
 %
 Since our semantics catches more ``bad'' behavior than their monitoring system, we have not simply formalized their implementation.
 %%
@@ -66,12 +66,10 @@ It is easy enough to amend the structural contracts to reflect the fact that a b
       \mvaluation &::= \may \alt \must \alt \bot \\
       \menvs \subset \Env &::= \menv \ldots \\
       \MatchResult &::= \menvs_\mvaluation \\
-      \menvs_\bot &= \emptyset_\bot \\
+      \menvs_\bot &= \emptyset_\bot = \emptyset_\mvaluation \\
       \mdata \in \Qualified &= S \alt \mconstant \alt \mconstructor(\mdata \ldots) \\
-      S \subset \Qualified &
-      \\[2pt]
-      \may \oplus \_ &= \_ \oplus \may = \may \\
-      \bot \oplus \mvaluation &= \mvaluation
+      S \subset \Qualified & \\
+      \mconstructor \in \Constructors &= \setof{{\tt call}, {\tt ret}, {\tt cons}}
       \\[2pt]
       \must \wedge \must &= \must \\
       \bot \wedge \_ &= \_ \wedge \bot = \bot \\
@@ -89,23 +87,21 @@ It is easy enough to amend the structural contracts to reflect the fact that a b
 %    \matches &: \Pattern \times \Qualified \times \Env \to \MatchResult \\
     \matches(\sany, \_, \menv) &= \menv_\must \\
     \matches(\snone, \_, \menv) &= \emptyset_\bot \\
-    \matches(\mtoplevelname,
-    \bclos{\mtoplevelname}{\mscon_D}{k}{j}{\mtimeline}{\mscon_R}{\mmlab^{\prime}}{\maddr},
-    \menv) &= \menv_\must \\
+    \matches(\mtoplevelname, \snlam{\mtoplevelname}{\mvar}{\mexp}, \menv) &= \menv_\must \\
     \matches(\snegpat{\mvpat}, \mdata, \menv) &= \menv_{\neg \mvaluation} \\
     \text{where }& \matches(\mvpat, \mdata, \menv) = \menv'_\mvaluation \\
     \matches(\sbind{\mvar}, \mdata, \menv) &= \menv[\mvar \mapsto \mdata]_\must \\
     \matches(\mvar, \mdata, \menv) &= \menv_{\menv(\mvar) \simeq \mdata} \\
-    \matches(\mpat\equiv\mconstructor(\mvpat, \ldots), S, \menv) &= \Delta\setbuild{\matches(\mpat, \mdata, \menv)}{\mdata \in S} \\
     \matches(\mconstructor(\mvpat, \ldots), \mconstructor(\mdata, \ldots), \menv) &= (\Bowtie \menvs \ldots)_{\bigwedge \mvaluation \ldots} \\
     \text{where }& \menvs_\mvaluation \ldots = \matches(\mvpat, \mdata, \menv) \ldots \\
-    \matches(\mdata, \mdata', \menv) &= \menv_{\bigoplus\limits_{\mdata'' \in \mdata'}{{\mdata \simeq \mdata''}}} \\
+    \matches(\mpat, S, \menv) &= \Delta\setbuild{\matches(\mpat, \mdata, \menv)}{\mdata \in S} \\
+    \matches(\mdata, \mdata', \menv) &= \menv_{\mdata \simeq \mdata'} \\
     \matches(\mpat, \mdata, \menv) &= \emptyset_\bot \quad
     \text{otherwise}
     \\[2pt]
-    \Delta S &= (\bigcup\limits_{\menvs_{\_} \in S}\menvs)_{\delta \setbuild{\mvaluation}{\menvs_\mvaluation \in S}} \\
+    \Delta S &= (\bigcup\limits_{\menvs_{\_} \in S}\menvs)_{\delta \setbuild{\mvaluation}{{\_}_\mvaluation \in S}} \\
     \delta \setof{\mvaluation} &= \mvaluation \\
-    \delta S &= \may \quad \text{otherwise}
+    \delta \setof{t \ldots} &= \may \quad \text{otherwise}
   \end{align*}}{\caption{Semantics of matching}\label{fig:matchsem}}
 
 We define our semantics of matching in anticipation of abstraction, where we do not always know when two values are equal.
@@ -150,13 +146,11 @@ At the leaves, when considering values of the language equal, $\matches$ appeals
       \denotetcone{\mtcon_1}{\menv}
       \\
      \denotetcone{\stbind{\mevent}{\mtcon}}{\menv} &=
-     \setof{\epsilon} \cup \{ \mevent' \mtrace :
-       \menv'_\must = \matches(\mevent, \mevent', \menv),
-       \\&\phantom{= \setof{\epsilon} \cup \{ \mevent'\mtrace : \ }
-         \mtrace \in \denotetcone{\mtcon}{\menv'} \}
+      \setof{\epsilon}\cup
+        \{ \mevent' \mtrace : \mevent',\menv' \in \denotetconfulle{\mevent}{\menv},
+        \\&\phantom{= \setof{\epsilon}\cup \{ \mevent'\mtrace : } \mtrace \in \denotetcone{\mtcon}{\menv'} \}
      \\
-      \denotetcone{\mevent}{\menv} &= \setof{\epsilon} \cup
-      \denotetconfulle{\mevent}{\menv}
+      \denotetcone{\mevent}{\menv} &= \setof{\epsilon}\cup\denotetconfulle{\mevent}{\menv}
       \\[2pt]
       \denotetconfulle{\stseq{\mtcon_0}{\mtcon_1}}{\menv} &=
       \denotetconfulle{\mtcon_0}{\menv} \semseq
@@ -167,10 +161,9 @@ At the leaves, when considering values of the language equal, $\matches$ appeals
         \denotetconfulle{\mtcon}{\menv}}
       \\
      \denotetconfulle{\stbind{\mevent}{\mtcon}}{\menv} &=
-     \setbuild{\mevent' \mtrace}{\menv'_\must = \matches(\mevent, \mevent',
-       \menv), \mtrace \in \denotetconfulle{\mtcon}{\menv'}}
+     \setbuild{\mevent' \mtrace}{\mevent',\menv' \in \denotetconfulle{\mevent}, \mtrace \in \denotetconfulle{\mtcon}{\menv'}}
      \\
-      \denotetconfulle{\mevent}{\menv} &= \setbuild{\mevent'}{\menv'_\must =
+      \denotetconfulle{\mevent}{\menv} &= \setbuild{\mevent',\menv'}{\menv'_\must =
         \matches(\mevent, \mevent', \menv)}
       \\[2pt]
       \semneg{\Pi} &= \setbuild{\mtrace}{\forall \mtrace' \in
@@ -234,26 +227,28 @@ The extension to support the approximate matching semantics uses the appropriate
 %
 Multiple possible matches lead to multiple possible derivations, and the temporal contract connectives are lifted over these sets of derivatives.
 %
-Thus, derivatation produces a set of possible derivations and a ternary value indicating how sure we are to not blame.
+Thus, derivatation produces a set of possible derivations and a valuation indicating how sure we are to \emph{not} blame.
 %%
 
 %%
-We say $\mexp$ satisfies a temporal contract $\mtcon$ if its event trace filtered by the timeline to which the contract is attached ($\denote{\mexp}_\mtimeline$) is in the denotation of the temporal contract ($\denotetcon{\mtcon}$).
+We say $\mexp$ satisfies a temporal contract $\mtcon$ if its event trace filtered by the timeline to which the contract is attached is in the denotation of the temporal contract ($\denotetcon{\mtcon}$).
+%
+Since monitors are generated during reduction, the proof is mostly technical that our monitoring system ensures an expression either satisfies its contract or blames, and hinges mainly on the correctness of derivatives:
 %
 
-\begin{theorem}[Full]
+\begin{theorem}[Full]\label{thm:full}
  $\denotetconfull{\derivee{\mevent}{\mtcon}{\menv}} = \setbuild{\mtrace}{\mevent\mtrace \in \denotetconfulle{\mtcon}{\menv}}$
 \end{theorem}
 
-\begin{theorem}[Partial]
+\begin{theorem}[Partial]\label{thm:partial}
  $\denotetcon{\derivee{\mevent}{\mtcon}{\menv}} = \setbuild{\mtrace}{\mevent\mtrace \in \denotetcone{\mtcon}{\menv}}$
 \end{theorem}
 
-\begin{theorem}[Top level full]
+\begin{theorem}[Top level full]\label{thm:top-full}
  $\denotetconfull{\derive{\mevent}{\mtcon}} = \setbuild{\mtrace}{\mevent\mtrace \in \denotetconfull{\mtcon}}$
 \end{theorem}
 
-\begin{theorem}[Top level partial]
+\begin{theorem}[Top level partial]\label{thm:top-partial}
  $\denotetcon{\derive{\mevent}{\mtcon}} = \setbuild{\mtrace}{\mevent\mtrace \in \denotetcon{\mtcon}}$
 \end{theorem}
 
@@ -319,18 +314,30 @@ and has a straightforward proof except in the $\neg$ case, which requires some t
 \end{byCases}
 %z
 
-An additional property we need to have is that we can tell when a contract is empty, so that we can blame appropriately.
-\begin{theorem}
-  $\mtrace \in \denotetcon{\mtcon} \iff \neg\flatempty(\mtcon)$
-\end{theorem}
-%
-Depends on
-\begin{lemma}[Flat emptiness]
-  $\flatempty(\mtcon) \implies \denotetconfull{\mtcon} = \emptyset$
-\end{lemma}
-Where $\flatempty$ is defined similarly to $\nullable$, but every base case is $\bot$, and the $\vee$ and $\wedge$ are swapped (thus $\top$ can only come from an empty $\cup$ --- the failing contract).
-%
-Our implementation reduces temporal contracts at construction time, so that the following invariant holds of represented contracts:
-\begin{equation*}
- \flatempty(\mtcon) \iff \mtcon = \bot
-\end{equation*}
+An interesting corollary relating paths to repeated derivation:
+\begin{corollary}
+  $\mtrace \in \denotetcon{\mtcon} \iff \nullable(\derive{\mtrace}{\mtcon}) = \epsilon$
+\end{corollary}
+% %
+% Depends on
+% \begin{lemma}[Flat emptiness]
+%   $\flatempty(\mtcon) \implies \denotetconfull{\mtcon} = \emptyset$
+% \end{lemma}
+% where $\flatempty$ and $\flatempty_\menv$ are defined as (where $[_\menv]$ denotes the definition applies to both)
+% \begin{align*}
+%   \flatempty[_\menv](T) &= \bot \quad\text{if } T\equiv\epsilon,\, T\equiv(\stmany{\mtcon}),\,\text{or }T\equiv\stnot{\mtcon} \\
+%   \flatempty[_\menv](\stbind{\mevent}{\mtcon}) &= \flatempty[_\menv](\mevent) \\
+%   \flatempty[_\menv](\stOr{\mtcon\ldots}) &= \bigwedge \flatempty[_\menv](\mtcon)\ldots \\
+%   \flatempty[_\menv](\stAnd{\mtcon\ldots}) &= \bigvee \flatempty[_\menv](\mtcon)\ldots \\
+%   \flatempty[_\menv](\stseq{\mtcon_0}{\mtcon_1}) &= \flatempty[_\menv](\mtcon_0) \vee \flatempty[_\menv](\mtcon_1) \\
+%   \flatempty(\mtcon,\menv) &= \flatempty_\menv(\mtcon) \\[2pt]
+%   \flatempty[_\menv](\snone) &= \top \\
+%   \flatempty_\menv(\mvar) &= (\menv(\mvar) \overset{?}{=} \emptyset) \\
+%   \flatempty[_\menv](\snegpat{\mvpat}) &= \top \quad\text{if } \mvpat\equiv\sany,\, \mvpat\equiv\sbind{\mvar}, \text{ or } \mvpat\equiv\snegpat{\mvpat'} \text{ and } \flatempty[_\menv](\mvpat') \\
+%   \flatempty[_\menv](\mvpat) &= \bot \quad\text{otherwise}
+% \end{align*}
+% %
+% Our implementation reduces temporal contracts at construction time, so that the following invariant holds of represented contracts:
+% \begin{equation*}
+%  \flatempty(\mtcon) \iff \mtcon = \bot
+% \end{equation*}

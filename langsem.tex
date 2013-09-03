@@ -3,18 +3,8 @@ Now that we have a clear view of the behavior of temporal contracts, we nail dow
 The semantics we present is in the style of Felleisen's reduction semantics~\citep{ianjohnson:Felleisen:2009:SEP:1795772}, which can be systematically transformed into an abstract machine in the form presented in~\citet{dvanhorn:VanHorn2010Abstracting}.
 %%
 
-%FIXME: This is from the LTL days...
-%%
-Wrapping monitors around values associates entirely fresh NFA states.
+The language itself is standard ISWIM, just extended with contract-monitoring forms, whose syntax and semantics we will focus on.
 %
-The names given to bindings are really associated with the bindings.
-%
-We have to give up some precision for decidability --- we use a monovariant allocation scheme for monitor allocation.
-%
-This scheme allows us to lift all textual temporal contracts to the top level and check individually.
-%
-A polyvariant scheme would require either knowing how many abstract bindings are allocated during execution, or an exhaustive enumeration of possible bindings as propositions to check.
-
 %%
 \subsection{Syntax}
 %\FloatBarrier
@@ -22,147 +12,65 @@ A polyvariant scheme would require either knowing how many abstract bindings are
 \begin{figure}
 \begin{align*}
 \mexp \in \Expr &::=
-      \slit{\mconstant}
- \alt \svar{\mvar}
- \alt \sapp{\mexp}{\mexp}
- \alt \slam{\mvar}{\mexp}
- \alt \sif{\mexp}{\mexp}{\mexp} \\
-&\alt \sSMon{\mmlab}{\mmlab}{\mlab}{\mtimeline}{\mscon}{\mexp}
- \alt \sTMon{\mmlab}{\mmlab}{\mlab}{\mscon}{\mtcon}{\mexp} \\
-\mconstant \in \Constant &=
- -1 \alt 0 \alt 1 \alt \ldots \alt + \alt - \alt \ldots \\
-&\alt \strue \alt \sfalse \alt \vee \alt \wedge \alt \ldots \\
-&\alt \sunit \alt \scons \alt \scar \alt \scdr \alt \ldots \\
-\mvar \in \Var &\quad\text{ an infinite set} \\
-\mmlab \in \Label \alt \toplevel &\quad\text{ an infinite set, where $\toplevel$ is the top-level}
+      \snlam{\mtoplevelname}{\mvar}{\mexp}
+ \alt \sSMon{k}{l}{k}{\mtimeline}{\mscon}{\mexp}
+ \alt \sTMon{k}{l}{j}{\mscon}{\mtcon}{\mexp}
+ \alt \stblame{k}{j} \\
+&\alt \scev{k}{j}{\mtimeline}{\mval_f}{\mexp}
+ \alt \ldots
 \end{align*}
 \caption{Syntax}
 \label{fig:syntax}
 \end{figure}
 
 %
-\autoref{fig:syntax} presents the core, desugared syntax of our language model.
-%
-Note that the surface syntax is better represented by the pseudocode examples given in \cref{sec:sort,sec:file,sec:tcp}; for example, a user would not be able to use $\mathtt{smon}$ or $\mathtt{tmon}$ in expressions.
-%
-While the syntax is largely conventional, the nature of monitoring and labelling are worth discussion.
-
-%
-A structural monitor $\sSMon{k}{\ell}{j}{\mtimeline}{\mscon}{\mexp}$ is like a traditional monitor \cite{ianjohnson:dthf:complete}: the structural contract is given by $\mscon$ and the contract parties are given by labels: $k$ is the server, $l$ is the client, and $j$ is the contract itself.
+A structural monitor $\sSMon{k}{l}{j}{\mtimeline}{\mscon}{\mexp}$ is like a traditional monitor \cite{ianjohnson:dthf:complete}: the structural contract is given by $\mscon$ and the contract parties are given by labels: $k$ is the server, $l$ is the client, and $j$ is the contract itself.
 %
 However, our structural monitors additionally feature a timeline ($\mtimeline$), used to temporally reason over values as they flow through contract boundaries (cf. \autoref{sec:temporal-semantics}).
 %
 
 %
-A temporal monitor $\sTMon{k}{\ell}{j}{\mscon}{\mtcon}{\mexp}$ has a structural component as well ($\mscon$), but importantly it also considers a temporal contract given by $\mtcon$.
+A temporal monitor $\sTMon{k}{l}{j}{\mscon}{\mtcon}{\mexp}$ has a structural component as well ($\mscon$), but importantly it also considers a temporal contract given by $\mtcon$.
 %
-These kinds of monitors are only introduced at the top level, and thus need not be qualified over a timeline, as it is effectively $\toplevel$.
-%
-At this point we would like to note that our usage of labels differs slightly from existing literature \cite{ianjohnson:dthf:complete}: we have a notion of the ``top level label'', denoted by $\toplevel$; this is similar to \citeauthor{ianjohnson:dthf:complete}'s use of $\ell_0$.
+\iflong{At this point we would like to note that our usage of labels differs slightly from existing literature \cite{ianjohnson:dthf:complete}: we have a notion of the ``top level label'', denoted by $\toplevel$; this is similar to \citeauthor{ianjohnson:dthf:complete}'s use of $l_0$.}
 %%
 
 %%
-\subsection{Value Space and Evaluation Contexts}
-
-\begin{figure}
-\begin{align*}
-\mexp &::= \ldots
- \alt \sblame{\mmlab}{\mmlab} \\
-&\alt \schk*{\mmlab}{\mmlab}{\mtimeline}{\mexp}{\mval}
- \alt \sret{\mmlab}{\mtimeline}{\mexp}
-\\
-\mval \in \Value &::=
-      \mconstant
- \alt \vcons{\mval}{\mval}
- \alt \maddr \\
-&\alt \bclos{\mmlab}{\mscon}{\mmlab}{\mmlab}{\mtimeline}{\mscon}{\mmlab}{\maddr}
-\\
-\maddr \in \Addr &\quad\text{an infinite set} \\
-\mstimeline \in \Timeline &::= \maddr \alt \toplevel
-\end{align*}
-\caption{Value space}
-\label{fig:values}
-\end{figure}
+Expressions of the form $\sret{k}{j}{\mtimeline}{\mval}{\mexp}$ denote the production of a return event on the $\mtimeline$ timeline, blaming $k$ for failures, where $\mval$ is the function being returned from, and $\mexp$ has evaluated to the return value.
+%
+Call events are similar.
+%
+The $\stblame{l}{j}$ expression denotes a temporal contract failure (of the contract $j$), which is a fatal error which blames $l$.
 %%
-
 %
-\autoref{fig:values} presents the value space for our language model.
+After arguments to a call, or return values are wrapped, we get a blessing from the temporal monitor that the call or return is acceptable.
 %
-For evaluation purposes, we extend our definition of expressions ($\mexp$) to include intermediate terms for contract checking.
+\newcommand*{\namefmt}[1]{\textit{\textsc{#1}}}
+This is embodied in the $\namefmt{wrap}$ and $\namefmt{event}$ rules in \autoref{fig:reduction}.
 %
-Expressions of the form $\sret{\mmlab}{\mtimeline}{\mexp}$ denote the production of an return event $\sretev{\mmlab}{\mexp}$, which may be rejected by the temporal monitors in place.
+Functions wrapped in arrow contracts are annotated with the name in the contract ($\snlam{\mtoplevelname}{\mvar}{\mexp}$) for matching purposes, but otherwise these functions have the same behavior as non-annotated functions.
 %
-The $\sblame{\ell}{j}$ expression denotes a contract failure (of the contract $j$), which is a fatal error which blames $\ell$.
 %
-An $\schk*{\ell}{j}{\mtimeline}{\mexp}{\mval}$ expression denotes an obligation to check the contract of $j$ given by $\mexp$ against the value $\mval$, blaming $\ell$ if the contract is violated.
+\iflong{
+Our evaluation contexts in \autoref{fig:ctx} follow straightforwardly and are ownership-sensitive \cite{ianjohnson:dthf:complete}, though we leave out discussion of this topic, as we feel it is orthogonal to our work.}
 %
-The timeline component of this expression ($\mtimeline$) is used to pass along the timeline to any monitors inside of $\mexp$ which might need to reason over it; given complete monitoring \cite{ianjohnson:dthf:complete}, the contract itself is still subject and a party to the program's contracts.
 %
-
-%
-Values ($\mval$) are conventional except for blessed closures ($\bclos{\mmlab}{\mscon}{\mmlab}{\mmlab}{\mtimeline}{\mscon}{\mmlab}{\maddr}$).
-%
-Though we've discussed timelines ($\mtimeline$) (cf. \autoref{sec:temporal-semantics}), we show here that our representation for them is either as an address ($\maddr$) or the top level ($\toplevel$).
-%
-
-%
-Our evaluation contexts in \autoref{fig:ctx} follow straightforwardly and are ownership-sensitive \cite{ianjohnson:dthf:complete}, though we leave out discussion of this topic, as we feel it is orthogonal to our work.
-%
-A machine state ($\mstate$) is composed of the evaluation context ($\mctx{\mmlab}$), store ($\msto$), and store of PMSM states ($\mTMons$).
-%
-The former maps addresses to sets of values and the latter maps timelines to PMSMs.
-%
-
-%%
-\begin{figure}
-\begin{align*}
-\mctx{\mmlab} \in \ECtx &::=
-      \sapp{\mctx{\mmlab}}{\mexp}
- \alt \sapp{\mval}{\mctx{\mmlab}}
- \alt \sif{\mctx{\mmlab}}{\mexp}{\mexp} \\
-&\alt \vcons{\mctx{\mmlab}}{\mexp}
- \alt \vcons{\mval}{\mctx{\mmlab}} \\
-&\alt \sSMon{\ell}{k}{j}{\mtimeline}{\mscon}{\mctx*} \\
-&\alt \sTMon{\ell}{k}{j}{\mscon}{\mtcon}{\mctx*} \\
-&\alt \schk*{k}{\ell}{\mtimeline}{\mctx*}{\mval}
-\alt \sret{\ell}{\mtimeline}{\mctx*}
-\\
-\mctx* \in \ECtx* &::=
-      \hole
- \alt \sapp{\mctx*}{\mexp}
- \alt \sapp{\mval}{\mctx*}
- \alt \sif{\mctx*}{\mexp}{\mexp} \\
-&\alt \vcons{\mctx*}{\mexp}
- \alt \vcons{\mval}{\mctx*} \\
-&\alt \scall{\mmlab}{\mtimeline}{\mctx*}
- \alt \sret{\mmlab}{\mtimeline}{\mctx*} \\
-\ECtx* &\subset \ECtx
-\\
-\mstate \in \State &= \chevron{\mctx{\mmlab}, \msto, \mTMons} \quad\text{machine state}
-\\
-\msto \in \Store &= \Addr \parto \wp(\Value)
-\\
-\mTMons \in \TMons &= \Timeline \parto \wp(\PMSM)
-\end{align*}
-\caption{Evaluation contexts}
-\label{fig:ctx}
-\end{figure}
-%%
 
 %%
 \subsection{Reduction} \label{sec:reduction}
 
-\newcommand*{\namefmt}[1]{\textit{\textsc{#1}}}
+A machine state ($\mstate$) is composed of the expression, ($\mexp$) and store of temporal contracts ($\mTMons : \Timeline \to \wp(\TContract)$).
+%
 \begin{figure*}
-\newcommand*{\update}[3]{#1^\prime = #1[#2 \mapsto #1(#2)\sqcup#3]}
+\newcommand*{\update}[3]{#1^\prime = #1[#2 \mapsto #1(#2)\mathrel{\sqcup}{#3}]}
 \newcommand*{\name}[1]{&\text{[\namefmt{#1}]}}
 \newcommand*{\where}{\text{where }}
 \newcommand*{\cwhere}{\phantom{\where}}
 \centering
 $\begin{array}{@{}l @{\ }c@{\ } l@{} r}
-\mstate \chevron{\mctx{\mmlab}[\ldots], \msto, \mTMons}
+\mstate := \chevron{\mctx{\mmlab}[\ldots], \mTMons}
 &\machstep&
-\mstate^\prime \chevron{\mctx{\mmlab^\prime}[\ldots], \msto^\prime, \mTMons^\prime}
+\mstate^\prime := \chevron{\mctx{\mmlab^\prime}[\ldots], \mTMons^\prime}
 \name{rule-name}
 
 \iflong*{
@@ -184,26 +92,35 @@ $\begin{array}{@{}l @{\ }c@{\ } l@{} r}
 \sown{ \sapp{\{ \sown{\mval}{\mmlab}/\mvar \}}{\mexp} }{\mmlab}
 \name{apply}
 
-\\ % Temporal monitor
+\\
 }
+% Temporal monitor
 {\\ \hline}
 \sTMon{k}{\mmlab}{j}{\mscon}{\mtcon}{\mval}
 &\machstep&
 \sSMon{k}{\mmlab}{j}{\mtimeline}{\mscon}{\mval}
 \name{tmon} \\
-&&\where \update{\mTMons}{\mtimeline}{\smachine} \\
-&&\cwhere \smachine = \compile{\mtcon}{\mtimeline} \ne \bot \\
-&&\cwhere \mtimeline = \salloc{\mstate} \\
-&&\text{given } \mmlab = \toplevel
+&&\where \update{\mTMons}{\mtimeline}{\setof{\mtcon}} \\
+&&\cwhere \mtimeline = \salloc{\mstate}
 
-\\ % Temporal monitor compilation fail
+\\ % Arrow monitor
+\sSMon{k}{l}{j}{\mtimeline}{\sarr{\mtoplevelname}{\mscon_D}{\mscon_R}}{\mval}
+&\machstep&
+\self \qquad \text{given } \mval \equiv \slam{\mvar}{\mexp}
+\name{wrap} \\
+&&\where \self = \snlam{\mtoplevelname}{\mvar}{\sret{k}{j}{\mtimeline}{\self}{\mexp_{\mathit{rng}}}} \\
+&&\cwhere \mexp_{\mathit{rng}} = \sSMon{k}{l}{j}{\mtimeline}{\mscon_R}{
+                               \sapp{\mval}{\mexp_{\mathit{call}}}} \\
+&&\cwhere \mexp_{\mathit{call}} = \scall{l}{j}{\mtimeline}{\self}{\mexp_{\mathit{arg}}} \\
+&&\cwhere \mexp_{\mathit{arg}} = \sSMon{l}{k}{j}{\mtimeline}{\mscon_D}{\mvar}
+
+\\ % Arrow monitor fail
 \ditto
 &\machstep&
-\sblame{j}{j}
-\name{tmon-fail} \\
-&&\where \bot = \compile{\mtcon}{\mtimeline} \\
-&&\cwhere \mtimeline = \salloc{\mstate} \\
-&&\text{given } \mmlab = \toplevel 
+\sblame{k}{j} \qquad\text{given } \mval \nequiv \slam{\mvar}{\mexp}
+\name{wrap-fail}
+
+\\
 
 \iflong{
 \\ % Flat monitor
@@ -219,21 +136,6 @@ $\begin{array}{@{}l @{\ }c@{\ } l@{} r}
 \name{smon-cons}
 }
 
-\\ % Arrow monitor
-\sSMon{k}{\mmlab}{j}{\mtimeline}{ \sarr{\mmlab_\lambda}{\mscon_D}{\mscon_R} }{\mval}
-&\machstep&
-\sown{\bclos{\mmlab_\lambda}{\mscon_D}{k}{j}{\mtimeline}{\mscon_R}{\mmlab}{\maddr}}{\mmlab}
-\name{smon-arrow} \\
-&&\where \maddr = \salloc{\mstate} \\
-&&\cwhere \update{\msto}{\maddr}{\mval} \\
-&&\text{given } \mval = \slam{\mvar}{\mexp}
-
-\\ % Arrow monitor fail
-\ditto
-&\machstep&
-\sblame{k}{j} \qquad\text{given } \mval \neq \slam{\mvar}{\mexp}
-\name{smon-arrow-fail}
-
 \iflong{
 \\ % Check true
 \schk{k}{j}{ \sOwn{\strue}{j} }{\mval}
@@ -248,44 +150,33 @@ $\begin{array}{@{}l @{\ }c@{\ } l@{} r}
 \name{chk-false}
 }
 
-\\ % Blessed application (call)
-\sapp{ \sOwn{\bclos{\mmlab_\lambda}{\mscon_D}{k}{j}{\mtimeline}{\mscon_R}{\mmlab^{\prime\prime}}{\maddr}}{\mmlab} }{ \sOwn{\mval}{\mmlab} }
+\\ % Call/Return
+\scev{k}{j}{\mtimeline}{\mval_f}{\sown{\mval}{o}}
 &\machstep&
-%TODO: Should the timeline be different?
-\mexp_{ret}
-\name{call} \\
-&&\where \mexp_{ret} =
-\sret{\mmlab_\lambda}{\mtimeline}{ \sSMon{k}{\mmlab^{\prime\prime}}{j}{\mtimeline}{\mscon_R}{\mexp_{call}} } \\
-&&\cwhere \mexp_{call} = \sapp{\mval_\lambda}{\sSMon{\mmlab^{\prime\prime}}{k}{j}{\mtimeline}{\mscon_D}{\mval}} \\
-&&\cwhere \mval_\lambda = \slam{\mvar}{\mexp} \in \msto(\maddr) \\
-&&\cwhere \mTMons^\prime \in \sstep{\mTMons}{\mtimeline}{\scallev{\mmlab_\lambda}{\mval}}
+\sown{\mval}{k}
+\name{event} \\
+&&\where \mtcons_\mvaluation = \Delta\setbuild{\derive{\scevev{\mval_f}{\mval}}{\mtcon}}{\mtcon\in\mTMons(\mtimeline)} \\
+&&\cwhere \mTMons' = \mTMons[\mtimeline \mapsto \gamma_1?(\mtimeline) \to \mtcons, \mTMons(\mtimeline) \sqcup \mtcons] \\
+&&\text{given } \mvaluation \neq \bot \\
 
-\\ % Call fail
+\\ % Call/Return fail
 \ditto
 &\machstep&
-\sblame{\mmlab}{j}
-\qquad\text{given } \bot \in \sstep{\mTMons}{\mtimeline}{\scallev{\mmlab_\lambda}{\mval}}
-\name{call-fail}
+\stblame{k}{j}
+\quad\where \ditto, \text{given } \mvaluation \neq \must
+\name{TCon-fail}
 
-\\ % Return
-\sret{\mmlab_{ret}}{\mtimeline}{ \sOwn{\mval}{\mmlab} }
-&\machstep&
-\sown{\mval}{\mmlab_{ret}}
-\qquad\where \mTMons^\prime \in \sstep{\mTMons}{\mtimeline}{\sretev{\mmlab}{\mval}}
-\name{return}
-
-\\ % Return fail
-\ditto
-&\machstep&
-\sblame{\mmlab}{\j}
-\qquad\text{given } \bot \in \sstep{\mTMons}{\mtimeline}{\sretev{\mmlab}{\mval}}
-\name{return-fail}
-
-\\ \hline % Blame
+\\ \hline % Blame from structural monitor
 \mctx{\mmlab}[\sblame{k}{j}]
 &\machstep&
 \sblame{k}{j}
 \name{blame}
+
+\\ % Blame from temporal monitor
+\mctx{\mmlab}[\stblame{k}{j}]
+&\machstep&
+\stblame{k}{j}
+\name{TCon-blame}
 
 \end{array}$
 \caption{Reduction rules}
@@ -297,17 +188,11 @@ We give our reduction relation in \autoref{fig:reduction}.
 %
 In the interest of space, we only present and discuss the rules which we feel are most relevant to our discussion of temporal contracts.
 %
-We elide the rules for the primitive functions as they are standard and straightforward.
-%
-Note, however, that all of our primitives (save for $\scons$) take only addresses as arguments and each rule dereferences the addresses in the store.
-%
 
 %
-The \namefmt{tmon} rule compiles the temporal contract inside of the $\mathtt{tmon}$ ($\mtcon$) and stores it inside the PMSM store ($\mTMons$), associated with a fresh timeline ($\mtimeline$) and joined with any extant PMSMs associated with the timeline ($\mTMons(\mtimeline)$).
+The \namefmt{tmon} rule stores the given temporal contract inside the store ($\mTMons$), associated with an allocated timeline ($\mtimeline$) and joined with any pre-existing temporal contracts on that timeline (as abstract allocation cannot always produce fresh timelines).
 %
 The structural component of the contract ($\mscon$) is then used to rewrap the monitored value ($\mval$) inside of a structural monitor ($\mathtt{smon}$) associated with the timeline.
-%
-Should the compilation of the temporal contract fail --- which would happen \eg if the PMSM is initially not accepting --- then the reduction would instead blame the contract in \namefmt{tmon-fail}.
 %
 
 %
@@ -320,43 +205,108 @@ Cons-list contracts (in \namefmt{smon-cons}) are also simple given our evaluatio
 %
 }
 %
-Arrow contracts (in \namefmt{smon-arrow}), however, are more nuanced.
+Since temporal contracts monitor the calls and returns of functions, we use new syntactic forms to communicate the call and return events (with the corresponding wrapped values) to the temporal monitor.
 %
-As we our temporal contracts reason over the calls and returns of functions, we cannot simply translate this into \eg\ $\slam{\mvar}{ \sSMon{k}{\mmlab}{j}{\mtimeline}{\mscon_R}{ \sapp{\mval}{\sSMon{\mmlab}{k}{j}{\mtimeline}{\mscon_D}{\mvar} }}}$.
+When an event is permissible by the temporal monitor, we reduce to the wrapped value.
 %
-Instead, we construct a blessed closure with all of the relevant information, and store the monitored value in the store at a fresh address (\maddr) and joined with any extant values at that same address ($\msto(\maddr)$).
+An event is permissible if the temporal contracts on the timeline do not derive to the empty contract.
 %
-We will perform the relevant checking upon application of the blessed closure (in \namefmt{call}).
+\iflong{Finally, note that the evaluation context's owner becomes the callee after this step (in line with the call).}
+%%
 %
-Nevertheless, if the monitored value is not a function, then we fail and blame in a straightforward manner (in \namefmt{smon-arrow-fail}).
+%%
+Since multiple temporal contracts can be on a timeline, and a timeline might be aliased in the abstract, we have two points to focus on in the $\namefmt{event}$ rule.
 %
-
+We reuse $\Delta$ from the definition of matching in order to combine the possible outcomes of derivation due to weak equality; any difference in valuation means we must conservatively blame.
 %
-Blessed application (in \namefmt{call}) is quite involved.
+When a timeline corresponds to one concrete timeline (given by $\gamma_1?$, always true in the concrete), we can destructively update the timeline state.
 %
-As we discussed regarding arrow contracts, we cannot simply check the structural domain and range.
+If the timeline is aliased, then we abstractly cannot decide which contract belongs to which alias of the timeline (they can even be identical contracts on two different timelines), so we join with the derivation to simultaneously step and not step all contracts.
 %
-Instead, we must first check with any relevant PMSMs (through the $\delta{}step$ function) whether the call event which represents this application is permissible; if not, then the relevant rule is instead \namefmt{call-fail}, which blames the caller.
 %
-Assuming that the call is temporally permissible, then we construct an application expression ($\mexp_{call}$) which wraps the argument in a structural domain monitor.
+\iflong{
+An expression's event trace is defined as the string of events that would be passed to the temporal monitor, were we to leave in the ${\tt call}$ and ${\tt ret}$ redexes.
 %
-In turn, we wrap \emph{that} expression in a structural range monitor, which itself is wrapped in a return event production (which will be handled in \namefmt{return}/\namefmt{return-fail}).
+We restrict it to a particular timeline in the following corecursive definition:
+\begin{align*}
+ \denote{\mexp}_\mtimeline &= \prefixes\left(\left\{
+   \begin{array}{ll}
+      \setbuild{\scevev{\mval_f}{\mval}\mtrace}
+               {\mtrace \in \denote{\mctx{\mmlab^\prime}[\mval]}_\mtimeline}
+       &\text{if } \mexp\equiv\mctx{\mmlab^\prime}[\scev{k}{j}{\mtimeline}{\mval_f}{\mval}] \\
+      \bigcup\setbuild{\denote{\mexp'}}{\mexp \machstep \mexp'} &\text{otherwise}\end{array}\right.\right)
+\end{align*}
+%%
+Since timelines get allocated freshly and temporal contracts get introduced in later computation, our monitor's correctness condition must take into account all possible monitor constructions along execution.
 %
-This formulation guarantees that a call event is produced \emph{before} the call actually occurs, which is obviously critical to the correctness of these temporal contracts.
+Therefore, we state correctness as a correspondence between blame and (full) adherence to contracts after any amount of computation has produced some amount of temporal monitors.
 %
-Finally, note that the evaluation context's owner becomes the callee after this step (in line with the call).
+The well-formedness criterion ($\wf$) requires emptiness to mean blame, and forces sane initial conditions; if an expression adheres to a temporal contract, it can never lead to an empty monitor by definition.
+\begin{align*}
+ \wf(\chevron{\mexp, \mTMons}) &= \forall \mtimeline\in\dom(\mTMons). \mTMons(\mtimeline) = \emptyset \implies \mexp \equiv \mctx{\mmlab^\prime}[\stblame{k}{j}] \\
+ \adhere(\chevron{\mexp, \mTMons}) &= \forall \mtimeline\in\dom(\mTMons). \denote{\mexp}_\mtimeline \subseteq \bigcup\limits_{\mtcon \in \mTMons(\mtimeline)}{\denotetcon{\mtcon}} \\
+ \good(\mtimeline, \mstate) &= \forall \mstate'\equiv\chevron{E[\scev{k}{j}{\mtimeline}{\mval_f}{\mval}], \mTMons}. \mstate \machstep^* \mstate' \implies \\
+                            &\qquad \forall \mTMons'. \mstate' \centernot\machstep \chevron{E[\stblame{k}{j}], \mTMons'} \\
+ \alias(\mtimeline, \mstate) &= \exists \mstate'\equiv\chevron{E[\sTMon{k}{l}{j}{\mscon}{\mtcon}{\mval}], \mTMons}. \\
+                           &\qquad\mstate \machstep^* \mstate' \machstep \chevron{E[\sSMon{k}{l}{j}{\mtimeline}{\mscon}{\mval}], \mTMons\sqcup[\mtimeline \mapsto \mTMons(\mtimeline) \sqcup \setof{\mtcon}]} \\
+ \blame(\mtimeline, \mstate) &= \exists \mstate'\equiv\chevron{E[\scev{k}{j}{\mtimeline}{\mval_f}{\mval}], \mTMons}, \mTMons'. \\
+                             &\qquad\mstate \machstep^* \mstate' \machstep \chevron{E[\stblame{k}{j}], \mTMons'} \\
+\end{align*}
 %
-
+%%
+\begin{lemma}[Well-formedness preserved]\label{lem:wf}
+  If $\wf(\mstate)$ and $\mstate \machstep \mstate'$ then $\wf(\mstate')$.
+\end{lemma}
+\begin{proof}
+  Cases on $\machstep$.
+\end{proof}
 %
-To complete our modeling of temporal monitors, we must also represent return events; we do so in \namefmt{return}.
+\begin{lemma}[Adherence means aliasing or no blame]
+  For all $\mstate\equiv\chevron{\mexp, \mTMons}$,
+  if $\adhere(\mstate)$ then
+  $\forall \mtimeline \in \dom(\mTMons). \alias(\mtimeline, \mstate) \vee \good(\mtimeline,\mstate)$.
+\end{lemma}
 %
-Once we have reduced an application to a value, we must note that the function which was called will now return.
+\begin{lemma}[Later blame means eventual non-adherence]
+  For all $\mstate\equiv\chevron{\mexp, \mTMons}$,
+  if $\exists \mtimeline \in \dom(\mTMons). \blame(\mtimeline,\mstate)$ then
+  $\exists \mstate'. \neg\adhere(\mstate') \wedge \mstate \machstep^* \mstate'$.
+\end{lemma}
 %
-Again, we check with any relevant PMSMs---using the $\delta{}step$ function---whether the return event is permissible; if not, then the relevant rule is instead \namefmt{return-fail}, which blames the callee.
+\begin{theorem}[Monitor soundness]
+  If $\overline{\mstate} = \chevron{\mexp,\mTMons} \machstep^* \chevron{\mctx{\mmlab^\prime}[\stblame{k}{j}], \mTMons'}$, $\wf(\chevron{\mexp,\mTMons})$ and $\inv(\chevron{\mexp, \mTMons})$ then $\exists \mstate \in \overline{\mstate}.\neg\inv(\mstate)$
+\end{theorem}
+Proof by induction and \autoref{thm:top-partial}.
+\iflong{
+  \begin{proof}
+    \begin{byCases}
+      \case{\text{Base}}{Vacuously true by definition of $\inv$.}
+      \case{\text{Induction step }\overline{\mstate} \equiv
+        \chevron{\mexp, \mTMons} \machstep^* \chevron{\mexp'', \mTMons''} \machstep \chevron{\mexp', \mTMons'}}{
+        By cases on the final step
+         $\chevron{\mctx{\mmlab^\prime}[\mexp''], \mTMons''} \machstep
+          \chevron{\mctx{\mmlab^{\prime\prime}}[\mexp'], \mTMons'}$:
+        \begin{byCases}
+          \case{\scev{k}{j}{\mtimeline}{\mval_f}{\sown{\mval}{o}} \machstep \stblame{k}{j}}{
+            Absurd by definition of $\inv$ and \autoref{thm:top-partial}.}
+          \otherwise{No blame}
+        \end{byCases}
+      }
+    \end{byCases}
+  \end{proof}}
 %
-Otherwise, we reduce to the return value.
+\begin{theorem}[Monitor completeness]
+  For all $\mstate\equiv\chevron{\mexp,\mTMons}$,
+  if $\neg\inv(\mstate)$ and $\wf(\mstate)$. then $\exists k,j, \mTMons'. \mstate \machstep^* \chevron{\mctx{\mmlab^\prime}[\stblame{k}{j}], \mTMons'}$.
+\end{theorem}
+\iflong{
+  \begin{proof}
+    Trivial in the case that $\exists \mtimeline. \mTMons(\mtimeline) = \emptyset$.
+    By definition of $\inv$, there must be some timeline $\mtimeline$, temporal contract $\mtcon$, and event trace $\mtrace$ such that $\mtrace \notin \denotetcon{\mTMons(\mtimeline)}$
+  \end{proof}
+}
 %
-This formulation guarantees that a return event is produced \emph{before} the return actually completes, again critical for correctness.
+Notice that the invariant about adherence is not limited by the number of steps it is allowed to take.
 %
-After this reduction step, the evaluation context's owner becomes that of the original caller again (in line with the return).
-%
+Since the expression throughout reduction adheres to each contract on each created timeline, after no amount of steps will the monitor be able to blame.
+}
