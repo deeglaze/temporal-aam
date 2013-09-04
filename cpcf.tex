@@ -43,7 +43,7 @@ The semantics of temporal contracts is also geared towards checking safety prope
 %%
 AAM was originally targeted towards describing flow analyses, but is robust enough to apply to model-checking safety properties of higher-order programs.
 %
-It is well-known that control-flow analysis can be stated in terms of model-checking, but this observation is misleading; one must use a quadratic number of model-checking queries to discover what a monovariant flow analysis can discover in one run.
+It is well-known that control-flow analysis can be stated in terms of model-checking~\citep{ianjohnson:analysis-is-mc}, but this observation is misleading; one must use a quadratic number of model-checking queries to discover what a monovariant flow analysis can discover in one run.
 %
 In general, the queries are at least linear in the size of the abstract value space, which is exponential in some polyvariant analyses such as 1-CFA. % TODO: cite Van Horn, Mairson?
 %
