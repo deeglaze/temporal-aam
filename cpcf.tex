@@ -180,7 +180,9 @@ On top a basic abstraction from AAM, we evaluate the following techniques to imp
 \item{($\Gamma$) use abstract garbage collection~\citep{dvanhorn:Might:2006:GammaCFA} to remove dead temporal monitors;}
 \item{($\Gamma_\tau$) use abstract garbage collection to remove bindings to dead values in live temporal monitors.
 %
-This means we reduce $\mtcon,\menv$ to $\mtcon,\menv'$, where $\menv'$ restricts variables to the values in $\menv$ that touch only reachable addresses;}
+This means we reduce $\mtcon,\menv$ to $\mtcon,\menv'$, where $\menv'$ restricts variables to the values in $\menv$ that touch only reachable addresses.
+%
+The concrete semantics would operate the same way regardless of GC, but this is akin to using weak boxes to maintain values in temporal contract environments;}
 \item{($\Xi$) separate continuation management to a pushdown abstraction~\citep{dvanhorn:Vardoulakis2011CFA2}.}%; or}
 %\item{use a polyvariant allocation strategy such as $m$-CFA ~\citep{dvanhorn:Might2010Resolving} or polymorphic splitting~\citep{dvanhorn:wright-jagannathan-toplas98}.}
 \end{itemize}

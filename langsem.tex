@@ -69,9 +69,9 @@ A machine state ($\mstate$) is composed of the expression ($\mexp$), and store o
 \newcommand*{\cwhere}{\phantom{\where}}
 \centering
 $\begin{array}{@{}l @{\ }c@{\ } l@{} r}
-\mstate := \chevron{\mctx{\mmlab}[\mexp], \mTMons}
+\mstate := \chevron{\mctx{\mmlab}[\mathit{redex}], \mTMons}
 &\machstep&
-\mstate^\prime := \chevron{\mctx{\mmlab^\prime}[\mexp'], \mTMons^\prime}
+\mstate^\prime := \chevron{\mctx{\mmlab^\prime}[\mathit{reduct}], \mTMons^\prime}
 \name{rule-name}
 
 \iflong*{
