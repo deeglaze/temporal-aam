@@ -19,7 +19,8 @@
 \newcommand*{\mconstructor}{c}
 \newcommand*{\matom}{a}
 \newcommand*{\mdata}{v}
-\newcommand*{\mpat}{\mathit{pat}}
+\newcommand*{\mvpat}{\mathit{pat}}
+\newcommand*{\mpat}{p}
 \newcommand*{\mpatset}{\mathit{P}}
 \newcommand*{\msubpat}{\mathit{subpat}}
 \newcommand*{\pmsmq}{q}
@@ -36,7 +37,7 @@
 \newcommand*{\self}{\mathit{self}}
 
 \newcommand*{\mbindenv}{\gamma}
-\newcommand*{\menvs}{\Gamma}
+\newcommand*{\menvs}{\isset{\menv}}
 \newcommand*{\mres}{\mathit{result}}
 \newcommand*{\meqs}{I}
 
@@ -45,13 +46,13 @@
 \newcommand*{\mcontract}{C}
 \newcommand*{\mscon}{S}
 \newcommand*{\mtcon}{T}
+\newcommand*{\motcon}{T^\circ}
 \newcommand*{\mtcons}{{\mathcal T}}
 \newcommand*{\mname}{n}
 \newcommand*{\mtoplevelname}{\ell}
 \newcommand*{\mevent}{A}
 \newcommand*{\mbevent}{B}
 \newcommand*{\mconstant}{\mathit{cst}}
-\newcommand*{\mvpat}{p}
 \newcommand*{\mfnpat}{f}
 \newcommand*{\mcontracts}{{\mathcal C}}
 \newcommand*{\mnames}{N}
@@ -277,6 +278,7 @@
 
 % Notation
 \newcommand*{\many}[1]{\overline{#1}}
+\newcommand*{\isset}[1]{\tilde{#1}}
 \newcommand*{\combinef}[2]{#1 \mathrel{\triangleleft} #2}
 \newcommand*{\combinepat}[2]{#1 \mathrel{\bowtie} #2}
 \newcommand*{\combinepatalone}{\bowtie}
@@ -304,7 +306,7 @@
 \newcommand*{\Event}{\mathit{Event}}
 \newcommand*{\FunctionEvent}{\mathit{FEvent}}
 \newcommand*{\BEvent}{\mathit{BEvent}}
-\newcommand*{\VPat}{\mathit{VarPattern}}
+\newcommand*{\VPat}{\mathit{TPattern}}
 \newcommand*{\Constant}{\mathit{Constant}}
 \newcommand*{\Constructors}{\mathit{Constructors}}
 \newcommand*{\PreValue}{\mathit{PreValue}}

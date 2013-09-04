@@ -13,13 +13,14 @@ The language itself is standard ISWIM, just extended with contract-monitoring fo
 \begin{align*}
 \mexp \in \Expr &::=
       \snlam{\mtoplevelname}{\mvar}{\mexp}
- \alt \sSMon{k}{l}{k}{\mtimeline}{\mscon}{\mexp}
- \alt \sTMon{k}{l}{j}{\mscon}{\mtcon}{\mexp}
- \alt \stblame{k}{j} \\
-&\alt \scev{k}{j}{\mtimeline}{\mval_f}{\mexp}
- \alt \ldots
+% These are already in overview
+% \alt \sSMon{k}{l}{k}{\mtimeline}{\mscon}{\mexp}
+% \alt \sTMon{k}{l}{j}{\mscon}{\mtcon}{\mexp}
+ \alt \stblame{k}{j} 
+ \alt \scev{k}{j}{\mtimeline}{\mval_f}{\mexp}
+ \alt \text{other forms}
 \end{align*}
-\caption{Syntax}
+\caption{Syntax additions}
 \label{fig:syntax}
 \end{figure}
 
@@ -59,7 +60,7 @@ Our evaluation contexts in \autoref{fig:ctx} follow straightforwardly and are ow
 %%
 \subsection{Reduction} \label{sec:reduction}
 
-A machine state ($\mstate$) is composed of the expression, ($\mexp$) and store of temporal contracts ($\mTMons : \Timeline \to \wp(\TContract)$).
+A machine state ($\mstate$) is composed of the expression ($\mexp$), and store of temporal contracts ($\mTMons : \Timeline \to \wp(\TContract)$).
 %
 \begin{figure*}
 \newcommand*{\update}[3]{#1^\prime = #1[#2 \mapsto #1(#2)\mathrel{\sqcup}{#3}]}
@@ -68,9 +69,9 @@ A machine state ($\mstate$) is composed of the expression, ($\mexp$) and store o
 \newcommand*{\cwhere}{\phantom{\where}}
 \centering
 $\begin{array}{@{}l @{\ }c@{\ } l@{} r}
-\mstate := \chevron{\mctx{\mmlab}[\ldots], \mTMons}
+\mstate := \chevron{\mctx{\mmlab}[\mexp], \mTMons}
 &\machstep&
-\mstate^\prime := \chevron{\mctx{\mmlab^\prime}[\ldots], \mTMons^\prime}
+\mstate^\prime := \chevron{\mctx{\mmlab^\prime}[\mexp'], \mTMons^\prime}
 \name{rule-name}
 
 \iflong*{
@@ -124,9 +125,9 @@ $\begin{array}{@{}l @{\ }c@{\ } l@{} r}
 
 \iflong{
 \\ % Flat monitor
-\sSMon{k}{\mmlab}{j}{\mtimeline}{ \sown*{\sflat{\mexp}}{\mmlab^{\prime\prime}} }{ \sOwn{\mconstant}{\mmlab^{\prime\prime}} }
+\sSMon{k}{\mmlab}{j}{\mtimeline}{ \sown*{\sflat{\mexp}}{\mmlab^{\prime\prime}} }{ \sOwn{\mval}{\mmlab^{\prime\prime}} }
 &\machstep&
-\schk*{k}{j}{\mtimeline}{ \sapp{\mexp}{\mconstant} }{\mconstant}
+\schk*{k}{j}{\mtimeline}{ \sapp{\mexp}{\mval} }{\mval}
 \name{smon-flat}
 %
 \\ % Cons monitor

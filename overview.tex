@@ -4,7 +4,7 @@
 \\
     \mexp \in \Expr &::= \sTMon{k}{l}{j}{\mscon}{\mtcon}{\mexp}
                     \alt \sSMon{k}{l}{j}{\mtimeline}{\mscon}{\mexp}
-                    \alt \ldots
+                    \alt \text{other forms}
 \\
 \mmlab,k,l,j \in \Label&\text{ an infinite set} \\
 \mtimeline \in \Timeline &\text{ an infinite set}
@@ -15,19 +15,21 @@
 
 \begin{figure}
   \begin{align*}
- \mtcon \in \TContract &::=
+  \motcon \in \TContract^\circ &::=
       \mevent \alt \snonevent{\mevent}
  \alt \epsilon
- \alt \stnot{\mtcon}
- \alt \stseq{\mtcon}{\mtcon}
- \alt \stmany{\mtcon} \\
-&\alt \stOr{\mtcon\ldots}
- \alt \stAnd{\mtcon\ldots}
- \alt \stbind{\mevent}{\mtcon}
+ \alt \stnot{\motcon}
+ \alt \stseq{\motcon}{\motcon}
+ \alt \stmany{\motcon{}} \\
+&\alt \stOr{\isset{\motcon}}
+ \alt \stAnd{\isset{\motcon}}
+ \alt \stbind{\mevent}{\motcon}
 \\
+\mtcon \in \TContract &= \text{same rules as } \TContract^\circ \text{ for } \mtcon \text{ plus } \alt \motcon, \menv \\
+\menv \in \Env &= \Var \to \wp(\Value) \\
 \mevent \in \Event &::= \scevev{\mname}{\mvpat} \alt \sany \\
 \mcev \in \FunctionEvent &::= {\tt call} \alt {\tt ret} \\
-\mvpat \in \VPat &::= \mconstant \alt \sbind{\mvar} \alt \mname \alt \scons(\mvpat,\mvpat) \alt \snegpat{\mvpat} \alt \sany \alt \snone \\
+\mvpat \in \VPat &::= \mval \alt \sbind{\mvar} \alt \mname \alt \scons(\mvpat,\mvpat) \alt \snegpat{\mvpat} \alt \sany \alt \snone \\
 \mvar \in \Var &\quad\text{an infinite set} \\
 \mname \in \Name &::= \mvar \alt \mtoplevelname
   \end{align*}
@@ -40,10 +42,16 @@ Temporal contracts provide a declarative language for monitoring the temporal or
 We present and analyze a slightly different formulation than \dfm's temporal contracts that allows for more precise specification of value-use.
 %
 The syntax is presented in \autoref{fig:tcontract-syntax}.
+%
+We notate sets of some element type with metavariable $e$ as $\isset{e}$, and lists as $\many{e}$.
+%
+We write the interpolation of sets and lists into many arguments as $e\ldots$, following the rules of \citet{dvanhorn:Kohlbecker1987Macrobyexample}.
+%
+The if-then-else syntax we use follows Dijkstra ($\mathit{guard} \to \mathit{then}, \mathit{else}$), where anything non-$\bot$ is considered true.
 %%
 
 %%
-Temporal contracts ($\mtcon$) include events ($\mevent$) (for $\mevent$ction), negated events ($\snonevent{\mevent}$), event matching scoped over a following contract ($\stbind{\mevent}{\mtcon}$), concatenation ($\stseq{\mtcon}{\mtcon}$) (often represented using juxtaposition), negated contracts ($\stnot{\mtcon}$), Kleene closure of events ($\stmany{\mtcon}$), union ($\stOr{\mtcon\ldots}$), intersection ($\stAnd{\mtcon\ldots}$) and the empty temporal contract ($\epsilon$).
+Temporal contracts ($\mtcon$) include events ($\mevent$) (for $\mevent$ction), negated events ($\snonevent{\mevent}$), event matching scoped over a following contract ($\stbind{\mevent}{\mtcon}$), concatenation ($\stseq{\mtcon}{\mtcon}$) (often represented using juxtaposition), negated contracts ($\stnot{\mtcon}$), Kleene closure of events ($\stmany{\mtcon}$), union ($\stOr{\isset{\mtcon}}$), intersection ($\stAnd{\isset{\mtcon}}$), the empty temporal contract ($\epsilon$), and an open temporal contract closed by an environment ($\motcon, \menv$).
 %
 We consider the fail contract $\bot$ as a macro for $\stOr{\setof{}}$; \dfm's universal contract $\sddd$ was intended to be interpreted lazily (though was not in the formal semantics), but laziness poses challenges to the derivative parsing approach we have taken, so we leave the study of laziness to future work.
 %
@@ -59,7 +67,7 @@ However, if $\mname$ is a variable ($\mvar$), then we consult a binding environm
 %
 Our distinction between variables (bound by temporal contract) and labels (bound by structural contract) is one aspect of what separates our semantics from \dfm's.
 %
-Patterns can match constants ($\mconstant$), variable bindings and references ($\sbind{\mvar}$, $\mvar$), labeled functions ($\mtoplevelname$), structured data ($\scons(\mvpat,\mvpat)$), negated patterns that do not bind ($\snegpat{\mvpat}$), anything or nothing ($\sany$, $\snone$).
+Patterns can match values ($\mval$), variable bindings and references ($\sbind{\mvar}$, $\mvar$), labeled functions ($\mtoplevelname$), structured data ($\scons(\mvpat,\mvpat)$), negated patterns that do not bind ($\snegpat{\mvpat}$), anything or nothing ($\sany$, $\snone$).
 %%
 
 %%

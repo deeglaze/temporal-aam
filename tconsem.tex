@@ -61,14 +61,22 @@ It is easy enough to amend the structural contracts to reflect the fact that a b
               \begin{minipage}[b]{.50\linewidth}#1 #2\hrule height 0pt\end{minipage}
               \begin{minipage}[b]{.45\linewidth}#3 #4\hrule height 0pt\end{minipage}
              \end{figure}}} 
-\matchsemfigs{  
+\matchsemfigs{
+\setlength{\abovedisplayskip}{0pt}
+\setlength{\belowdisplayskip}{4pt}
+\setlength{\abovedisplayshortskip}{0pt}
+\setlength{\belowdisplayshortskip}{8pt}
+  \begin{align*}
+    \matches &: \Pattern \times \Qualified \times \Env \to \wp(\MatchResult) \\
+    \Delta &: \wp(\MatchResult) \to \MatchResult \\
+    \delta &: \wp(\Valuation) \to \Valuation
+  \end{align*}
     \begin{align*}
-      \mvaluation &::= \may \alt \must \alt \bot \\
-      \menvs \subset \Env &::= \menv \ldots \\
-      \MatchResult &::= \menvs_\mvaluation \\
+      \mvaluation \in \Valuation &::= \may \alt \must \alt \bot \\
+      \mpat \in \Pattern &::= \VPat \text{ rules plus } \alt \mconstructor(\many{\mpat}) \\
+      S \subset \MatchResult &::= \menvs_\mvaluation \\
       \menvs_\bot &= \emptyset_\bot = \emptyset_\mvaluation \\
-      \mdata \in \Qualified &= S \alt \mconstant \alt \mconstructor(\mdata \ldots) \\
-      S \subset \Qualified & \\
+      \mdata \in \Qualified &= \isset{\mdata} \alt \mval \alt \mconstructor(\many{\mdata}) \\
       \mconstructor \in \Constructors &= \setof{{\tt call}, {\tt ret}, {\tt cons}}
       \\[2pt]
       \must \wedge \must &= \must \\
@@ -92,16 +100,17 @@ It is easy enough to amend the structural contracts to reflect the fact that a b
     \text{where }& \matches(\mvpat, \mdata, \menv) = \menv'_\mvaluation \\
     \matches(\sbind{\mvar}, \mdata, \menv) &= \menv[\mvar \mapsto \mdata]_\must \\
     \matches(\mvar, \mdata, \menv) &= \menv_{\menv(\mvar) \simeq \mdata} \\
-    \matches(\mconstructor(\mvpat, \ldots), \mconstructor(\mdata, \ldots), \menv) &= (\Bowtie \menvs \ldots)_{\bigwedge \mvaluation \ldots} \\
+    \matches(\mconstructor(\many{\mpat}), \mconstructor(\many{\mdata}), \menv) &= (\Bowtie \menvs \ldots)_{\bigwedge \mvaluation \ldots} \\
     \text{where }& \menvs_\mvaluation \ldots = \matches(\mvpat, \mdata, \menv) \ldots \\
-    \matches(\mpat, S, \menv) &= \Delta\setbuild{\matches(\mpat, \mdata, \menv)}{\mdata \in S} \\
+    \matches(\mpat, \isset{\mdata}, \menv) &= \Delta\setbuild{\matches(\mpat, \mdata, \menv)}{\mdata \in \isset{\mdata}} \\
     \matches(\mdata, \mdata', \menv) &= \menv_{\mdata \simeq \mdata'} \\
     \matches(\mpat, \mdata, \menv) &= \emptyset_\bot \quad
     \text{otherwise}
     \\[2pt]
     \Delta S &= (\bigcup\limits_{\menvs_{\_} \in S}\menvs)_{\delta \setbuild{\mvaluation}{{\_}_\mvaluation \in S}} \\
+    \delta \emptyset &= \bot \\
     \delta \setof{\mvaluation} &= \mvaluation \\
-    \delta \setof{t \ldots} &= \may \quad \text{otherwise}
+    \delta \isset{t} &= \may \quad \text{otherwise}
   \end{align*}}{\caption{Semantics of matching}\label{fig:matchsem}}
 
 We define our semantics of matching in anticipation of abstraction, where we do not always know when two values are equal.
@@ -125,10 +134,10 @@ At the leaves, when considering values of the language equal, $\matches$ appeals
              \end{figure}}}
 \tconsemfigs{
     \begin{align*}
-      \denotetconbothe{\stOr{\mtcon \ldots}}{\menv} &=
+      \denotetconbothe{\stOr{\isset{\mtcon}}}{\menv} &=
       \bigcup\denotetconbothe{\mtcon}{\menv}\ldots
       \\
-      \denotetconbothe{\stAnd{\mtcon \ldots}}{\menv} &=
+      \denotetconbothe{\stAnd{\isset{\mtcon}}}{\menv} &=
       \bigcap\denotetconbothe{\mtcon}{\menv}\ldots
       \\
       \denotetconbothe{\epsilon}{\menv} &= \setof{\epsilon}
@@ -191,10 +200,10 @@ At the leaves, when considering values of the language equal, $\matches$ appeals
       \stOr{\setof{\derivee{\mevent}{\mtcon_0}{\menv},\
           \stseq{\nullable(\mtcon_0)}{\derivee{\mevent}{\mtcon_1}{\menv}}}}
       \\
-      \derivee{\mevent}{\stOr{\mtcon\ldots}}{\menv} &=
+      \derivee{\mevent}{\stOr{\isset{\mtcon}}}{\menv} &=
       \stOr{\derivee{\mevent}{\mtcon}{\menv}\ldots}
       \\
-      \derivee{\mevent}{\stAnd{\mtcon\ldots}}{\menv} &=
+      \derivee{\mevent}{\stAnd{\isset{\mtcon}}}{\menv} &=
       \stAnd{\derivee{\mevent}{\mtcon}{\menv}\ldots}
       \\
       \derivee{\mevent}{\stmany{\mtcon}}{\menv} &=
@@ -209,10 +218,10 @@ At the leaves, when considering values of the language equal, $\matches$ appeals
       \\
       \nullable(\stbind{\mevent}{\mtcon}) &= \nullable(\mevent) = \bot
       \\
-      \nullable(\stOr{\mtcon\ldots}) &=
+      \nullable(\stOr{\isset{\mtcon}}) &=
       \bigvee{\nullable(\mtcon)\ldots}
       \\
-      \nullable(\stAnd{\mtcon\ldots}) &=
+      \nullable(\stAnd{\isset{\mtcon}}) &=
       \bigwedge{\nullable(\mtcon)\ldots}
       \\
       \nullable(\stseq{\mtcon_0}{\mtcon_1}) &=
@@ -327,8 +336,8 @@ An interesting corollary relating paths to repeated derivation:
 % \begin{align*}
 %   \flatempty[_\menv](T) &= \bot \quad\text{if } T\equiv\epsilon,\, T\equiv(\stmany{\mtcon}),\,\text{or }T\equiv\stnot{\mtcon} \\
 %   \flatempty[_\menv](\stbind{\mevent}{\mtcon}) &= \flatempty[_\menv](\mevent) \\
-%   \flatempty[_\menv](\stOr{\mtcon\ldots}) &= \bigwedge \flatempty[_\menv](\mtcon)\ldots \\
-%   \flatempty[_\menv](\stAnd{\mtcon\ldots}) &= \bigvee \flatempty[_\menv](\mtcon)\ldots \\
+%   \flatempty[_\menv](\stOr{\isset{\mtcon}}) &= \bigwedge \flatempty[_\menv](\mtcon)\ldots \\
+%   \flatempty[_\menv](\stAnd{\isset{\mtcon}}) &= \bigvee \flatempty[_\menv](\mtcon)\ldots \\
 %   \flatempty[_\menv](\stseq{\mtcon_0}{\mtcon_1}) &= \flatempty[_\menv](\mtcon_0) \vee \flatempty[_\menv](\mtcon_1) \\
 %   \flatempty(\mtcon,\menv) &= \flatempty_\menv(\mtcon) \\[2pt]
 %   \flatempty[_\menv](\snone) &= \top \\
