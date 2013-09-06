@@ -107,7 +107,7 @@ Unsimilarly, it does not synthesize checkers for runtime monitoring the expresse
 %
 A complete separation of model generation and model-checking also degrades precision, since the more in-depth constraint solving typical model-checkers do can help prune the control-flow space; our approach is amenable to integrated constraint solving and is left to future work.
 %%
-%
+
 %%
 A technique that specifically targets higher-order languages, higher-order recursion schemes (HORS)~\citep{ianjohnson:Knapik:2002:HPT:646794.704852}, is rooted in simply-typed, call-by-name lambda terms, but has model-checking solutions that have been extended to call-by-value ~\citep{ianjohnson:DBLP:journals/jacm/Kobayashi13} and untyped ~\citep{dvanhorn:Tsukada2010Untyped} languages, through heavy type-theoretic machinery.
 %
@@ -119,7 +119,7 @@ Additionally, the AAM approach makes extensions to more complex language feature
 %
 Finally, HORS do not synthesize runtime monitors or have a notion of blame, unlike our system.
 %%
-%
+
 %%
 \paragraph{Static contract verification:}
 In the world of static sotware contract verification, there is much more relevant work.
@@ -199,12 +199,16 @@ The concrete semantics would operate the same way regardless of GC, but this is 
 %%
 We built temporal higher-order contracts into our existing framework for analyzing a subset of Scheme \footnote{Model and benchmarks available online \url{http://github.com/dvanhorn/oaam/tree/thocon}}.
 %
-The sort example is verified if we don't use \texttt{(listof integer?)} twice in the contract.
+Our benchmarks are a collection of examples from \dfm's paper and implementation, along with a larger-than-toy example:
+\paragraph{{\tt sort1}:}{\dfm's motivating example of a non-reentrant sort function where the given comparison function may not be called after sort returns\footnote{If sort stashes the comparator in a global and we call it afterwards, \dfm's implementation does not raise blame, whereas ours does.}.
 %
-This gives us strong motivation to improve the analysis precision to a pushdown abstraction, which can verify the example.
-%
-GC after the call to sort will collect the comparison function, and thus soundly remove the obligation to never call it; without GC, the obligation lingers, and any additional calls to sort will raise a spurious blame.
-
+The structural contract for {\tt sort1} is weak: {\tt (listof integer?) -> any/c}.
+}
+\paragraph{{\tt sort2}:}{like {\tt sort1}, but with a stronger structural contract that will confuse a regular analysis: {\tt (listof integer?) -> (listof integer?)}.}
+\paragraph{{\tt sort3}:}{like {\tt sort2}, but call sort more than once (mapped over a list of lists), in order to confuse non-$\Gamma_\tau$ analyses.}
+\paragraph{{\tt malloc}:}{A pair of two functions, malloc and free, where malloc returns an ever-growing counter and free does nothing. They are contracted so that free may not be called with addresses that were previously freed and not subsequently returned by malloc.}
+\paragraph{{\tt file}:}{A function, {\tt open}, which given a file path, produces a list of read, write and close functions. They are contracted such that none of these functions may be called after close. Using this interface, we copy the contents of files in one list and write them to the files in the other.}
+\paragraph{{\tt FTP}:}{An FTP server built on TCP. \textbf{TODO: Alex}}
 %%
 
 %%
@@ -212,13 +216,20 @@ The analysis results and run times for our benchmark programs are in \autoref{fi
 %
 Analyses without garbage collection used the global store widening to accelerate convergence.
 %%
+
+%%
+The minor variations to the sort example motivated our additional analytical machinery, \textbf{TO BE SEEN} and proved strong enough to verify the more complicated example of the FTP interaction.
+%
+No technique we employed could fully verify the {\tt malloc} example, since the protocol depends on being able to prove equality between values that are mutated and grown without bound; our abstraction for numbers is simple, so the mutated counter immediately jumps to \textbf{Int}$\top$, where comparisons conservatively both succeed and fail.
+
+%%
 \section{Conclusion and future work} \label{sec:conclusion}
 %%
 
 %%
 We demonstrated that a linguistic construction for monitoring temporal properties of higher-order programs (temporal higher-order contracts) can be transparently abstracted to provide a sound verification algorithm, almost for free, given the AAM approach.
 %
-Our preliminary evaluation provides evidence that this can be an effective approach to verification, given the right combination of existing analysis machinery.
+Our preliminary evaluation provides evidence that this can be an effective approach to verifying programs with finite protocols, given the right combination of existing analysis machinery.
 %
 The way forward is clear: build a quality temporal monitoring library and contract a large project to find weaknesses in the language of temporal contracts, and finally evaluate the verification algorithm on this ``more realistic'' example.
 %
@@ -242,7 +253,10 @@ It is unclear whether an analysis can precisely match calls and returns in both 
 %
 \item{some specifications are better suited to DLTL or state machines:
 %
-we may wish to mix and match ways in which we express properties, where a contract in a different language is considered primitive, and only continues when the contract is accepting (much like sequence contracts work now).
+some examples in \dfm's test suite included using side effects in the temporal monitor's matching to encode state transitions.
+To more adequately handle this idiom without sophisticated handling of side-effects, we may wish to mix and match ways in which we express properties.
+%
+For example, a contract in a different language is considered primitive, and only continues when the contract is accepting (much like sequence contracts work now).
 }
 %
 \item{whole program analysis is intractible at scale:
@@ -250,6 +264,8 @@ we may wish to mix and match ways in which we express properties, where a contra
 we can verify on a per-module basis if we add temporal contracts to a semantics of partial programs, such as in \citet{dvanhorn:TobinHochstadt2012Higherorder}.
 %
 The primary difficulty there is a sound definition of {\tt havoc} in the presence of temporal contracts, which simulates all possible interactions with a module.
+%
+Additional concerns lie in adequately maintaining enough information about unknown values to prune search space, without also exploding the search space with all the distinguished unknown values, but there is existing work on this that we can leverage~\citep{ianjohnson:DBLP:journals/cacm/DilligDA10}.
 }
 \end{itemize}
 %

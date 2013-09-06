@@ -1,4 +1,4 @@
-Behavioral contracts allow languages to internalize a notion of ``type checking'' at run time, so that untyped or statically-typed-but-currently-failing-the-type-checker programs can still be run/tested with expected invariants checked on-the-fly.
+Behavioral contracts allow languages to internalize a notion of ``type checking'' at run time, so that untyped or statically-typed-but-currently-failing-the-type-checker programs can still be run and tested with expected invariants checked on-the-fly.
 %
 Contracts go beyond typical type systems because they give full access to the language, allowing expression of strong invariants that a traditional type checker could not verify.
 %
@@ -8,4 +8,6 @@ Contract violations during testing or even after deployment help correct both th
 %%
 Temporal higher-order contracts provide a language for specifying and dynamically monitoring adhereance to stateful protocols in a higher-order language.
 %
-In this work, we present a semantics for these contracts; we do so by introducing a notion of derivative for regular expressions with back references, and a sound abstraction to computably verify temporal contract satisfaction.
+In this work, we present a concrete and abstract semantics for these contracts to improve specification expressiveness and also provide a method to statically verify that specifications hold.
+%
+We do so by introducing a notion of derivative for regular expressions with back references, and a sound, straight-forward abstraction that leaves us with a correct model-checker.

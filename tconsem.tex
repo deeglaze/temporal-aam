@@ -134,47 +134,48 @@ At the leaves, when considering values of the language equal, $\matches$ appeals
              \end{figure}}}
 \tconsemfigs{
     \begin{align*}
-      \denotetconbothe{\stOr{\isset{\mtcon}}}{\menv} &=
-      \bigcup\denotetconbothe{\mtcon}{\menv}\ldots
+      \denotetconbothe{\stOr{\isset{\motcon}}}{\menv} &=
+      \bigcup\denotetconbothe{\motcon}{\menv}\ldots
       \\
-      \denotetconbothe{\stAnd{\isset{\mtcon}}}{\menv} &=
-      \bigcap\denotetconbothe{\mtcon}{\menv}\ldots
+      \denotetconbothe{\stAnd{\isset{\motcon}}}{\menv} &=
+      \bigcap\denotetconbothe{\motcon}{\menv}\ldots
       \\
       \denotetconbothe{\epsilon}{\menv} &= \setof{\epsilon}
       \\
-      \denotetconbothe{\stnot{\mtcon}}{\menv} &=
-      \semneg{\denotetconfulle{\mtcon}{\menv}}
+      \denotetconbothe{\stnot{\motcon}}{\menv} &=
+      \semneg{\denotetconfulle{\motcon}{\menv}}
       \\[2pt]
-      \denotetcone{\stmany{\mtcon}}{\menv} &=
-      \denotetconfulle{\stmany{\mtcon}}{\menv} \semseq
-      \denotetcone{\mtcon}{\menv}
+      \denotetcone{\stmany{\motcon{}}}{\menv} &=
+      \denotetconfulle{\stmany{\motcon{}}}{\menv} \semseq
+      \denotetcone{\motcon}{\menv}
       \\
-      \denotetcone{\stseq{\mtcon_0}{\mtcon_1}}{\menv} &=
-      \denotetcone{\mtcon_0}{\menv} \cup
-      \denotetconfulle{\mtcon_0}{\menv}\semseq
-      \denotetcone{\mtcon_1}{\menv}
+      \denotetcone{\stseq{\motcon_0}{\motcon_1}}{\menv} &=
+      \denotetcone{\motcon_0}{\menv} \cup
+      \denotetconfulle{\motcon_0}{\menv}\semseq
+      \denotetcone{\motcon_1}{\menv}
       \\
-     \denotetcone{\stbind{\mevent}{\mtcon}}{\menv} &=
+     \denotetcone{\stbind{\mevent}{\motcon}}{\menv} &=
       \setof{\epsilon}\cup
-        \{ \mevent' \mtrace : \mevent',\menv' \in \denotetconfulle{\mevent}{\menv},
-        \\&\phantom{= \setof{\epsilon}\cup \{ \mevent'\mtrace : } \mtrace \in \denotetcone{\mtcon}{\menv'} \}
+        \{ \mdata \mtrace : \mdata,\menv' \in \denoteevent{\mevent}{\menv},
+        \\&\phantom{= \setof{\epsilon}\cup \{ \mdata\mtrace : } \mtrace \in \denotetcone{\motcon}{\menv'} \}
      \\
       \denotetcone{\mevent}{\menv} &= \setof{\epsilon}\cup\denotetconfulle{\mevent}{\menv}
       \\[2pt]
-      \denotetconfulle{\stseq{\mtcon_0}{\mtcon_1}}{\menv} &=
-      \denotetconfulle{\mtcon_0}{\menv} \semseq
-      \denotetconfulle{\mtcon_1}{\menv}
+      \denotetconfulle{\stseq{\motcon_0}{\motcon_1}}{\menv} &=
+      \denotetconfulle{\motcon_0}{\menv} \semseq
+      \denotetconfulle{\motcon_1}{\menv}
       \\
-      \denotetconfulle{\stmany{\mtcon}}{\menv} &=
+      \denotetconfulle{\stmany{\motcon{}}}{\menv} &=
       \setbuild{\mtrace^i}{i \le \omega, \mtrace \in
-        \denotetconfulle{\mtcon}{\menv}}
+        \denotetconfulle{\motcon}{\menv}}
       \\
-     \denotetconfulle{\stbind{\mevent}{\mtcon}}{\menv} &=
-     \setbuild{\mevent' \mtrace}{\mevent',\menv' \in \denotetconfulle{\mevent}, \mtrace \in \denotetconfulle{\mtcon}{\menv'}}
+     \denotetconfulle{\stbind{\mevent}{\motcon}}{\menv} &=
+     \setbuild{\mdata \mtrace}{\mdata,\menv' \in \denoteevent{\mevent}{\menv}, \mtrace \in \denotetconfulle{\motcon}{\menv'}}
      \\
-      \denotetconfulle{\mevent}{\menv} &= \setbuild{\mevent',\menv'}{\menv'_\must =
-        \matches(\mevent, \mevent', \menv)}
+      \denotetconfulle{\mevent}{\menv} &= \setbuild{\mdata}{\mdata,\menv' \in \denoteevent{\mevent}{\menv}}
       \\[2pt]
+      \denoteevent{\mevent}{\menv} &= \setbuild{\mdata,\menv'}{\menv'_\must = \matches(\mevent, \mdata, \menv)}
+      \\
       \semneg{\Pi} &= \setbuild{\mtrace}{\forall \mtrace' \in
         \Pi\setminus\setof{\epsilon}. \mtrace' \nleq \mtrace}
       \\
@@ -182,52 +183,52 @@ At the leaves, when considering values of the language equal, $\matches$ appeals
         \in \Pi, \mtrace' \in \Pi'}
     \end{align*}}{\caption{Denotational Semantics of Temporal Contracts ($B$ means both $P$ and $F$)}\label{fig:tcontract-denotation}}
   {\begin{align*}
-      \derivee{\mevent}{\epsilon}{\menv} &= \bot
+      \derivee{\mdata}{\epsilon}{\menv} &= \bot
       \\
-      \derivee{\mevent}{\mevent'}{\menv} &= \left\{
+      \derivee{\mdata}{\mevent}{\menv} &= \left\{
         \begin{array}{ll}
-          \epsilon & \text{if } \menv'_\must = \matches(\mevent', \mevent, \menv) \\
+          \epsilon & \text{if } \menv'_\must = \matches(\mevent, \mdata, \menv) \\
           \bot & \text{otherwise}
         \end{array}\right.
       \\
-      \derivee{\mevent}{\stbind{\mevent'}{\mtcon}}{\menv} &=
+      \derivee{\mdata}{\stbind{\mevent}{\motcon}}{\menv} &=
       \left\{\begin{array}{ll}
-          \mtcon,\menv' & \text{if } \menv'_\must = \matches(\mevent', \mevent, \menv) \\
+          \motcon,\menv' & \text{if } \menv'_\must = \matches(\mevent, \mdata, \menv) \\
           \bot & \text{otherwise}
         \end{array}\right.
       \\
-      \derivee{\mevent}{\stseq{\mtcon_0}{\mtcon_1}}{\menv} &=
-      \stOr{\setof{\derivee{\mevent}{\mtcon_0}{\menv},\
-          \stseq{\nullable(\mtcon_0)}{\derivee{\mevent}{\mtcon_1}{\menv}}}}
+      \derivee{\mdata}{\stseq{\motcon_0}{\motcon_1}}{\menv} &=
+      \stOr{\setof{\derivee{\mdata}{\motcon_0}{\menv},\
+          \stseq{\nullable(\motcon_0)}{\derivee{\mdata}{\motcon_1}{\menv}}}}
       \\
-      \derivee{\mevent}{\stOr{\isset{\mtcon}}}{\menv} &=
-      \stOr{\derivee{\mevent}{\mtcon}{\menv}\ldots}
+      \derivee{\mdata}{\stOr{\isset{\motcon}}}{\menv} &=
+      \stOr{\derivee{\mdata}{\motcon}{\menv}\ldots}
       \\
-      \derivee{\mevent}{\stAnd{\isset{\mtcon}}}{\menv} &=
-      \stAnd{\derivee{\mevent}{\mtcon}{\menv}\ldots}
+      \derivee{\mdata}{\stAnd{\isset{\motcon}}}{\menv} &=
+      \stAnd{\derivee{\mdata}{\motcon}{\menv}\ldots}
       \\
-      \derivee{\mevent}{\stmany{\mtcon}}{\menv} &=
-      \stseq{\derivee{\mevent}{\mtcon}{\menv}}{\stmany{\mtcon}}
+      \derivee{\mdata}{\stmany{\motcon{}}}{\menv} &=
+      \stseq{\derivee{\mdata}{\motcon}{\menv}}{\stmany{\motcon{}}}
       \\
-      \derivee{\mevent}{\stnot{\mtcon}}{\menv} &=
-      \nullable(\derivee{\mevent}{\mtcon}{\menv}) \to \bot,
-      \stnot{\derivee{\mevent}{\mtcon}{\menv}}
+      \derivee{\mdata}{\stnot{\motcon}}{\menv} &=
+      \nullable(\derivee{\mdata}{\motcon}{\menv}) \to \bot,
+      \stnot{\derivee{\mdata}{\motcon}{\menv}}
       \\[2pt]
-      \nullable(\epsilon) &= \nullable(\stmany{\mtcon}) =
-      \nullable(\stnot{\mtcon}) = \epsilon
+      \nullable(\epsilon) &= \nullable(\stmany{\motcon{}}) =
+      \nullable(\stnot{\motcon}) = \epsilon
       \\
-      \nullable(\stbind{\mevent}{\mtcon}) &= \nullable(\mevent) = \bot
+      \nullable(\stbind{\mevent}{\motcon}) &= \nullable(\mevent) = \bot
       \\
-      \nullable(\stOr{\isset{\mtcon}}) &=
-      \bigvee{\nullable(\mtcon)\ldots}
+      \nullable(\stOr{\isset{\motcon}}) &=
+      \bigvee{\nullable(\motcon)\ldots}
       \\
-      \nullable(\stAnd{\isset{\mtcon}}) &=
-      \bigwedge{\nullable(\mtcon)\ldots}
+      \nullable(\stAnd{\isset{\motcon}}) &=
+      \bigwedge{\nullable(\motcon)\ldots}
       \\
-      \nullable(\stseq{\mtcon_0}{\mtcon_1}) &=
-      \nullable(\mtcon_0)\wedge \nullable(\mtcon_1)
+      \nullable(\stseq{\motcon_0}{\motcon_1}) &=
+      \nullable(\motcon_0)\wedge \nullable(\motcon_1)
       \\
-      \nullable(\mtcon,\menv) &= \nullable(\mtcon)
+      \nullable(\motcon,\menv) &= \nullable(\motcon)
     \end{align*}}{\caption{Derivatives of Temporal Contracts}\label{fig:tcon-deriv}}
 
 The semantics and derivatives here are simplified to the concrete case, for space.
@@ -246,75 +247,76 @@ Since monitors are generated during reduction, the proof is mostly technical tha
 %
 
 \begin{theorem}[Full]\label{thm:full}
- $\denotetconfull{\derivee{\mevent}{\mtcon}{\menv}} = \setbuild{\mtrace}{\mevent\mtrace \in \denotetconfulle{\mtcon}{\menv}}$
+ $\denotetconfull{\derivee{\mdata}{\motcon}{\menv}} = \setbuild{\mtrace}{\mdata\mtrace \in \denotetconfulle{\motcon}{\menv}}$
 \end{theorem}
 
 \begin{theorem}[Partial]\label{thm:partial}
- $\denotetcon{\derivee{\mevent}{\mtcon}{\menv}} = \setbuild{\mtrace}{\mevent\mtrace \in \denotetcone{\mtcon}{\menv}}$
+ $\denotetcon{\derivee{\mdata}{\motcon}{\menv}} = \setbuild{\mtrace}{\mdata\mtrace \in \denotetcone{\motcon}{\menv}}$
 \end{theorem}
 
 \begin{theorem}[Top level full]\label{thm:top-full}
- $\denotetconfull{\derive{\mevent}{\mtcon}} = \setbuild{\mtrace}{\mevent\mtrace \in \denotetconfull{\mtcon}}$
+ $\denotetconfull{\derive{\mdata}{\mtcon}} = \setbuild{\mtrace}{\mdata\mtrace \in \denotetconfull{\mtcon}}$
 \end{theorem}
 
 \begin{theorem}[Top level partial]\label{thm:top-partial}
- $\denotetcon{\derive{\mevent}{\mtcon}} = \setbuild{\mtrace}{\mevent\mtrace \in \denotetcon{\mtcon}}$
+ $\denotetcon{\derive{\mdata}{\mtcon}} = \setbuild{\mtrace}{\mdata\mtrace \in \denotetcon{\mtcon}}$
 \end{theorem}
 
 The latter three fall out of the first from simple inductions.
 %
-The first theorem depends on the following lemma
+The first theorem depends on the following lemma, which follows from a simple induction.
 
 \begin{lemma}[Nullability]\label{lem:nullability}
-  $\nullable(\mtcon) = \epsilon \iff \epsilon \in \denotetconfulle{\mtcon}{\menv}$
+  $\nullable(\motcon) = \epsilon \iff \epsilon \in \denotetconfulle{\motcon}{\menv}$
 \end{lemma}
-and has a straightforward proof except in the $\neg$ case, which requires some tricky reasoning.
+
+\autoref{thm:full} has a straightforward proof except in the $\neg$ case, which requires some tricky reasoning.
 %
 \begin{byCases}
   \iftwocolumn{}
   {\fontsize{8pt}{9pt}\selectfont}
-  \case{\mtcon \equiv \stnot{\mtcon'}}{
+  \case{\motcon \equiv \stnot{\motcon{}'}}{
     \begin{byCases}
-      \case{H : \nullable(\derivee{\mevent}{\mtcon'}{\menv}) = \epsilon}{
+      \case{H : \nullable(\derivee{\mdata}{\motcon{}'}{\menv}) = \epsilon}{
         \begin{pfsteps*}
-          \item{$\denotetconfull{\derivee{\mevent}{\mtcon}{\menv}} = \emptyset$} \BY{computation}
-          \item{$\epsilon \in \denotetconfull{\derivee{\mevent}{\mtcon'}{\menv}}$}
+          \item{$\denotetconfull{\derivee{\mdata}{\motcon}{\menv}} = \emptyset$} \BY{computation}
+          \item{$\epsilon \in \denotetconfull{\derivee{\mdata}{\motcon{}'}{\menv}}$}
             \BY{$H$, lemma \ref{lem:nullability}} \pflabel{deriveeps}
-          \item{$\mevent \in \denotetconfulle{\mtcon'}{\menv}$} \BY{IH, \pfref{deriveeps}}
+          \item{$\mdata \in \denotetconfulle{\motcon{}'}{\menv}$} \BY{IH, \pfref{deriveeps}}
         \end{pfsteps*}
-        To show $\setbuild{\mtrace}{\mevent\mtrace \in \denotetconfulle{\mtcon}{\menv}} = \emptyset$, we suppose $\mtrace \in \semneg{\denotetconfulle{\mtcon'}{\menv}}$ and show $\mtrace \nequiv \mevent\mtrace'$:
+        To show $\setbuild{\mtrace}{\mdata\mtrace \in \denotetconfulle{\motcon}{\menv}} = \emptyset$, we suppose $\mtrace \in \semneg{\denotetconfulle{\motcon{}'}{\menv}}$ and show $\mtrace \nequiv \mdata\mtrace'$:
         \begin{byCases}
-          \case{\mtrace \equiv \mevent\mtrace'}{
-            Since $\mevent \in \denotetconfulle{\mtcon'}{\menv}$, by definition of $\neg$, contradiction.}
-          \otherwise{$\mtrace$ not prefixed by $\mevent$}
+          \case{\mtrace \equiv \mdata\mtrace'}{
+            Since $\mdata \in \denotetconfulle{\motcon{}'}{\menv}$, by definition of $\neg$, contradiction.}
+          \otherwise{$\mtrace$ not prefixed by $\mdata$}
         \end{byCases}}
-      \case{H : \nullable(\derivee{\mevent}{\mtcon'}{\menv}) = \bot}{
-\newcommand{\lhs}{\semneg{\setbuild{\mtrace}{\mevent\mtrace \in \denotetconfulle{\mtcon'}{\menv}}}}
-\newcommand{\rhs}{\semneg{\denotetconfulle{\mtcon'}{\menv}}}
+      \case{H : \nullable(\derivee{\mdata}{\motcon{}'}{\menv}) = \bot}{
+\newcommand{\lhs}{\semneg{\setbuild{\mtrace}{\mdata\mtrace \in \denotetconfulle{\motcon{}'}{\menv}}}}
+\newcommand{\rhs}{\semneg{\denotetconfulle{\motcon{}'}{\menv}}}
         \begin{pfsteps*}
-          \item{$\epsilon \notin \denotetconfull{\derivee{\mevent}{\mtcon'}{\menv}}$}
+          \item{$\epsilon \notin \denotetconfull{\derivee{\mdata}{\motcon{}'}{\menv}}$}
              \BY{lemma \ref{lem:nullability}} \pflabel{derivenoeps}
-          \item{$\setbuild{\mtrace}{\mevent\mtrace \in \denotetconfulle{\mtcon'}{\menv}} = \denotetconfull{\derivee{\mevent}{\mtcon'}{\menv}}$} \BY{IH} \pflabel{IH}
-          \item{$\mevent \notin \denotetconfulle{\mtcon'}{\menv}$} \BY{\pfref{derivenoeps}, \pfref{IH}}
+          \item{$\setbuild{\mtrace}{\mdata\mtrace \in \denotetconfulle{\motcon{}'}{\menv}} = \denotetconfull{\derivee{\mdata}{\motcon{}'}{\menv}}$} \BY{IH} \pflabel{IH}
+          \item{$\mdata \notin \denotetconfulle{\motcon{}'}{\menv}$} \BY{\pfref{derivenoeps}, \pfref{IH}}
           \item{Goal is $\lhs = \setbuild{\mtrace}{\mevent\mtrace \in \rhs}$} \BY{computation}
         \end{pfsteps*}
         We prove this goal by bi-containment:
         \begin{byCases}
           \case{\mathit{Hs} : \mtrace \in \lhs}{
             \begin{pfsteps*}
-              \item{$\forall \mtrace' \in \setbuild{\mtrace}{\mevent\mtrace \in \denotetconfulle{\mtcon'}{\menv}}\setminus\setof{\epsilon}. \mtrace' \nleq \mtrace$}
+              \item{$\forall \mtrace' \in \setbuild{\mtrace}{\mevent\mtrace \in \denotetconfulle{\motcon{}'}{\menv}}\setminus\setof{\epsilon}. \mtrace' \nleq \mtrace$}
                   \BY{$\mathit{Hs}$ and inversion} \pflabel{Hinv}
-               \item{Suppose $\mtrace' \in \denotetconfulle{\mtcon'}{\menv}$} \pflabel{let}
+               \item{Suppose $\mtrace' \in \denotetconfulle{\motcon{}'}{\menv}$} \pflabel{let}
                \item{$\mtrace' \nleq \mevent\mtrace$}
                  \BY{\pfref{Hinv}, \pfref{let}, prefix cancellation} \pflabel{concl}
                \item{$\mtrace \in \rhs$} \BY{\pfref{concl}}
             \end{pfsteps*}}
           \case{\mathit{Hs} : \mtrace \in \rhs}{
             \begin{pfsteps*}
-              \item{$\forall \mtrace' \in \denotetconfulle{\mtcon'}{\menv}\setminus\setof{\epsilon}. \mtrace' \nleq \mevent\mtrace$}
+              \item{$\forall \mtrace' \in \denotetconfulle{\motcon{}'}{\menv}\setminus\setof{\epsilon}. \mtrace' \nleq \mevent\mtrace$}
                 \BY{$\mathit{Hs}$, inversion} \pflabel{Hsinv1}
-              \item{Suppose $\mtrace' \in \setbuild{\mtrace}{\mevent\mtrace \in \denotetconfulle{\mtcon'}{\menv}} \setminus\setof{\epsilon}$} \pflabel{let}
-              \item{$\mevent\mtrace' \in \denotetconfulle{\mtcon'}{\menv}$} \BY{\pfref{let}} \pflabel{in}
+              \item{Suppose $\mtrace' \in \setbuild{\mtrace}{\mevent\mtrace \in \denotetconfulle{\motcon{}'}{\menv}} \setminus\setof{\epsilon}$} \pflabel{let}
+              \item{$\mevent\mtrace' \in \denotetconfulle{\motcon{}'}{\menv}$} \BY{\pfref{let}} \pflabel{in}
               \item{$\mtrace' \nleq \mtrace$} \BY{\pfref{Hsinv1}, \pfref{in}, prefix cancellation} \pflabel{concl}
               \item{$\mtrace \in \lhs$} \BY{\pfref{concl}}
             \end{pfsteps*}}
