@@ -37,9 +37,9 @@ A temporal monitor $\sTMon{k}{l}{j}{\mscon}{\mtcon}{\mexp}$ has a structural com
 %%
 
 %%
-Expressions of the form $\sret{k}{j}{\mtimeline}{\mval}{\mexp}$ denote the production of a return event on the $\mtimeline$ timeline, blaming $k$ for failures, where $\mval$ is the function being returned from, and $\mexp$ has evaluated to the return value.
+Expressions of the form $\sret{k}{j}{\mtimeline}{\mval}{\mexp}$ denote the production of a return action on the $\mtimeline$ timeline, blaming $k$ for failures, where $\mval$ is the function being returned from, and $\mexp$ has evaluated to the return value.
 %
-Call events are similar.
+Call actions are similar.
 %
 The $\stblame{l}{j}$ expression denotes a temporal contract failure (of the contract $j$), which is a fatal error which blames $l$.
 %%
@@ -47,7 +47,7 @@ The $\stblame{l}{j}$ expression denotes a temporal contract failure (of the cont
 After arguments to a call, or return values are wrapped, we get a blessing from the temporal monitor that the call or return is acceptable.
 %
 \newcommand*{\namefmt}[1]{\textit{\textsc{#1}}}
-This is embodied in the $\namefmt{wrap}$ and $\namefmt{event}$ rules in \autoref{fig:reduction}.
+This is embodied in the $\namefmt{wrap}$ and $\namefmt{action}$ rules in \autoref{fig:reduction}.
 %
 Functions wrapped in arrow contracts are annotated with the name in the contract ($\snlam{\mtoplevelname}{\mvar}{\mexp}$) for matching purposes, but otherwise these functions have the same behavior as non-annotated functions.
 %
@@ -155,7 +155,7 @@ $\begin{array}{@{}l @{\ }c@{\ } l@{} r}
 \scev{k}{j}{\mtimeline}{\mval_f}{\sown{\mval}{o}}
 &\machstep&
 \sown{\mval}{k}
-\name{event} \\
+\name{action} \\
 &&\where \mtcons_\mvaluation = \Delta\setbuild{\derive{\scevev{\mval_f}{\mval}}{\mtcon}}{\mtcon\in\mTMons(\mtimeline)} \\
 &&\cwhere \mTMons' = \mTMons[\mtimeline \mapsto \gamma_1?(\mtimeline) \to \mtcons, \mTMons(\mtimeline) \sqcup \mtcons] \\
 &&\text{given } \mvaluation \neq \bot \\
@@ -206,17 +206,17 @@ Cons-list contracts (in \namefmt{smon-cons}) are also simple given our evaluatio
 %
 }
 %
-Since temporal contracts monitor the calls and returns of functions, we use new syntactic forms to communicate the call and return events (with the corresponding wrapped values) to the temporal monitor.
+Since temporal contracts monitor the calls and returns of functions, we use new syntactic forms to communicate the call and return actions (with the corresponding wrapped values) to the temporal monitor.
 %
-When an event is permissible by the temporal monitor, we reduce to the wrapped value.
+When an action is permissible by the temporal monitor, we reduce to the wrapped value.
 %
-An event is permissible if the temporal contracts on the timeline do not derive to the empty contract.
+An action is permissible if the temporal contracts on the timeline do not derive to the empty contract.
 %
 \iflong{Finally, note that the evaluation context's owner becomes the callee after this step (in line with the call).}
 %%
 %
 %%
-Since multiple temporal contracts can be on a timeline, and a timeline might be aliased in the abstract, we have two points to focus on in the $\namefmt{event}$ rule.
+Since multiple temporal contracts can be on a timeline, and a timeline might be aliased in the abstract, we have two points to focus on in the $\namefmt{action}$ rule.
 %
 We reuse $\Delta$ from the definition of matching in order to combine the possible outcomes of derivation due to weak equality; any difference in valuation means we must conservatively blame.
 %
@@ -226,7 +226,7 @@ If the timeline is aliased, then we abstractly cannot decide which contract belo
 %
 %
 \iflong{
-An expression's event trace is defined as the string of events that would be passed to the temporal monitor, were we to leave in the ${\tt call}$ and ${\tt ret}$ redexes.
+An expression's action trace is defined as the string of actions that would be passed to the temporal monitor, were we to leave in the ${\tt call}$ and ${\tt ret}$ redexes.
 %
 We restrict it to a particular timeline in the following corecursive definition:
 \begin{align*}
@@ -303,7 +303,7 @@ Proof by induction and \autoref{thm:top-partial}.
 \iflong{
   \begin{proof}
     Trivial in the case that $\exists \mtimeline. \mTMons(\mtimeline) = \emptyset$.
-    By definition of $\inv$, there must be some timeline $\mtimeline$, temporal contract $\mtcon$, and event trace $\mtrace$ such that $\mtrace \notin \denotetcon{\mTMons(\mtimeline)}$
+    By definition of $\inv$, there must be some timeline $\mtimeline$, temporal contract $\mtcon$, and action trace $\mtrace$ such that $\mtrace \notin \denotetcon{\mTMons(\mtimeline)}$
   \end{proof}
 }
 %
