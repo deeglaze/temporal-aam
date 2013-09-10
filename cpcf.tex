@@ -1,11 +1,12 @@
-%FIXME: Still from LTL days...
-\section{Introduction}
+ake\section{Introduction}
 
 Software systems are typically large, consist of many modules, and have invariants that are typically either outright inexpressible or too costly to express (and prove) in the language's static type system --- if it has one.
 %
-When this is the case, one might hope to rely on software contracts~\cite{dvanhorn:Findler2002Contracts} to give dynamic guarantees about the behavior of one's system, blaming the correct party responsible for any violation of these invariants.
+When this is the case, one might hope to rely on software contracts~\cite{dvanhorn:dvanhorn:meyer-eiffel} to give dynamic guarantees about the behavior of one's system.
 %
-A proposed system of \emph{temporal contracts}~\citep{ianjohnson:dfm:icfp2011} (henceform DFM) provides a linguistic mechanism to describe temporal properties that are often checked extra-linguistically via model-checking an abstraction of the program.
+In modern, higher-order languages, the question of ``who violated the contract?'' becomes non-trivial, and we graduate to higher-order contracts ~citet{dvanhorn:Findler2002Contracts} to blame the correct party responsible for any violation of these invariants.
+%
+A proposed system of \emph{temporal higher-order contracts}~\citep{ianjohnson:dfm:icfp2011} (henceform DFM) provides a linguistic mechanism to describe temporal properties of behavioral values flowing through the program, when traditionally such properties are checked extra-linguistically by model-checking an abstracted form of the program.
 %
 Example temporal properties are, ``a file can only be closed if it has been opened'' (\cref{sec:file}) and, ``if function A is given a function B, then that B may not be called once A returns.'' (\cref{sec:sort})
 %
@@ -15,13 +16,9 @@ Such invariants are important for interfaces that have set-up and tear-down prot
 %%
 There are downsides to software contracts, however.
 %
-If a contract is violated, a blame exception is thrown or the process simply terminates with the error.
-%
-Contracts do not themselves ensure correctness --- they help the process of constructing correct programs.
+Since contracts are strictly for runtime monitoring, they do not themselves ensure correctness --- they help the process of constructing correct programs.
 %
 In addition, contracts can introduce considerable overhead to the program.
-%
-Just wrapping a function in a contract monitor can disable compiler optimizations, and depending on the level of checking a contract does, the entry and exit of contract boundaries can also take a long time (indeed, one may run arbitary programs as such checks!).
 %
 These may be acceptable costs to pay at the beginning of development, but as programs mature, we need a way to safely remove contract checking and have a performance-and-correctness return on the initial investment.
 %%
@@ -32,12 +29,6 @@ Temporal contracts pose an additional challenge over higher-order function contr
 We propose a framework that is composable with techniques to verify functional contracts, that has low technical overhead (\eg, no translation to a model-checker's language necessary).
 %
 The technique uses the Abstracting Abstract Machines (AAM) approach (by \citet{dvanhorn:VanHorn2010Abstracting}) to check for reachability of a temporal contract blame.
-%
-The language for temporal contracts is an extension of regular expressions with back references, as many desirable properties are difficult to express in LTL with back-references (DLTL ~\cite{ianjohnson:jlo})\footnote{A sentiment expressed by DLTL's inventor~\citep{boddenadmission}}.
-%
-Temporal contracts can talk about value flow and use over time via binding in the specification --- this is not something that LTL can locally express, and DLTL does not currently have any model checking tool-support.
-%
-The semantics of temporal contracts is also geared towards checking safety properties, since dynamic liveness checking is undecidable in general.
 %%
 
 %%
@@ -62,7 +53,6 @@ Our contributions in this paper are as follows:
 %%
 
 %%
-%FIXME: Still from LTL days...
 \section{Related Work}
 %%
 
@@ -71,7 +61,7 @@ Model-checking and contract verification (proving functional correctness) are hu
 %
 The main separating factor between this work and the model-checking literature is that temporal property verification is \emph{extra-linguistic}, meaning there is no mechanism in the object language that could monitor for the properties.
 %
-Furthermore, work that focuses on the linguistic mechanism does not also focus on the verificiation mechanism.
+Furthermore, work that focuses on the linguistic mechanism does not also focus on the verification mechanism.
 %%
 
 %%
@@ -89,6 +79,10 @@ Tracematches use a language similar to temporal contracts but do not support neg
 J-LO on the other hand offers a monitoring system based on LTL propositions with binding constructs that tracks the satisfaction of the LTL proposition with the assumption that future portions of the proposition hold.
 %
 If the \emph{now} portion of the proposition fails to hold, the monitor raises a failure (it does not blame).
+%
+The language for temporal contracts is an extension of regular expressions with back references, as many desirable properties are difficult to express in LTL with back-references (DLTL ~\cite{ianjohnson:jlo})\footnote{A sentiment expressed by DLTL's inventor~\citep{boddenadmission}}.
+%
+Temporal contracts and DLTL can talk about value flow and use over time via binding in the specification --- this is not something that LTL can locally express, and DLTL does not currently have any model checking tool-support.
 %
 J-LO's goal is closer to temporal contracts, but its language is not; conversely, tracematches match the language and not the goal.
 %

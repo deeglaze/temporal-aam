@@ -39,21 +39,24 @@
 
 Temporal contracts provide a declarative language for monitoring the temporal ordering of events that pass through module boundaries.
 %
-We present and analyze a slightly different formulation than \dfm's temporal contracts that allows for more precise specification of value-use.
-%
 The syntax is presented in \autoref{fig:tcontract-syntax}.
+%
 %
 We notate sets of some element type with metavariable $e$ as $\isset{e}$, and lists as $\many{e}$.
 %
 We write the interpolation of sets and lists into many arguments as $e\ldots$, following the rules of \citet{dvanhorn:Kohlbecker1987Macrobyexample}.
 %
 The if-then-else syntax we use follows Dijkstra ($\mathit{guard} \to \mathit{then}, \mathit{else}$), where anything non-$\bot$ is considered true.
+%
+We use $x\equiv S(y,\ldots)$ to mean ``$x$ matches $S(y,\ldots)$;'' alternatively, there exist elements $y\ldots$ such that $x = S(y,\ldots)$.
+%
+For brevity, we will use $\mname(\mvpat)$ and $\retof{\mname}(\mvpat)$ to mean $\scallev{\mname}{\mvpat}$ and $\sretev{\mname}{\mvpat}$ respectively.
 %%
 
 %%
 Temporal contracts ($\mtcon$) include events ($\mevent$) (for $\mevent$ction), negated events ($\snonevent{\mevent}$), event matching scoped over a following contract ($\stbind{\mevent}{\mtcon}$), concatenation ($\stseq{\mtcon}{\mtcon}$) (often represented using juxtaposition), negated contracts ($\stnot{\mtcon}$), Kleene closure of events ($\stmany{\mtcon}$), union ($\stOr{\isset{\mtcon}}$), intersection ($\stAnd{\isset{\mtcon}}$), the empty temporal contract ($\epsilon$), and an open temporal contract closed by an environment ($\motcon, \menv$).
 %
-We consider the fail contract $\bot$ as a macro for $\stOr{\setof{}}$; \dfm's universal contract $\sddd$ was intended to be interpreted lazily (though was not in the formal semantics), but laziness poses challenges to the derivative parsing approach we have taken, so we leave the study of laziness to future work.
+We consider the fail contract $\bot$ as a macro for $\stOr{\setof{}}$.
 %
 The difference between $\snonevent{\mevent}$ and $\stnot{\mtcon}$ is that the first must be an event and force time to step forward once, whereas the second may match arbitrarily many events.
 %%
@@ -65,75 +68,36 @@ If $\mname$ is a label ($\mtoplevelname$), we simply check that the monitor wrap
 %
 However, if $\mname$ is a variable ($\mvar$), then we consult a binding environment that the monitoring system builds as we pass binding events to determine if the function is exactly equal to the value bound.
 %
-Our distinction between variables (bound by temporal contract) and labels (bound by structural contract) is one aspect of what separates our semantics from \dfm's.
-%
 Patterns can match values ($\mval$), variable bindings and references ($\sbind{\mvar}$, $\mvar$), labeled functions ($\mtoplevelname$), structured data ($\scons(\mvpat,\mvpat)$), negated patterns that do not bind ($\snegpat{\mvpat}$), anything or nothing ($\sany$, $\snone$).
 %%
-
-%%
-\dfm's semantics for referring to functions is problematic; we give a slightly different account that captures the spirit of their prose describing their system, and indeed mirrors their actual implementation.
-%
-Consider one of their motivating examples (recalled---using our syntax and semantics---and discussed in \autoref{sec:sort}), which was to protect the comparator passed to a sort function from escaping the scope of the call.
-%
-What this should mean is the particular binding introduced by a call to $sort$ cannot be called after $sort$ returns, \ie, each constructed monitor around given comparators should not be called after $sort$ returns.
-%
-However, the flat use of \emph{labels} instead of \emph{bindings} would cause a second call to a supposedly-correct $sort$ to fail, since it internally calls the comparator of the same label, but of a different monitor construction.
-%
-\dfm's implementation also includes call/return matching via a different binding at the call site to eventually use in the matching return.
-%
-We leave call/return matching to future work, as it is not necessary to verify the motivating examples.
-%%
-
-%%
-\iflong{
-\subsection{Sort example} \label{sec:sort}
+\newcommand{\sortid}{\mathit{sort}}
+\subsection{\dfm's sort example, revised} \label{sec:sort}
 %
 \renewcommand*{\arraystretch}{1.2}
 \newcommand*{\call}[1]{\scallev{#1}{\_}}
 \newcommand*{\ret}[1]{\sretev{#1}{\_}}
 \begin{align*}
- &\begin{array}{ l @{\quad}l@{\ } c @{\ }l }
- SortContract =
- &sort &:   &(cmp\ :\ Pos\ \to Pos\ \to\ Bool) \\
- &     &    &(List\ Pos) \\
- &     &\to &(List\ Pos) \\
- \end{array}
- \\
- &~\begin{array}{ @{~}r@{} l @{}l }
-  \text{where}\quad
-  &\stnot{(&\sddd~ \call{sort}~ \stmany{\snonevent{\ret{sort}}}~ \call{sort}~ \sddd)} \\
-  \cap\quad
-  &\stnot{(&\sddd~ \scallev{sort}{?cmp}~ \sddd~ \\
-  &&\ret{sort} \sddd~ \call{cmp}~ \sddd)}
- \end{array}
- %\caption{Sort example}
- %\label{fig:sort}
+ \sortid &: (\mathit{cmp} : \mathit{Pos} \to \mathit{Pos} \to \mathit{Bool})\ (List\ Pos) \to (List\ Pos) \\
+ \text{where } &\stnot{(\stmany{\snonevent{\sortid(\_,\_)}} \sortid(\_,\_)~ \stmany{\snonevent{\retof{\sortid}(\_)}}~ \sortid(\_,\_))} \\
+ \cap\  &(\stmany{\snonevent{\sortid(\_,\_)}}~ \sortid(?\mathit{cmp}, \_)~ \stmany{\snonevent{\retof{\sortid}(\_)}}~ \retof{\sortid}(\_)~ \stmany{\snonevent{\mathit{cmp}(\_,\_)}})
 \end{align*}
 %
 %%
-This example presents the contract for a hypothetical $sort$ function which takes two arguments: a comparator and a list (of positive numbers).
+This example presents the contract for a hypothetical $\sortid$ function which takes two arguments: a comparator and a list (of positive numbers).
 %
-The notation ``$\mathit{name}\ :\ Domain\ \to\ Range$'' describes a function contract where the argument satisfies the $Domain$ contract and the result satisfies the $Range$ contract.
+The temporal component, given by the ``where'' clauses following its structural (arrow) contract.
 %
-The ``$\mathit{name}\ :$'' prefix denotes the name of the function, for use in the temporal aspect of the contract.
+The first of these clauses states that a second call to $\sortid$ may not occur if there is no intervening return from $\sortid$, \ie, it is non-reentrant.
+%
+The second temporal clause specifies a higher-order property; given a call to $\sortid$, its associated $\mathit{cmp}$ argument cannot be called after $\sortid$ returns.
+%
+Since $\mathit{cmp}$ will be wrapped with its higher-order contract at each call, which creates new values, the bindings for $\mathit{cmp}$ will be distinct across execution.
 %%
 %
 %%
-$SortContract$'s temporal component, given by the ``where'' clauses following its structural (arrow) contract.
-%
-The first of these clauses states that a second call to $sort$ may not occur (hence the negation of the trace) if there is no intervening return from $sort$ ($\stmany{\snonevent{\ret{sort}}}$).
-%
-This is specifying a particular safety property (as evidenced by the negation of the trace): $sort$ is supposed to be \emph{non-re-entrant}.
-%
-The second temporal clause specifies a higher-order property; it states that, given a call to $sort$, its associated $cmp$ argument cannot be called after $sort$ returns.
-%%
 %
 %%
-Note also that the negated clauses of the temporal contract are prefixed and suffixed by ``$\sddd$''.
-%TODO: Provide decent and intuitive explanation that doesn't require any forward-reference
-%%
-%
-%%
+\iflong{
 \subsection{File example} \label{sec:file}
 %
 \begin{align*}
