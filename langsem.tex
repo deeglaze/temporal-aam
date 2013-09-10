@@ -193,11 +193,11 @@ In the interest of space, we only present and discuss the rules which we feel ar
 %
 The \namefmt{tmon} rule stores the given temporal contract inside the store ($\mTMons$), associated with an allocated timeline ($\mtimeline$) and joined with any pre-existing temporal contracts on that timeline (as abstract allocation cannot always produce fresh timelines).
 %
-The structural component of the contract ($\mscon$) is then used to rewrap the monitored value ($\mval$) inside of a structural monitor ($\mathtt{smon}$) associated with the timeline.
+The structural component of the contract ($\mscon$) is then used to rewrap the monitored value ($\mval$) inside of a structural monitor (${\tt smon}$) associated with the timeline.
 %
 
 %
-The \namefmt{smon} rules handle the reduction of structural monitors.
+%The \namefmt{wrap} rules handle the reduction of structural monitors.
 %
 \iflong{%
 Flat contracts (in \namefmt{smon-flat}) on constants are easily translated into a check on the contract.

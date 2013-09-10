@@ -316,7 +316,7 @@ Thus, derivatation produces a set of possible derivations and a valuation indica
     \delta \isset{t} &= \may \quad \text{otherwise}
   \end{align*}}{\caption{Semantics of matching}\label{fig:matchsem}}
 
-We define our semantics of matching in anticipation of abstraction, where we do not always know when two values are equal.
+We define our semantics of matching in \autoref{fig:matchsem} in anticipation of abstraction, where we do not always know when two values are equal.
 %
 When matching against a set of possible values, we might have a $\must$ match and a $\bot$ match, in which case the entire match should be considered $\may$ matching (this is the significance of the $\Delta$ metafunction).
 %
@@ -359,7 +359,7 @@ The first theorem depends on the following lemma, which follows from a simple in
   $\nullable(\motcon) = \epsilon \iff \epsilon \in \denotetconfulle{\motcon}{\menv}$
 \end{lemma}
 
-\autoref{thm:full} has a straightforward proof except in the $\neg$ case, which requires some tricky reasoning.
+\autoref{thm:full} has a straightforward proof except in the $\neg$ case, shown below:
 %
 \begin{byCases}
   \iftwocolumn{}

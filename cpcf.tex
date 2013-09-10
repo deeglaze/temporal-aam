@@ -1,14 +1,14 @@
-ake\section{Introduction}
+\section{Introduction}
 
 Software systems are typically large, consist of many modules, and have invariants that are typically either outright inexpressible or too costly to express (and prove) in the language's static type system --- if it has one.
 %
 When this is the case, one might hope to rely on software contracts~\cite{dvanhorn:dvanhorn:meyer-eiffel} to give dynamic guarantees about the behavior of one's system.
 %
-In modern, higher-order languages, the question of ``who violated the contract?'' becomes non-trivial, and we graduate to higher-order contracts ~citet{dvanhorn:Findler2002Contracts} to blame the correct party responsible for any violation of these invariants.
+In modern, higher-order languages, the question of ``who violated the contract?'' becomes non-trivial, and we graduate to higher-order contracts ~\citet{dvanhorn:Findler2002Contracts} to blame the correct party responsible for any violation of these invariants.
 %
 A proposed system of \emph{temporal higher-order contracts}~\citep{ianjohnson:dfm:icfp2011} (henceform DFM) provides a linguistic mechanism to describe temporal properties of behavioral values flowing through the program, when traditionally such properties are checked extra-linguistically by model-checking an abstracted form of the program.
 %
-Example temporal properties are, ``a file can only be closed if it has been opened'' (\cref{sec:file}) and, ``if function A is given a function B, then that B may not be called once A returns.'' (\cref{sec:sort})
+Example temporal properties are, ``a file can only be closed if it has been opened'' and, ``if function A is given a function B, then that B may not be called once A returns.''
 %
 Such invariants are important for interfaces that have set-up and tear-down protocols to follow, or even pure interfaces that have particular compositions of calls needed to construct some object.
 %%
@@ -187,7 +187,7 @@ The concrete semantics would operate the same way regardless of GC, but this is 
 
 \begin{figure}
   \input{benchmark-table}
-  \caption{Benchmark results. Numbers are run-time (ms) / number of spurious blames}
+  \caption{Benchmark results. Numbers are run-time (ms) / spurious blames (\%)}
   \label{fig:evaluation}
 \end{figure}
 %%
