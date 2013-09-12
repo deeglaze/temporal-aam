@@ -1,8 +1,27 @@
 #lang racket
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Generate numbers tabular (Program, LOC, Time (ms), Space (mb), Speed (states/sec)
-(require (submod "../oaam/code/drive-benchmarks.rkt" data) "proctime.rkt"
-         racket/trace)
+(require "proctime.rkt" racket/trace)
+
+(define sort1 "../benchmarks/temp-c/sort.sch")
+(define sort2 "../benchmarks/temp-c/sort-pushdown.sch")
+(define sort3 "../benchmarks/temp-c/sort-lists.sch")
+(define file "../benchmarks/temp-c/file.sch")
+(define malloc "../benchmarks/temp-c/malloc.sch")
+(define to-test
+  (list file malloc sort1 sort2 sort3))
+
+;; Algorithm tags used to drive [run-benchmark.rkt]
+(define baseline "ps")
+(define μ "psu")
+(define Ξ "psp")
+(define Γ "lcg")
+(define Γτ "lcgt")
+(define μΓτ "lcgut")
+(define μΓτΞ "lcgutp")
+
+(define which-analyses
+  (list baseline μ Ξ Γ Γτ μΓτ μΓτΞ))
 
 (define (file->name s)
   (define path (string->path s))
