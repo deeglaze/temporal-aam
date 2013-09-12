@@ -6,6 +6,10 @@ But first, we must discuss why we do not import \dfm's semantics directly.
 \subsection{\dfm's semantics}
 \newcommand{\denotedfm}[2]{\denote{#1}_{#2}}
 \begin{figure}
+\setlength{\abovedisplayskip}{0pt}
+\setlength{\belowdisplayskip}{4pt}
+\setlength{\abovedisplayshortskip}{0pt}
+\setlength{\belowdisplayshortskip}{8pt}
   \begin{align*}
     \denotedfm{\bullet}{\bullet} &: \TContract^\circ \times \Env \to \wp(\mathit{Trace})
     \\

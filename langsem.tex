@@ -1,12 +1,12 @@
 Now that we have a clear view of the behavior of temporal contracts, we nail down a formal semantics that we use to prove the correctness of our monitoring system.
 %
-The semantics we present is in the style of Felleisen's reduction semantics~\citep{ianjohnson:Felleisen:2009:SEP:1795772}, which can be systematically transformed into an abstract machine in the form presented in~\citet{dvanhorn:VanHorn2010Abstracting}.
+We present a reduction semantics~\citep{ianjohnson:Felleisen:2009:SEP:1795772}, which can be systematically transformed into an abstract machine in the form presented in~\citet{dvanhorn:VanHorn2010Abstracting}.
 %%
 
 The language itself is standard ISWIM, just extended with contract-monitoring forms, whose syntax and semantics we will focus on.
 %
 %%
-\subsection{Syntax}
+\subsection{Additional syntactic forms}
 %\FloatBarrier
 
 \begin{figure}
@@ -25,17 +25,8 @@ The language itself is standard ISWIM, just extended with contract-monitoring fo
 \end{figure}
 
 %
-A structural monitor $\sSMon{k}{l}{j}{\mtimeline}{\mscon}{\mexp}$ is like a traditional monitor \cite{ianjohnson:dthf:complete}: the structural contract is given by $\mscon$ and the contract parties are given by labels: $k$ is the server, $l$ is the client, and $j$ is the contract itself.
-%
-However, our structural monitors additionally feature a timeline ($\mtimeline$), used to temporally reason over values as they flow through contract boundaries (cf. \autoref{sec:temporal-semantics}).
-%
-
-%
-A temporal monitor $\sTMon{k}{l}{j}{\mscon}{\mtcon}{\mexp}$ has a structural component as well ($\mscon$), but importantly it also considers a temporal contract given by $\mtcon$.
-%
 \iflong{At this point we would like to note that our usage of labels differs slightly from existing literature \cite{ianjohnson:dthf:complete}: we have a notion of the ``top level label'', denoted by $\toplevel$; this is similar to \citeauthor{ianjohnson:dthf:complete}'s use of $l_0$.}
 %%
-
 %%
 Expressions of the form $\sret{k}{j}{\mtimeline}{\mval}{\mexp}$ denote the production of a return action on the $\mtimeline$ timeline, blaming $k$ for failures, where $\mval$ is the function being returned from, and $\mexp$ has evaluated to the return value.
 %

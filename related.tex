@@ -1,0 +1,74 @@
+%%
+Model-checking and contract verification (proving functional correctness) are huge fields and it is important to view our work in the greater context of these worlds of research.
+%
+The main separating factor between this work and the model-checking literature is that temporal property verification is \emph{extra-linguistic}, meaning there is no mechanism in the object language that could monitor for the properties.
+%
+Furthermore, work that focuses on the linguistic mechanism does not also focus on the verification mechanism.
+%%
+
+%%
+\paragraph{Runtime monitoring:}
+Monitoring sequences of actions at runtime is a mature and active area of research.
+%
+This area has similarities to temporal contracts due to the use of runtime monitoring and of languages for describing execution traces, but nothing in the area has the concept of blame or has a static story.
+%
+The notion of an action is reminiscent of aspect-oriented programming's notion of a \emph{join-point}, and thus we see several systems built on AspectJ \citep{ianjohnson:aspectj} that offer a domain-specific language for running \emph{advice} when the action trace matches a specified pattern, \eg, Tracematches \citep{ianjohnson:Allan05addingtrace} and J-LO ~\citep{ianjohnson:jlo}.
+%
+Tracematches use a language similar to temporal contracts but do not support negation; they also have a different purpose: execute advice at more specific times based on the program history, and not to offer a high-level specification system with blame that contracts provide.
+%
+J-LO on the other hand offers a monitoring system based on LTL propositions with binding constructs that tracks the satisfaction of the LTL proposition with the assumption that future portions of the proposition hold.
+%
+If the \emph{now} portion of the proposition fails to hold, the monitor raises a failure (it does not blame).
+%
+The language for temporal contracts is an extension of regular expressions with back references, as many desirable properties are difficult to express in LTL with back-references (DLTL ~\cite{ianjohnson:jlo})\footnote{A sentiment expressed by DLTL's inventor~\citep{boddenadmission}}.
+%
+Temporal contracts and DLTL can talk about value flow and use over time via binding in the specification --- this is not something that LTL can locally express, and DLTL does not currently have any model checking tool-support.
+%
+J-LO's goal is closer to temporal contracts, but its language is not; conversely, tracematches match the language and not the goal.
+%
+In both cases, the only static analysis is on the specification itself in order to improve runtime performance, and not on the monitored program's adherence to the specification.
+%
+Both systems are also tied to Java's class structure, so they cannot express properties of higher-order behavior or refinements on values.
+
+\paragraph{Higher-order model-checking:}
+Java and C++ both have several high-quality model-checking tools \citep{ianjohnson:bandera, ianjohnson:java-pathfinder, ianjohnson:LLBMC}, some of which are bounded model-checkers; meaning they cannot fully verify temporal properties --- only present possible counter-examples.
+%
+Bandera~\citep{ianjohnson:bandera} is a collection of tools that uses static analysis techniques to extract a finite model from a Java program to feed to select back-end model-checkers.
+%
+Similar to our approach, Bandera employs flow analysis in order to produce compact models.
+%
+Unsimilarly, it does not synthesize checkers for runtime monitoring the expressed properties, nor does it natively support higher-order functions.
+%
+A complete separation of model generation and model-checking also degrades precision, since the more in-depth constraint solving typical model-checkers do can help prune the control-flow space; our approach is amenable to integrated constraint solving and is left to future work.
+%%
+
+%%
+A technique that specifically targets higher-order languages, higher-order recursion schemes (HORS)~\citep{ianjohnson:Knapik:2002:HPT:646794.704852}, is rooted in simply-typed, call-by-name lambda terms, but has model-checking solutions that have been extended to call-by-value ~\citep{ianjohnson:DBLP:journals/jacm/Kobayashi13} and untyped ~\citep{dvanhorn:Tsukada2010Untyped} languages, through heavy type-theoretic machinery.
+%
+Model-checking an untyped HORS is undecidable, and such model checkers make various approximations biased to soundly model-check programs in traditional type systems rather than traditional untyped languages.
+%
+Our technique is lighter weight and more transparently correct since it follows from a systematic transformation of a standard semantics.
+%
+Additionally, the AAM approach makes extensions to more complex language features straightforward, whereas in HORS one would need to CPS, double CPS, or perform a functional encoding of a new form of data; all of which impose additional proof obligations and points-of-failure for the analysis implementor.
+%
+Finally, HORS do not synthesize runtime monitors or have a notion of blame, unlike our system.
+%%
+
+%%
+\paragraph{Behavioral contract verification:}
+In the world of static sotware contract verification, there is more closely related work.
+%
+There have been many successful efforts in the realm of first-order contract verification~\citep{ianjohnson:fahndrich:contracts:2011,ianjohnson:vcc:2009}, but the techniques employed are inherently first-order: the only values are booleans.
+%
+\citet{ianjohnson:Flanagan:2006:HTC:1111037.1111059}'s notion of hybrid type checking is one way to state the problem: dynamic types are essentially flat contracts, and are treated as subtypes of anything during static checking.
+%
+If an external theorem prover can prove that the flat contracts always hold, the dynamic checks can be safely removed.
+%
+\citet{dvanhorn:Xu2012Hybrid} describes a higher-order contract verification system for OCaml by inlining all contract monitors and relying on a system of simplifications further enhanced by an SMT solver to optimize away dynamic checks.
+%
+\citet{dvanhorn:TobinHochstadt2012Higherorder} use AAM on a module semantics with higher-order contracts and is the most related to this work.
+%
+However, whereas their work focuses on a concrete semantics for handling unknown values and an external theorem prover to show contract containment, our work focuses on an orthogonal issue of temporal contract monitoring.
+%
+Our techniques should smoothly integrate with theirs when considering partial programs, and is left to future work (\cref{sec:conclusion}).
+%%
