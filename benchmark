@@ -1,0 +1,980 @@
+./sort-lists.ps.time.0:cpu time: 1012 real time: 1015 gc time: 44
+./file.psu.time.0:cpu time: 272 real time: 272 gc time: 32
+./sort-pushdown.lcgt.time.0:cpu time: 25917 real time: 25950 gc time: 1700
+./malloc.lcgutp.time.0:cpu time: 108 real time: 109 gc time: 24
+./file.lcgutp.time.0:cpu time: 720 real time: 719 gc time: 52
+./file.lcg.time.0:cpu time: 696 real time: 697 gc time: 44
+./sort.lcg.time.0:cpu time: 19053 real time: 19062 gc time: 708
+./sort-lists.psp.time.0:cpu time: 2696 real time: 2695 gc time: 88
+./file.psp.time.0:cpu time: 160 real time: 160 gc time: 28
+./malloc.ps.time.0:cpu time: 116 real time: 116 gc time: 24
+./sort.psu.time.0:cpu time: 288 real time: 287 gc time: 28
+./sort-pushdown.psu.time.0:cpu time: 364 real time: 363 gc time: 32
+./malloc.lcgut.time.0:cpu time: 108 real time: 111 gc time: 28
+./malloc.psu.time.0:cpu time: 116 real time: 119 gc time: 24
+./sort-lists.psu.time.0:cpu time: 1024 real time: 1022 gc time: 52
+./malloc.lcgt.time.0:cpu time: 112 real time: 109 gc time: 24
+./malloc.lcg.time.0:cpu time: 104 real time: 105 gc time: 28
+./sort.lcgt.time.0:cpu time: 21289 real time: 21292 gc time: 1472
+./file.lcgut.time.0:cpu time: 728 real time: 729 gc time: 56
+./sort-pushdown.lcgut.time.0:cpu time: 26217 real time: 26239 gc time: 1752
+./sort.psp.time.0:cpu time: 368 real time: 368 gc time: 32
+./sort-pushdown.ps.time.0:cpu time: 356 real time: 357 gc time: 32
+./malloc.psp.time.0:cpu time: 88 real time: 88 gc time: 24
+./sort-pushdown.lcgutp.time.0:cpu time: 188 real time: 190 gc time: 24
+./sort.lcgut.time.0:cpu time: 22045 real time: 22043 gc time: 1476
+./sort.lcgutp.time.0:cpu time: 324 real time: 325 gc time: 28
+./sort.ps.time.0:cpu time: 288 real time: 287 gc time: 28
+./sort-pushdown.psp.time.0:cpu time: 488 real time: 487 gc time: 36
+./file.ps.time.0:cpu time: 276 real time: 276 gc time: 32
+./file.lcgt.time.0:cpu time: 760 real time: 759 gc time: 56
+./sort-pushdown.lcg.time.0:cpu time: 21513 real time: 21514 gc time: 784
+./sort-lists.lcgutp.time.0:cpu time: 2768 real time: 2765 gc time: 128
+./sort-lists.ps.time.0:State count: 13566
+./file.psu.time.0:State count: 994
+./sort-lists.psp.time.0:State count: 31354
+./file.psp.time.0:State count: 544
+./malloc.ps.time.0:State count: 101
+./sort.psu.time.0:State count: 1675
+./sort-pushdown.psu.time.0:State count: 2557
+./malloc.psu.time.0:State count: 101
+./sort-lists.psu.time.0:State count: 13566
+./sort.psp.time.0:State count: 3329
+./sort-pushdown.ps.time.0:State count: 2557
+./malloc.psp.time.0:State count: 105
+./sort.ps.time.0:State count: 1675
+./sort-pushdown.psp.time.0:State count: 4646
+./file.ps.time.0:State count: 994
+./sort-lists.ps.time.0:Point count: 921
+./file.psu.time.0:Point count: 575
+./sort-lists.psp.time.0:Point count: 22440
+./file.psp.time.0:Point count: 541
+./malloc.ps.time.0:Point count: 101
+./sort.psu.time.0:Point count: 311
+./sort-pushdown.psu.time.0:Point count: 408
+./malloc.psu.time.0:Point count: 101
+./sort-lists.psu.time.0:Point count: 921
+./sort.psp.time.0:Point count: 2817
+./sort-pushdown.ps.time.0:Point count: 408
+./malloc.psp.time.0:Point count: 105
+./sort.ps.time.0:Point count: 311
+./sort-pushdown.psp.time.0:Point count: 3914
+./file.ps.time.0:Point count: 575
+./sort-lists.ps.time.0:States/second: 18307.69230769231
+./file.psu.time.0:States/second: 10247.422680412372
+./sort-lists.lcgt.time.0:States/second: 752.5591079577194
+./sort-lists.lcg.time.0:States/second: 776.8052380575485
+./sort-pushdown.lcgt.time.0:States/second: 1182.9677319865839
+./malloc.lcgutp.time.0:States/second: 1651.3761467889908
+./file.lcgutp.time.0:States/second: 1593.3147632311977
+./file.lcg.time.0:States/second: 1604.31654676259
+./sort.lcg.time.0:States/second: 1319.5989922317867
+./sort-lists.psp.time.0:States/second: 12422.345483359746
+./file.psp.time.0:States/second: 8242.424242424242
+./malloc.ps.time.0:States/second: 3482.7586206896553
+./sort.psu.time.0:States/second: 12884.615384615385
+./sort-pushdown.psu.time.0:States/second: 14695.402298850575
+./malloc.lcgut.time.0:States/second: 1585.5855855855855
+./malloc.psu.time.0:States/second: 3482.7586206896553
+./sort-lists.psu.time.0:States/second: 18136.363636363636
+./malloc.lcgt.time.0:States/second: 1629.6296296296296
+./malloc.lcg.time.0:States/second: 1692.3076923076924
+./sort.lcgt.time.0:States/second: 1120.6070287539935
+./file.lcgut.time.0:States/second: 1530.2197802197802
+./sort-pushdown.lcgut.time.0:States/second: 1169.932896141528
+./sort.psp.time.0:States/second: 11763.250883392226
+./sort-pushdown.ps.time.0:States/second: 14528.40909090909
+./malloc.psp.time.0:States/second: 3888.8888888888887
+./sort-pushdown.lcgutp.time.0:States/second: 1694.7368421052631
+./sort.lcgut.time.0:States/second: 1082.463465553236
+./sort.lcgutp.time.0:States/second: 1503.0864197530864
+./sort.ps.time.0:States/second: 12884.615384615385
+./sort-lists.lcgut.time.0:States/second: 788.8051570899602
+./sort-pushdown.psp.time.0:States/second: 11912.820512820514
+./file.ps.time.0:States/second: 10354.166666666666
+./file.lcgt.time.0:States/second: 1469.6569920844327
+./sort-pushdown.lcg.time.0:States/second: 1440.703190400893
+./sort-lists.lcgutp.time.0:States/second: 1231.548480463097
+./sort-lists.ps.time.0:Blame sites, blames: 17, 4
+./file.psu.time.0:Blame sites, blames: 27, 2
+./sort-pushdown.lcgt.time.0:Blame sites, tblames: 1697, 0
+./malloc.lcgutp.time.0:Blame sites, tblames: 5, 1
+./file.lcgutp.time.0:Blame sites, tblames: 50, 1
+./file.lcg.time.0:Blame sites, tblames: 51, 1
+./sort.lcg.time.0:Blame sites, tblames: 1723, 0
+./sort-lists.psp.time.0:Blame sites, blames: 290, 9
+./file.psp.time.0:Blame sites, blames: 24, 2
+./malloc.ps.time.0:Blame sites, blames: 5, 1
+./sort.psu.time.0:Blame sites, blames: 8, 0
+./sort-pushdown.psu.time.0:Blame sites, blames: 11, 2
+./malloc.lcgut.time.0:Blame sites, tblames: 5, 1
+./malloc.psu.time.0:Blame sites, blames: 5, 1
+./sort-lists.psu.time.0:Blame sites, blames: 17, 4
+./malloc.lcgt.time.0:Blame sites, tblames: 5, 1
+./malloc.lcg.time.0:Blame sites, tblames: 5, 1
+./sort.lcgt.time.0:Blame sites, tblames: 1630, 0
+./file.lcgut.time.0:Blame sites, tblames: 50, 1
+./sort-pushdown.lcgut.time.0:Blame sites, tblames: 1697, 0
+./sort.psp.time.0:Blame sites, blames: 45, 0
+./sort-pushdown.ps.time.0:Blame sites, blames: 11, 2
+./malloc.psp.time.0:Blame sites, blames: 5, 1
+./sort-pushdown.lcgutp.time.0:Blame sites, tblames: 2, 0
+./sort.lcgut.time.0:Blame sites, tblames: 1630, 0
+./sort.lcgutp.time.0:Blame sites, tblames: 5, 0
+./sort.ps.time.0:Blame sites, blames: 8, 0
+./sort-pushdown.psp.time.0:Blame sites, blames: 49, 0
+./file.ps.time.0:Blame sites, blames: 27, 2
+./file.lcgt.time.0:Blame sites, tblames: 50, 1
+./sort-pushdown.lcg.time.0:Blame sites, tblames: 1718, 0
+./sort-lists.lcgutp.time.0:Blame sites, tblames: 15, 0
+./sort-lists.lcgt.time.0:Result: Exhausted memory
+./sort-lists.lcg.time.0:Result: Exhausted memory
+./sort-lists.lcgut.time.0:Result: Exhausted memory
+./malloc.psp.mem.0:Peak memory use after a collection: 181793632
+./sort.lcgut.mem.0:Peak memory use after a collection: 313053760
+./sort-lists.psp.mem.0:Peak memory use after a collection: 190592560
+./sort-pushdown.ps.mem.0:Peak memory use after a collection: 182400312
+./sort-pushdown.psp.mem.0:Peak memory use after a collection: 183238432
+./sort-pushdown.lcgutp.mem.0:Peak memory use after a collection: 181520096
+./malloc.ps.mem.0:Peak memory use after a collection: 181927248
+./malloc.lcgut.mem.0:Peak memory use after a collection: 182245280
+./file.psp.mem.0:Peak memory use after a collection: 182074952
+./sort-lists.lcgutp.mem.0:Peak memory use after a collection: 205333112
+./sort.psp.mem.0:Peak memory use after a collection: 182881704
+./sort-pushdown.psu.mem.0:Peak memory use after a collection: 182415000
+./file.lcg.mem.0:Peak memory use after a collection: 185564416
+./malloc.lcg.mem.0:Peak memory use after a collection: 182232064
+./sort-pushdown.lcg.mem.0:Peak memory use after a collection: 232959144
+./file.ps.mem.0:Peak memory use after a collection: 182501800
+./file.lcgut.mem.0:Peak memory use after a collection: 188053816
+./file.psu.mem.0:Peak memory use after a collection: 182530568
+./sort-pushdown.lcgt.mem.0:Peak memory use after a collection: 358682344
+./malloc.lcgutp.mem.0:Peak memory use after a collection: 182421184
+./sort.lcgutp.mem.0:Peak memory use after a collection: 181560272
+./sort-pushdown.lcgut.mem.0:Peak memory use after a collection: 358669280
+./file.lcgt.mem.0:Peak memory use after a collection: 188005912
+./sort.ps.mem.0:Peak memory use after a collection: 182323040
+./sort-lists.psu.mem.0:Peak memory use after a collection: 183528632
+./sort.lcgt.mem.0:Peak memory use after a collection: 313045896
+./sort-lists.ps.mem.0:Peak memory use after a collection: 183532152
+./malloc.psu.mem.0:Peak memory use after a collection: 181944232
+./file.lcgutp.mem.0:Peak memory use after a collection: 187031672
+./malloc.lcgt.mem.0:Peak memory use after a collection: 182244392
+./sort.psu.mem.0:Peak memory use after a collection: 182345256
+./sort.lcg.mem.0:Peak memory use after a collection: 218429992
+./malloc.psp.mem.0:Current memory use: 184673064
+./sort.lcgut.mem.0:Current memory use: 315116360
+./sort-lists.psp.mem.0:Current memory use: 203056848
+./sort-pushdown.ps.mem.0:Current memory use: 209878712
+./sort-pushdown.psp.mem.0:Current memory use: 198968088
+./sort-pushdown.lcgutp.mem.0:Current memory use: 199301472
+./malloc.ps.mem.0:Current memory use: 193118216
+./malloc.lcgut.mem.0:Current memory use: 185877464
+./file.psp.mem.0:Current memory use: 199375840
+./sort-lists.lcgutp.mem.0:Current memory use: 233416208
+./sort.psp.mem.0:Current memory use: 185460464
+./sort-pushdown.psu.mem.0:Current memory use: 209859000
+./file.lcg.mem.0:Current memory use: 210654712
+./malloc.lcg.mem.0:Current memory use: 185159800
+./sort-pushdown.lcg.mem.0:Current memory use: 261436944
+./file.ps.mem.0:Current memory use: 197317536
+./file.lcgut.mem.0:Current memory use: 188463000
+./file.psu.mem.0:Current memory use: 197311232
+./sort-pushdown.lcgt.mem.0:Current memory use: 391631576
+./malloc.lcgutp.mem.0:Current memory use: 184669760
+./sort.lcgutp.mem.0:Current memory use: 216982784
+./sort-pushdown.lcgut.mem.0:Current memory use: 391618512
+./file.lcgt.mem.0:Current memory use: 188394048
+./sort.ps.mem.0:Current memory use: 195216872
+./sort-lists.psu.mem.0:Current memory use: 188304272
+./sort.lcgt.mem.0:Current memory use: 315108496
+./sort-lists.ps.mem.0:Current memory use: 188360984
+./malloc.psu.mem.0:Current memory use: 193121088
+./file.lcgutp.mem.0:Current memory use: 219401936
+./malloc.lcgt.mem.0:Current memory use: 185870992
+./sort.psu.mem.0:Current memory use: 195222424
+./sort.lcg.mem.0:Current memory use: 234816240
+./sort-pushdown.lcgut.time.1:cpu time: 26633 real time: 26671 gc time: 1689
+./sort.lcg.time.1:cpu time: 21433 real time: 21440 gc time: 776
+./file.ps.time.1:cpu time: 280 real time: 282 gc time: 36
+./malloc.lcgt.time.1:cpu time: 112 real time: 111 gc time: 28
+./malloc.lcg.time.1:cpu time: 104 real time: 104 gc time: 24
+./sort.lcgut.time.1:cpu time: 21425 real time: 21427 gc time: 1504
+./sort.ps.time.1:cpu time: 284 real time: 285 gc time: 32
+./malloc.psp.time.1:cpu time: 84 real time: 87 gc time: 24
+./malloc.lcgut.time.1:cpu time: 108 real time: 109 gc time: 24
+./sort.psu.time.1:cpu time: 292 real time: 293 gc time: 32
+./malloc.ps.time.1:cpu time: 116 real time: 115 gc time: 28
+./sort.psp.time.1:cpu time: 376 real time: 373 gc time: 32
+./sort-pushdown.psu.time.1:cpu time: 360 real time: 360 gc time: 32
+./file.lcg.time.1:cpu time: 688 real time: 685 gc time: 48
+./file.psp.time.1:cpu time: 164 real time: 162 gc time: 28
+./malloc.psu.time.1:cpu time: 116 real time: 116 gc time: 24
+./sort-lists.psp.time.1:cpu time: 2708 real time: 2708 gc time: 92
+./sort-lists.lcgutp.time.1:cpu time: 2776 real time: 2774 gc time: 108
+./file.lcgt.time.1:cpu time: 728 real time: 728 gc time: 52
+./file.lcgut.time.1:cpu time: 760 real time: 759 gc time: 52
+./sort-lists.ps.time.1:cpu time: 1116 real time: 1117 gc time: 48
+./sort-pushdown.lcgutp.time.1:cpu time: 188 real time: 187 gc time: 24
+./file.lcgutp.time.1:cpu time: 728 real time: 726 gc time: 52
+./sort-pushdown.psp.time.1:cpu time: 480 real time: 481 gc time: 32
+./sort-pushdown.lcg.time.1:cpu time: 21733 real time: 21734 gc time: 788
+./sort-lists.psu.time.1:cpu time: 1068 real time: 1070 gc time: 48
+./sort.lcgutp.time.1:cpu time: 312 real time: 313 gc time: 28
+./malloc.lcgutp.time.1:cpu time: 112 real time: 110 gc time: 28
+./sort.lcgt.time.1:cpu time: 21361 real time: 21361 gc time: 1528
+./file.psu.time.1:cpu time: 272 real time: 273 gc time: 36
+./sort-pushdown.ps.time.1:cpu time: 360 real time: 359 gc time: 32
+./sort-pushdown.lcgt.time.1:cpu time: 26773 real time: 26790 gc time: 1712
+./file.ps.time.1:State count: 994
+./sort.ps.time.1:State count: 1675
+./malloc.psp.time.1:State count: 105
+./sort.psu.time.1:State count: 1675
+./malloc.ps.time.1:State count: 101
+./sort.psp.time.1:State count: 3329
+./sort-pushdown.psu.time.1:State count: 2557
+./file.psp.time.1:State count: 544
+./malloc.psu.time.1:State count: 101
+./sort-lists.psp.time.1:State count: 31354
+./sort-lists.ps.time.1:State count: 13566
+./sort-pushdown.psp.time.1:State count: 4646
+./sort-lists.psu.time.1:State count: 13566
+./file.psu.time.1:State count: 994
+./sort-pushdown.ps.time.1:State count: 2557
+./file.ps.time.1:Point count: 575
+./sort.ps.time.1:Point count: 311
+./malloc.psp.time.1:Point count: 105
+./sort.psu.time.1:Point count: 311
+./malloc.ps.time.1:Point count: 101
+./sort.psp.time.1:Point count: 2817
+./sort-pushdown.psu.time.1:Point count: 408
+./file.psp.time.1:Point count: 541
+./malloc.psu.time.1:Point count: 101
+./sort-lists.psp.time.1:Point count: 22440
+./sort-lists.ps.time.1:Point count: 921
+./sort-pushdown.psp.time.1:Point count: 3914
+./sort-lists.psu.time.1:Point count: 921
+./file.psu.time.1:Point count: 575
+./sort-pushdown.ps.time.1:Point count: 408
+./sort-pushdown.lcgut.time.1:States/second: 1151.0184177951162
+./sort-lists.lcgut.time.1:States/second: 783.1518641830888
+./sort.lcg.time.1:States/second: 1173.1684554363042
+./file.ps.time.1:States/second: 10142.857142857143
+./malloc.lcgt.time.1:States/second: 1585.5855855855855
+./sort-lists.lcg.time.1:States/second: 818.8132562738937
+./malloc.lcg.time.1:States/second: 1692.3076923076924
+./sort.lcgut.time.1:States/second: 1113.5960407134187
+./sort.ps.time.1:States/second: 12884.615384615385
+./malloc.psp.time.1:States/second: 3888.8888888888887
+./malloc.lcgut.time.1:States/second: 1614.6788990825687
+./sort.psu.time.1:States/second: 12786.259541984733
+./malloc.ps.time.1:States/second: 3607.1428571428573
+./sort.psp.time.1:States/second: 11400.684931506848
+./sort-pushdown.psu.time.1:States/second: 14611.42857142857
+./file.lcg.time.1:States/second: 1632.5036603221083
+./file.psp.time.1:States/second: 8242.424242424242
+./malloc.psu.time.1:States/second: 3607.1428571428573
+./sort-lists.psp.time.1:States/second: 12353.821907013396
+./sort-lists.lcgt.time.1:States/second: 725.267666324651
+./sort-lists.lcgutp.time.1:States/second: 1227.994227994228
+./file.lcgt.time.1:States/second: 1534.435261707989
+./file.lcgut.time.1:States/second: 1469.6569920844327
+./sort-lists.ps.time.1:States/second: 16207.885304659498
+./sort-pushdown.lcgutp.time.1:States/second: 1721.9251336898396
+./file.lcgutp.time.1:States/second: 1580.110497237569
+./sort-pushdown.psp.time.1:States/second: 12036.269430051814
+./sort-pushdown.lcg.time.1:States/second: 1425.9804824157613
+./sort-lists.psu.time.1:States/second: 17237.61118170267
+./sort.lcgutp.time.1:States/second: 1560.8974358974358
+./malloc.lcgutp.time.1:States/second: 1651.3761467889908
+./sort.lcgt.time.1:States/second: 1117.0382165605095
+./file.psu.time.1:States/second: 10142.857142857143
+./sort-pushdown.ps.time.1:States/second: 14695.402298850575
+./sort-pushdown.lcgt.time.1:States/second: 1145.8605623809701
+./sort-pushdown.lcgut.time.1:Blame sites, tblames: 1697, 0
+./sort.lcg.time.1:Blame sites, tblames: 1723, 0
+./file.ps.time.1:Blame sites, blames: 27, 2
+./malloc.lcgt.time.1:Blame sites, tblames: 5, 1
+./malloc.lcg.time.1:Blame sites, tblames: 5, 1
+./sort.lcgut.time.1:Blame sites, tblames: 1630, 0
+./sort.ps.time.1:Blame sites, blames: 8, 0
+./malloc.psp.time.1:Blame sites, blames: 5, 1
+./malloc.lcgut.time.1:Blame sites, tblames: 5, 1
+./sort.psu.time.1:Blame sites, blames: 8, 0
+./malloc.ps.time.1:Blame sites, blames: 5, 1
+./sort.psp.time.1:Blame sites, blames: 45, 0
+./sort-pushdown.psu.time.1:Blame sites, blames: 11, 2
+./file.lcg.time.1:Blame sites, tblames: 51, 1
+./file.psp.time.1:Blame sites, blames: 24, 2
+./malloc.psu.time.1:Blame sites, blames: 5, 1
+./sort-lists.psp.time.1:Blame sites, blames: 290, 9
+./sort-lists.lcgutp.time.1:Blame sites, tblames: 15, 0
+./file.lcgt.time.1:Blame sites, tblames: 50, 1
+./file.lcgut.time.1:Blame sites, tblames: 50, 1
+./sort-lists.ps.time.1:Blame sites, blames: 17, 4
+./sort-pushdown.lcgutp.time.1:Blame sites, tblames: 2, 0
+./file.lcgutp.time.1:Blame sites, tblames: 50, 1
+./sort-pushdown.psp.time.1:Blame sites, blames: 49, 0
+./sort-pushdown.lcg.time.1:Blame sites, tblames: 1718, 0
+./sort-lists.psu.time.1:Blame sites, blames: 17, 4
+./sort.lcgutp.time.1:Blame sites, tblames: 5, 0
+./malloc.lcgutp.time.1:Blame sites, tblames: 5, 1
+./sort.lcgt.time.1:Blame sites, tblames: 1630, 0
+./file.psu.time.1:Blame sites, blames: 27, 2
+./sort-pushdown.ps.time.1:Blame sites, blames: 11, 2
+./sort-pushdown.lcgt.time.1:Blame sites, tblames: 1697, 0
+./sort-lists.lcgut.time.1:Result: Exhausted memory
+./sort-lists.lcg.time.1:Result: Exhausted memory
+./sort-lists.lcgt.time.1:Result: Exhausted memory
+./sort.lcg.mem.1:Peak memory use after a collection: 218617776
+./malloc.psp.mem.1:Peak memory use after a collection: 181795216
+./malloc.lcgut.mem.1:Peak memory use after a collection: 182247616
+./file.lcgt.mem.1:Peak memory use after a collection: 188004160
+./sort-pushdown.lcgutp.mem.1:Peak memory use after a collection: 181512960
+./sort.ps.mem.1:Peak memory use after a collection: 182321944
+./sort-lists.psp.mem.1:Peak memory use after a collection: 190591328
+./sort-pushdown.ps.mem.1:Peak memory use after a collection: 182409696
+./file.lcgut.mem.1:Peak memory use after a collection: 188053872
+./file.ps.mem.1:Peak memory use after a collection: 182503456
+./file.lcg.mem.1:Peak memory use after a collection: 185564712
+./sort-pushdown.lcgt.mem.1:Peak memory use after a collection: 358676224
+./sort-pushdown.psu.mem.1:Peak memory use after a collection: 182417072
+./sort.lcgutp.mem.1:Peak memory use after a collection: 181562048
+./malloc.lcgutp.mem.1:Peak memory use after a collection: 182416632
+./file.psu.mem.1:Peak memory use after a collection: 182529296
+./sort-lists.ps.mem.1:Peak memory use after a collection: 183531248
+./sort-pushdown.psp.mem.1:Peak memory use after a collection: 183236536
+./sort.lcgut.mem.1:Peak memory use after a collection: 313050512
+./malloc.lcg.mem.1:Peak memory use after a collection: 182176648
+./sort-lists.psu.mem.1:Peak memory use after a collection: 183524080
+./sort-lists.lcgutp.mem.1:Peak memory use after a collection: 205333864
+./sort.psu.mem.1:Peak memory use after a collection: 182338968
+./malloc.ps.mem.1:Peak memory use after a collection: 181927544
+./sort.psp.mem.1:Peak memory use after a collection: 182887120
+./file.psp.mem.1:Peak memory use after a collection: 182075200
+./malloc.psu.mem.1:Peak memory use after a collection: 181939840
+./sort-pushdown.lcgut.mem.1:Peak memory use after a collection: 358678056
+./file.lcgutp.mem.1:Peak memory use after a collection: 187029664
+./malloc.lcgt.mem.1:Peak memory use after a collection: 182247264
+./sort.lcgt.mem.1:Peak memory use after a collection: 313041072
+./sort-pushdown.lcg.mem.1:Peak memory use after a collection: 232845288
+./sort.lcg.mem.1:Current memory use: 234991168
+./malloc.psp.mem.1:Current memory use: 184674648
+./malloc.lcgut.mem.1:Current memory use: 185879944
+./file.lcgt.mem.1:Current memory use: 188392296
+./sort-pushdown.lcgutp.mem.1:Current memory use: 199295512
+./sort.ps.mem.1:Current memory use: 195215776
+./sort-lists.psp.mem.1:Current memory use: 203055616
+./sort-pushdown.ps.mem.1:Current memory use: 209888096
+./file.lcgut.mem.1:Current memory use: 188463056
+./file.ps.mem.1:Current memory use: 197319192
+./file.lcg.mem.1:Current memory use: 210655736
+./sort-pushdown.lcgt.mem.1:Current memory use: 391625456
+./sort-pushdown.psu.mem.1:Current memory use: 209861072
+./sort.lcgutp.mem.1:Current memory use: 216984168
+./malloc.lcgutp.mem.1:Current memory use: 184665208
+./file.psu.mem.1:Current memory use: 197309960
+./sort-lists.ps.mem.1:Current memory use: 188360080
+./sort-pushdown.psp.mem.1:Current memory use: 198966192
+./sort.lcgut.mem.1:Current memory use: 315113272
+./malloc.lcg.mem.1:Current memory use: 185104616
+./sort-lists.psu.mem.1:Current memory use: 188299720
+./sort-lists.lcgutp.mem.1:Current memory use: 233416800
+./sort.psu.mem.1:Current memory use: 195216040
+./malloc.ps.mem.1:Current memory use: 193118512
+./sort.psp.mem.1:Current memory use: 185465880
+./file.psp.mem.1:Current memory use: 199377152
+./malloc.psu.mem.1:Current memory use: 193116696
+./sort-pushdown.lcgut.mem.1:Current memory use: 391627432
+./file.lcgutp.mem.1:Current memory use: 219400088
+./malloc.lcgt.mem.1:Current memory use: 185873360
+./sort.lcgt.mem.1:Current memory use: 315104304
+./sort-pushdown.lcg.mem.1:Current memory use: 261323088
+./file.lcgut.time.2:cpu time: 724 real time: 722 gc time: 52
+./sort-pushdown.lcgt.time.2:cpu time: 26213 real time: 26229 gc time: 1748
+./sort-pushdown.psu.time.2:cpu time: 356 real time: 357 gc time: 32
+./sort-pushdown.lcg.time.2:cpu time: 21877 real time: 21880 gc time: 776
+./sort-pushdown.psp.time.2:cpu time: 480 real time: 483 gc time: 32
+./sort.lcgut.time.2:cpu time: 21333 real time: 21334 gc time: 1504
+./sort-pushdown.lcgutp.time.2:cpu time: 192 real time: 190 gc time: 24
+./sort.psu.time.2:cpu time: 280 real time: 283 gc time: 32
+./file.lcgt.time.2:cpu time: 720 real time: 721 gc time: 52
+./sort-lists.psu.time.2:cpu time: 1024 real time: 1023 gc time: 44
+./malloc.lcgt.time.2:cpu time: 108 real time: 109 gc time: 24
+./sort-pushdown.ps.time.2:cpu time: 356 real time: 356 gc time: 28
+./sort.psp.time.2:cpu time: 368 real time: 366 gc time: 32
+./malloc.lcg.time.2:cpu time: 104 real time: 106 gc time: 28
+./sort-lists.lcgutp.time.2:cpu time: 2828 real time: 2829 gc time: 116
+./malloc.lcgutp.time.2:cpu time: 108 real time: 110 gc time: 24
+./file.psp.time.2:cpu time: 164 real time: 163 gc time: 24
+./sort-pushdown.lcgut.time.2:cpu time: 27573 real time: 27588 gc time: 1724
+./sort.lcg.time.2:cpu time: 19261 real time: 19261 gc time: 716
+./malloc.ps.time.2:cpu time: 116 real time: 116 gc time: 24
+./malloc.psu.time.2:cpu time: 116 real time: 118 gc time: 24
+./malloc.psp.time.2:cpu time: 88 real time: 88 gc time: 28
+./malloc.lcgut.time.2:cpu time: 116 real time: 113 gc time: 28
+./file.ps.time.2:cpu time: 272 real time: 272 gc time: 32
+./sort.lcgt.time.2:cpu time: 21313 real time: 21313 gc time: 1472
+./file.lcg.time.2:cpu time: 696 real time: 697 gc time: 44
+./sort.ps.time.2:cpu time: 296 real time: 297 gc time: 28
+./sort-lists.ps.time.2:cpu time: 1092 real time: 1109 gc time: 52
+./sort-lists.psp.time.2:cpu time: 2708 real time: 2709 gc time: 80
+./sort.lcgutp.time.2:cpu time: 300 real time: 298 gc time: 24
+./file.lcgutp.time.2:cpu time: 724 real time: 726 gc time: 48
+./file.psu.time.2:cpu time: 276 real time: 275 gc time: 28
+./sort-pushdown.psu.time.2:State count: 2557
+./sort-pushdown.psp.time.2:State count: 4646
+./sort.psu.time.2:State count: 1675
+./sort-lists.psu.time.2:State count: 13566
+./sort-pushdown.ps.time.2:State count: 2557
+./sort.psp.time.2:State count: 3329
+./file.psp.time.2:State count: 544
+./malloc.ps.time.2:State count: 101
+./malloc.psu.time.2:State count: 101
+./malloc.psp.time.2:State count: 105
+./file.ps.time.2:State count: 994
+./sort.ps.time.2:State count: 1675
+./sort-lists.ps.time.2:State count: 13566
+./sort-lists.psp.time.2:State count: 31354
+./file.psu.time.2:State count: 994
+./sort-pushdown.psu.time.2:Point count: 408
+./sort-pushdown.psp.time.2:Point count: 3914
+./sort.psu.time.2:Point count: 311
+./sort-lists.psu.time.2:Point count: 921
+./sort-pushdown.ps.time.2:Point count: 408
+./sort.psp.time.2:Point count: 2817
+./file.psp.time.2:Point count: 541
+./malloc.ps.time.2:Point count: 101
+./malloc.psu.time.2:Point count: 101
+./malloc.psp.time.2:Point count: 105
+./file.ps.time.2:Point count: 575
+./sort.ps.time.2:Point count: 311
+./sort-lists.ps.time.2:Point count: 921
+./sort-lists.psp.time.2:Point count: 22440
+./file.psu.time.2:Point count: 575
+./file.lcgut.time.2:States/second: 1545.0762829403607
+./sort-pushdown.lcgt.time.2:States/second: 1170.3791288427797
+./sort-pushdown.psu.time.2:States/second: 14365.168539325843
+./sort-pushdown.lcg.time.2:States/second: 1416.5256756138826
+./sort-pushdown.psp.time.2:States/second: 12036.269430051814
+./sort.lcgut.time.2:States/second: 1118.40007502579
+./sort-lists.lcgt.time.2:States/second: 779.9497399246472
+./sort-pushdown.lcgutp.time.2:States/second: 1694.7368421052631
+./sort.psu.time.2:States/second: 12884.615384615385
+./file.lcgt.time.2:States/second: 1547.2222222222222
+./sort-lists.psu.time.2:States/second: 18136.363636363636
+./malloc.lcgt.time.2:States/second: 1644.8598130841121
+./sort-pushdown.ps.time.2:States/second: 14695.402298850575
+./sort.psp.time.2:States/second: 11931.899641577062
+./malloc.lcg.time.2:States/second: 1676.1904761904761
+./sort-lists.lcgutp.time.2:States/second: 1204.5293701344656
+./malloc.lcgutp.time.2:States/second: 1636.3636363636363
+./file.psp.time.2:States/second: 8119.4029850746265
+./sort-lists.lcg.time.2:States/second: 822.5458441586186
+./sort-pushdown.lcgut.time.2:States/second: 1112.7026144975887
+./sort.lcg.time.2:States/second: 1305.8224692255753
+./malloc.ps.time.2:States/second: 3482.7586206896553
+./malloc.psu.time.2:States/second: 3482.7586206896553
+./malloc.psp.time.2:States/second: 3888.8888888888887
+./malloc.lcgut.time.2:States/second: 1571.4285714285713
+./file.ps.time.2:States/second: 10354.166666666666
+./sort.lcgt.time.2:States/second: 1119.5550131430716
+./file.lcg.time.2:States/second: 1599.713055954089
+./sort.ps.time.2:States/second: 11964.285714285714
+./sort-lists.ps.time.2:States/second: 17303.571428571428
+./sort-lists.psp.time.2:States/second: 12339.236521054703
+./sort.lcgutp.time.2:States/second: 1639.7306397306397
+./file.lcgutp.time.2:States/second: 1577.9310344827586
+./file.psu.time.2:States/second: 10247.422680412372
+./sort-lists.lcgut.time.2:States/second: 758.3495198504185
+./file.lcgut.time.2:Blame sites, tblames: 50, 1
+./sort-pushdown.lcgt.time.2:Blame sites, tblames: 1697, 0
+./sort-pushdown.psu.time.2:Blame sites, blames: 11, 2
+./sort-pushdown.lcg.time.2:Blame sites, tblames: 1718, 0
+./sort-pushdown.psp.time.2:Blame sites, blames: 49, 0
+./sort.lcgut.time.2:Blame sites, tblames: 1630, 0
+./sort-pushdown.lcgutp.time.2:Blame sites, tblames: 2, 0
+./sort.psu.time.2:Blame sites, blames: 8, 0
+./file.lcgt.time.2:Blame sites, tblames: 50, 1
+./sort-lists.psu.time.2:Blame sites, blames: 17, 4
+./malloc.lcgt.time.2:Blame sites, tblames: 5, 1
+./sort-pushdown.ps.time.2:Blame sites, blames: 11, 2
+./sort.psp.time.2:Blame sites, blames: 45, 0
+./malloc.lcg.time.2:Blame sites, tblames: 5, 1
+./sort-lists.lcgutp.time.2:Blame sites, tblames: 15, 0
+./malloc.lcgutp.time.2:Blame sites, tblames: 5, 1
+./file.psp.time.2:Blame sites, blames: 24, 2
+./sort-pushdown.lcgut.time.2:Blame sites, tblames: 1697, 0
+./sort.lcg.time.2:Blame sites, tblames: 1723, 0
+./malloc.ps.time.2:Blame sites, blames: 5, 1
+./malloc.psu.time.2:Blame sites, blames: 5, 1
+./malloc.psp.time.2:Blame sites, blames: 5, 1
+./malloc.lcgut.time.2:Blame sites, tblames: 5, 1
+./file.ps.time.2:Blame sites, blames: 27, 2
+./sort.lcgt.time.2:Blame sites, tblames: 1630, 0
+./file.lcg.time.2:Blame sites, tblames: 51, 1
+./sort.ps.time.2:Blame sites, blames: 8, 0
+./sort-lists.ps.time.2:Blame sites, blames: 17, 4
+./sort-lists.psp.time.2:Blame sites, blames: 290, 9
+./sort.lcgutp.time.2:Blame sites, tblames: 5, 0
+./file.lcgutp.time.2:Blame sites, tblames: 50, 1
+./file.psu.time.2:Blame sites, blames: 27, 2
+./sort-lists.lcgt.time.2:Result: Exhausted memory
+./sort-lists.lcg.time.2:Result: Exhausted memory
+./sort-lists.lcgut.time.2:Result: Exhausted memory
+./sort-pushdown.psp.mem.2:Peak memory use after a collection: 183240880
+./sort-pushdown.lcgt.mem.2:Peak memory use after a collection: 358697456
+./sort.lcgutp.mem.2:Peak memory use after a collection: 181556464
+./file.lcgutp.mem.2:Peak memory use after a collection: 187029040
+./malloc.lcgt.mem.2:Peak memory use after a collection: 182247120
+./malloc.ps.mem.2:Peak memory use after a collection: 181928152
+./sort-pushdown.lcg.mem.2:Peak memory use after a collection: 232952352
+./file.ps.mem.2:Peak memory use after a collection: 182501600
+./malloc.psu.mem.2:Peak memory use after a collection: 181943520
+./sort.ps.mem.2:Peak memory use after a collection: 182321760
+./malloc.lcg.mem.2:Peak memory use after a collection: 182232544
+./sort-pushdown.ps.mem.2:Peak memory use after a collection: 182400464
+./malloc.psp.mem.2:Peak memory use after a collection: 181795184
+./sort-lists.psp.mem.2:Peak memory use after a collection: 190662888
+./sort.psp.mem.2:Peak memory use after a collection: 182884656
+./file.lcgt.mem.2:Peak memory use after a collection: 188005048
+./malloc.lcgutp.mem.2:Peak memory use after a collection: 182426128
+./file.psu.mem.2:Peak memory use after a collection: 182529456
+./sort.lcg.mem.2:Peak memory use after a collection: 218623880
+./sort-lists.psu.mem.2:Peak memory use after a collection: 183588208
+./sort.psu.mem.2:Peak memory use after a collection: 182335240
+./sort.lcgut.mem.2:Peak memory use after a collection: 313025800
+./sort-lists.ps.mem.2:Peak memory use after a collection: 183555224
+./sort-lists.lcgutp.mem.2:Peak memory use after a collection: 205323400
+./sort.lcgt.mem.2:Peak memory use after a collection: 313035840
+./sort-pushdown.lcgut.mem.2:Peak memory use after a collection: 358665448
+./sort-pushdown.psu.mem.2:Peak memory use after a collection: 182414720
+./file.lcgut.mem.2:Peak memory use after a collection: 188053416
+./file.psp.mem.2:Peak memory use after a collection: 182077384
+./file.lcg.mem.2:Peak memory use after a collection: 185566496
+./malloc.lcgut.mem.2:Peak memory use after a collection: 182258488
+./sort-pushdown.lcgutp.mem.2:Peak memory use after a collection: 181515976
+./sort-pushdown.psp.mem.2:Current memory use: 198970536
+./sort-pushdown.lcgt.mem.2:Current memory use: 391646688
+./sort.lcgutp.mem.2:Current memory use: 216979616
+./file.lcgutp.mem.2:Current memory use: 219402248
+./malloc.lcgt.mem.2:Current memory use: 185873720
+./malloc.ps.mem.2:Current memory use: 193119120
+./sort-pushdown.lcg.mem.2:Current memory use: 261430280
+./file.ps.mem.2:Current memory use: 197317336
+./malloc.psu.mem.2:Current memory use: 193120376
+./sort.ps.mem.2:Current memory use: 195215592
+./malloc.lcg.mem.2:Current memory use: 185160200
+./sort-pushdown.ps.mem.2:Current memory use: 209878864
+./malloc.psp.mem.2:Current memory use: 184674616
+./sort-lists.psp.mem.2:Current memory use: 203130688
+./sort.psp.mem.2:Current memory use: 185463416
+./file.lcgt.mem.2:Current memory use: 188393184
+./malloc.lcgutp.mem.2:Current memory use: 184674704
+./file.psu.mem.2:Current memory use: 197310120
+./sort.lcg.mem.2:Current memory use: 235013080
+./sort-lists.psu.mem.2:Current memory use: 188363848
+./sort.psu.mem.2:Current memory use: 195212312
+./sort.lcgut.mem.2:Current memory use: 315088560
+./sort-lists.ps.mem.2:Current memory use: 188384056
+./sort-lists.lcgutp.mem.2:Current memory use: 233408984
+./sort.lcgt.mem.2:Current memory use: 315098600
+./sort-pushdown.lcgut.mem.2:Current memory use: 391614680
+./sort-pushdown.psu.mem.2:Current memory use: 209858720
+./file.lcgut.mem.2:Current memory use: 188462600
+./file.psp.mem.2:Current memory use: 199378272
+./file.lcg.mem.2:Current memory use: 210656952
+./malloc.lcgut.mem.2:Current memory use: 185890568
+./sort-pushdown.lcgutp.mem.2:Current memory use: 199297160
+./sort-pushdown.lcgutp.time.3:cpu time: 192 real time: 193 gc time: 28
+./sort.ps.time.3:cpu time: 284 real time: 286 gc time: 32
+./malloc.lcgt.time.3:cpu time: 112 real time: 112 gc time: 24
+./file.lcgut.time.3:cpu time: 756 real time: 757 gc time: 56
+./sort.psu.time.3:cpu time: 288 real time: 285 gc time: 28
+./sort-lists.psu.time.3:cpu time: 1032 real time: 1030 gc time: 48
+./malloc.psu.time.3:cpu time: 120 real time: 118 gc time: 24
+./malloc.lcgut.time.3:cpu time: 108 real time: 109 gc time: 28
+./file.ps.time.3:cpu time: 272 real time: 274 gc time: 28
+./sort-lists.ps.time.3:cpu time: 1028 real time: 1030 gc time: 44
+./sort-lists.lcgutp.time.3:cpu time: 2836 real time: 2836 gc time: 116
+./malloc.psp.time.3:cpu time: 88 real time: 86 gc time: 24
+./malloc.lcgutp.time.3:cpu time: 112 real time: 109 gc time: 28
+./sort.lcg.time.3:cpu time: 18089 real time: 18103 gc time: 696
+./file.lcgutp.time.3:cpu time: 736 real time: 739 gc time: 52
+./file.psu.time.3:cpu time: 276 real time: 277 gc time: 36
+./file.psp.time.3:cpu time: 164 real time: 162 gc time: 28
+./sort.lcgt.time.3:cpu time: 21481 real time: 21482 gc time: 1456
+./sort-pushdown.psp.time.3:cpu time: 480 real time: 483 gc time: 32
+./sort-pushdown.psu.time.3:cpu time: 356 real time: 357 gc time: 28
+./sort-pushdown.lcgt.time.3:cpu time: 26533 real time: 26553 gc time: 1680
+./sort-pushdown.ps.time.3:cpu time: 360 real time: 359 gc time: 32
+./sort.lcgutp.time.3:cpu time: 300 real time: 300 gc time: 24
+./sort-lists.psp.time.3:cpu time: 2692 real time: 2689 gc time: 80
+./sort-pushdown.lcg.time.3:cpu time: 21325 real time: 21323 gc time: 784
+./malloc.ps.time.3:cpu time: 116 real time: 116 gc time: 24
+./sort-pushdown.lcgut.time.3:cpu time: 26965 real time: 26987 gc time: 1684
+./sort.lcgut.time.3:cpu time: 21649 real time: 21651 gc time: 1476
+./malloc.lcg.time.3:cpu time: 104 real time: 104 gc time: 24
+./file.lcgt.time.3:cpu time: 736 real time: 733 gc time: 60
+./file.lcg.time.3:cpu time: 696 real time: 698 gc time: 40
+./sort.psp.time.3:cpu time: 360 real time: 361 gc time: 32
+./sort.ps.time.3:State count: 1675
+./sort.psu.time.3:State count: 1675
+./sort-lists.psu.time.3:State count: 13566
+./malloc.psu.time.3:State count: 101
+./file.ps.time.3:State count: 994
+./sort-lists.ps.time.3:State count: 13566
+./malloc.psp.time.3:State count: 105
+./file.psu.time.3:State count: 994
+./file.psp.time.3:State count: 544
+./sort-pushdown.psp.time.3:State count: 4646
+./sort-pushdown.psu.time.3:State count: 2557
+./sort-pushdown.ps.time.3:State count: 2557
+./sort-lists.psp.time.3:State count: 31354
+./malloc.ps.time.3:State count: 101
+./sort.psp.time.3:State count: 3329
+./sort.ps.time.3:Point count: 311
+./sort.psu.time.3:Point count: 311
+./sort-lists.psu.time.3:Point count: 921
+./malloc.psu.time.3:Point count: 101
+./file.ps.time.3:Point count: 575
+./sort-lists.ps.time.3:Point count: 921
+./malloc.psp.time.3:Point count: 105
+./file.psu.time.3:Point count: 575
+./file.psp.time.3:Point count: 541
+./sort-pushdown.psp.time.3:Point count: 3914
+./sort-pushdown.psu.time.3:Point count: 408
+./sort-pushdown.ps.time.3:Point count: 408
+./sort-lists.psp.time.3:Point count: 22440
+./malloc.ps.time.3:Point count: 101
+./sort.psp.time.3:Point count: 2817
+./sort-pushdown.lcgutp.time.3:States/second: 1668.3937823834196
+./sort.ps.time.3:States/second: 13085.9375
+./malloc.lcgt.time.3:States/second: 1571.4285714285713
+./file.lcgut.time.3:States/second: 1473.5449735449736
+./sort.psu.time.3:States/second: 12984.496124031008
+./sort-lists.psu.time.3:States/second: 18063.914780292944
+./malloc.psu.time.3:States/second: 3482.7586206896553
+./malloc.lcgut.time.3:States/second: 1614.6788990825687
+./file.ps.time.3:States/second: 10354.166666666666
+./sort-lists.ps.time.3:States/second: 17944.444444444445
+./sort-lists.lcg.time.3:States/second: 785.4402402722835
+./sort-lists.lcgutp.time.3:States/second: 1201.1291460832745
+./malloc.psp.time.3:States/second: 3888.8888888888887
+./malloc.lcgutp.time.3:States/second: 1666.6666666666667
+./sort.lcg.time.3:States/second: 1389.4661213661986
+./sort-lists.lcgut.time.3:States/second: 781.4361502780661
+./file.lcgutp.time.3:States/second: 1550.1355013550135
+./file.psu.time.3:States/second: 10040.40404040404
+./sort-lists.lcgt.time.3:States/second: 779.4753144008657
+./file.psp.time.3:States/second: 8369.23076923077
+./sort.lcgt.time.3:States/second: 1110.743724677502
+./sort-pushdown.psp.time.3:States/second: 11974.226804123711
+./sort-pushdown.psu.time.3:States/second: 14528.40909090909
+./sort-pushdown.lcgt.time.3:States/second: 1156.09223118077
+./sort-pushdown.ps.time.3:States/second: 14695.402298850575
+./sort.lcgutp.time.3:States/second: 1623.3333333333333
+./sort-lists.psp.time.3:States/second: 12437.128123760413
+./sort-pushdown.lcg.time.3:States/second: 1453.4790972645803
+./malloc.ps.time.3:States/second: 3482.7586206896553
+./sort-pushdown.lcgut.time.3:States/second: 1137.4925860023725
+./sort.lcgut.time.3:States/second: 1102.1209740769834
+./malloc.lcg.time.3:States/second: 1692.3076923076924
+./file.lcgt.time.3:States/second: 1521.8579234972678
+./file.lcg.time.3:States/second: 1597.4212034383954
+./sort.psp.time.3:States/second: 11931.899641577062
+./sort-pushdown.lcgutp.time.3:Blame sites, tblames: 2, 0
+./sort.ps.time.3:Blame sites, blames: 8, 0
+./malloc.lcgt.time.3:Blame sites, tblames: 5, 1
+./file.lcgut.time.3:Blame sites, tblames: 50, 1
+./sort.psu.time.3:Blame sites, blames: 8, 0
+./sort-lists.psu.time.3:Blame sites, blames: 17, 4
+./malloc.psu.time.3:Blame sites, blames: 5, 1
+./malloc.lcgut.time.3:Blame sites, tblames: 5, 1
+./file.ps.time.3:Blame sites, blames: 27, 2
+./sort-lists.ps.time.3:Blame sites, blames: 17, 4
+./sort-lists.lcgutp.time.3:Blame sites, tblames: 15, 0
+./malloc.psp.time.3:Blame sites, blames: 5, 1
+./malloc.lcgutp.time.3:Blame sites, tblames: 5, 1
+./sort.lcg.time.3:Blame sites, tblames: 1723, 0
+./file.lcgutp.time.3:Blame sites, tblames: 50, 1
+./file.psu.time.3:Blame sites, blames: 27, 2
+./file.psp.time.3:Blame sites, blames: 24, 2
+./sort.lcgt.time.3:Blame sites, tblames: 1630, 0
+./sort-pushdown.psp.time.3:Blame sites, blames: 49, 0
+./sort-pushdown.psu.time.3:Blame sites, blames: 11, 2
+./sort-pushdown.lcgt.time.3:Blame sites, tblames: 1697, 0
+./sort-pushdown.ps.time.3:Blame sites, blames: 11, 2
+./sort.lcgutp.time.3:Blame sites, tblames: 5, 0
+./sort-lists.psp.time.3:Blame sites, blames: 290, 9
+./sort-pushdown.lcg.time.3:Blame sites, tblames: 1718, 0
+./malloc.ps.time.3:Blame sites, blames: 5, 1
+./sort-pushdown.lcgut.time.3:Blame sites, tblames: 1697, 0
+./sort.lcgut.time.3:Blame sites, tblames: 1630, 0
+./malloc.lcg.time.3:Blame sites, tblames: 5, 1
+./file.lcgt.time.3:Blame sites, tblames: 50, 1
+./file.lcg.time.3:Blame sites, tblames: 51, 1
+./sort.psp.time.3:Blame sites, blames: 45, 0
+./sort-lists.lcg.time.3:Result: Exhausted memory
+./sort-lists.lcgut.time.3:Result: Exhausted memory
+./sort-lists.lcgt.time.3:Result: Exhausted memory
+./sort.lcgutp.mem.3:Peak memory use after a collection: 181559232
+./malloc.lcg.mem.3:Peak memory use after a collection: 182174232
+./file.lcgt.mem.3:Peak memory use after a collection: 188005664
+./sort-lists.lcgutp.mem.3:Peak memory use after a collection: 205330680
+./file.ps.mem.3:Peak memory use after a collection: 182504080
+./malloc.lcgt.mem.3:Peak memory use after a collection: 182251176
+./file.lcg.mem.3:Peak memory use after a collection: 185566272
+./sort-pushdown.lcgt.mem.3:Peak memory use after a collection: 358671792
+./sort-pushdown.lcgutp.mem.3:Peak memory use after a collection: 181520496
+./file.psu.mem.3:Peak memory use after a collection: 182529520
+./sort.ps.mem.3:Peak memory use after a collection: 182322448
+./sort-pushdown.lcgut.mem.3:Peak memory use after a collection: 358650904
+./sort-lists.psu.mem.3:Peak memory use after a collection: 183528688
+./sort-pushdown.psp.mem.3:Peak memory use after a collection: 183246224
+./sort-pushdown.ps.mem.3:Peak memory use after a collection: 182402720
+./malloc.lcgut.mem.3:Peak memory use after a collection: 182247744
+./sort.psu.mem.3:Peak memory use after a collection: 182335216
+./sort.lcg.mem.3:Peak memory use after a collection: 218591896
+./sort-pushdown.lcg.mem.3:Peak memory use after a collection: 232999808
+./malloc.psu.mem.3:Peak memory use after a collection: 181948320
+./sort-lists.ps.mem.3:Peak memory use after a collection: 183529720
+./malloc.lcgutp.mem.3:Peak memory use after a collection: 182420768
+./sort.lcgt.mem.3:Peak memory use after a collection: 313024552
+./sort.lcgut.mem.3:Peak memory use after a collection: 313050232
+./malloc.ps.mem.3:Peak memory use after a collection: 181930976
+./file.lcgutp.mem.3:Peak memory use after a collection: 187026264
+./file.psp.mem.3:Peak memory use after a collection: 182076024
+./file.lcgut.mem.3:Peak memory use after a collection: 188053776
+./sort-lists.psp.mem.3:Peak memory use after a collection: 190599328
+./sort.psp.mem.3:Peak memory use after a collection: 182944032
+./malloc.psp.mem.3:Peak memory use after a collection: 181852864
+./sort-pushdown.psu.mem.3:Peak memory use after a collection: 182416056
+./sort.lcgutp.mem.3:Current memory use: 216981928
+./malloc.lcg.mem.3:Current memory use: 185101968
+./file.lcgt.mem.3:Current memory use: 188393800
+./sort-lists.lcgutp.mem.3:Current memory use: 233413616
+./file.ps.mem.3:Current memory use: 197319816
+./malloc.lcgt.mem.3:Current memory use: 185877304
+./file.lcg.mem.3:Current memory use: 210656728
+./sort-pushdown.lcgt.mem.3:Current memory use: 391621024
+./sort-pushdown.lcgutp.mem.3:Current memory use: 199302472
+./file.psu.mem.3:Current memory use: 197310184
+./sort.ps.mem.3:Current memory use: 195216280
+./sort-pushdown.lcgut.mem.3:Current memory use: 391623944
+./sort-lists.psu.mem.3:Current memory use: 188304328
+./sort-pushdown.psp.mem.3:Current memory use: 198975880
+./sort-pushdown.ps.mem.3:Current memory use: 209881120
+./malloc.lcgut.mem.3:Current memory use: 185880072
+./sort.psu.mem.3:Current memory use: 195212288
+./sort.lcg.mem.3:Current memory use: 234978144
+./sort-pushdown.lcg.mem.3:Current memory use: 261477736
+./malloc.psu.mem.3:Current memory use: 193125176
+./sort-lists.ps.mem.3:Current memory use: 188358552
+./malloc.lcgutp.mem.3:Current memory use: 184669200
+./sort.lcgt.mem.3:Current memory use: 315059320
+./sort.lcgut.mem.3:Current memory use: 315112832
+./malloc.ps.mem.3:Current memory use: 193121944
+./file.lcgutp.mem.3:Current memory use: 219396688
+./file.psp.mem.3:Current memory use: 199377976
+./file.lcgut.mem.3:Current memory use: 188462960
+./sort-lists.psp.mem.3:Current memory use: 203063616
+./sort.psp.mem.3:Current memory use: 185522792
+./malloc.psp.mem.3:Current memory use: 184732296
+./sort-pushdown.psu.mem.3:Current memory use: 209860056
+./malloc.lcg.time.4:cpu time: 104 real time: 106 gc time: 24
+./sort.lcgut.time.4:cpu time: 22069 real time: 22107 gc time: 1504
+./file.psu.time.4:cpu time: 288 real time: 295 gc time: 32
+./file.lcgutp.time.4:cpu time: 740 real time: 742 gc time: 48
+./sort-pushdown.psu.time.4:cpu time: 356 real time: 354 gc time: 32
+./malloc.lcgt.time.4:cpu time: 112 real time: 109 gc time: 24
+./file.lcgut.time.4:cpu time: 716 real time: 719 gc time: 56
+./sort.lcg.time.4:cpu time: 19217 real time: 19230 gc time: 728
+./file.lcg.time.4:cpu time: 688 real time: 685 gc time: 48
+./malloc.lcgutp.time.4:cpu time: 108 real time: 110 gc time: 24
+./malloc.lcgut.time.4:cpu time: 108 real time: 110 gc time: 24
+./sort-pushdown.lcgt.time.4:cpu time: 26393 real time: 26415 gc time: 1716
+./malloc.psp.time.4:cpu time: 84 real time: 86 gc time: 24
+./sort.lcgt.time.4:cpu time: 22549 real time: 22568 gc time: 1500
+./malloc.ps.time.4:cpu time: 116 real time: 118 gc time: 24
+./sort-lists.ps.time.4:cpu time: 1048 real time: 1046 gc time: 52
+./sort-pushdown.psp.time.4:cpu time: 488 real time: 486 gc time: 36
+./file.lcgt.time.4:cpu time: 740 real time: 740 gc time: 56
+./sort-pushdown.lcg.time.4:cpu time: 21057 real time: 21073 gc time: 821
+./sort-lists.lcgutp.time.4:cpu time: 2828 real time: 2826 gc time: 124
+./sort-pushdown.lcgutp.time.4:cpu time: 188 real time: 191 gc time: 24
+./sort.psu.time.4:cpu time: 288 real time: 286 gc time: 28
+./file.psp.time.4:cpu time: 160 real time: 161 gc time: 28
+./sort.lcgutp.time.4:cpu time: 300 real time: 299 gc time: 24
+./sort.psp.time.4:cpu time: 368 real time: 368 gc time: 32
+./sort-pushdown.ps.time.4:cpu time: 360 real time: 361 gc time: 28
+./malloc.psu.time.4:cpu time: 120 real time: 118 gc time: 28
+./sort.ps.time.4:cpu time: 284 real time: 283 gc time: 32
+./sort-lists.psp.time.4:cpu time: 2780 real time: 2780 gc time: 88
+./sort-lists.psu.time.4:cpu time: 1040 real time: 1040 gc time: 52
+./file.ps.time.4:cpu time: 276 real time: 274 gc time: 32
+./sort-pushdown.lcgut.time.4:cpu time: 26769 real time: 26793 gc time: 1732
+./file.psu.time.4:State count: 994
+./sort-pushdown.psu.time.4:State count: 2557
+./malloc.psp.time.4:State count: 105
+./malloc.ps.time.4:State count: 101
+./sort-lists.ps.time.4:State count: 13566
+./sort-pushdown.psp.time.4:State count: 4646
+./sort.psu.time.4:State count: 1675
+./file.psp.time.4:State count: 544
+./sort.psp.time.4:State count: 3329
+./sort-pushdown.ps.time.4:State count: 2557
+./malloc.psu.time.4:State count: 101
+./sort.ps.time.4:State count: 1675
+./sort-lists.psp.time.4:State count: 31354
+./sort-lists.psu.time.4:State count: 13566
+./file.ps.time.4:State count: 994
+./file.psu.time.4:Point count: 575
+./sort-pushdown.psu.time.4:Point count: 408
+./malloc.psp.time.4:Point count: 105
+./malloc.ps.time.4:Point count: 101
+./sort-lists.ps.time.4:Point count: 921
+./sort-pushdown.psp.time.4:Point count: 3914
+./sort.psu.time.4:Point count: 311
+./file.psp.time.4:Point count: 541
+./sort.psp.time.4:Point count: 2817
+./sort-pushdown.ps.time.4:Point count: 408
+./malloc.psu.time.4:Point count: 101
+./sort.ps.time.4:Point count: 311
+./sort-lists.psp.time.4:Point count: 22440
+./sort-lists.psu.time.4:Point count: 921
+./file.ps.time.4:Point count: 575
+./malloc.lcg.time.4:States/second: 1676.1904761904761
+./sort.lcgut.time.4:States/second: 1079.3284460132138
+./file.psu.time.4:States/second: 9745.098039215687
+./file.lcgutp.time.4:States/second: 1543.859649122807
+./sort-pushdown.psu.time.4:States/second: 14611.42857142857
+./malloc.lcgt.time.4:States/second: 1614.6788990825687
+./file.lcgut.time.4:States/second: 1551.532033426184
+./sort-lists.lcgut.time.4:States/second: 792.4862607917047
+./sort.lcg.time.4:States/second: 1307.996462202799
+./sort-lists.lcgt.time.4:States/second: 761.1655297067226
+./file.lcg.time.4:States/second: 1630.1169590643274
+./malloc.lcgutp.time.4:States/second: 1636.3636363636363
+./malloc.lcgut.time.4:States/second: 1600.0
+./sort-lists.lcg.time.4:States/second: 767.9348393075219
+./sort-pushdown.lcgt.time.4:States/second: 1162.1345250719587
+./malloc.psp.time.4:States/second: 3888.8888888888887
+./sort.lcgt.time.4:States/second: 1057.2720422004522
+./malloc.ps.time.4:States/second: 3482.7586206896553
+./sort-lists.ps.time.4:States/second: 17873.517786561264
+./sort-pushdown.psp.time.4:States/second: 11882.35294117647
+./file.lcgt.time.4:States/second: 1507.4424898511502
+./sort-pushdown.lcg.time.4:States/second: 1470.7306651474148
+./sort-lists.lcgutp.time.4:States/second: 1205.3824362606233
+./sort-pushdown.lcgutp.time.4:States/second: 1694.7368421052631
+./sort.psu.time.4:States/second: 12984.496124031008
+./file.psp.time.4:States/second: 8242.424242424242
+./sort.lcgutp.time.4:States/second: 1634.2281879194632
+./sort.psp.time.4:States/second: 11599.303135888502
+./sort-pushdown.ps.time.4:States/second: 14866.279069767443
+./malloc.psu.time.4:States/second: 3482.7586206896553
+./sort.ps.time.4:States/second: 13085.9375
+./sort-lists.psp.time.4:States/second: 11999.234596249522
+./sort-lists.psu.time.4:States/second: 17779.816513761467
+./file.ps.time.4:States/second: 10463.157894736842
+./sort-pushdown.lcgut.time.4:States/second: 1145.7749897315261
+./malloc.lcg.time.4:Blame sites, tblames: 5, 1
+./sort.lcgut.time.4:Blame sites, tblames: 1630, 0
+./file.psu.time.4:Blame sites, blames: 27, 2
+./file.lcgutp.time.4:Blame sites, tblames: 50, 1
+./sort-pushdown.psu.time.4:Blame sites, blames: 11, 2
+./malloc.lcgt.time.4:Blame sites, tblames: 5, 1
+./file.lcgut.time.4:Blame sites, tblames: 50, 1
+./sort.lcg.time.4:Blame sites, tblames: 1723, 0
+./file.lcg.time.4:Blame sites, tblames: 51, 1
+./malloc.lcgutp.time.4:Blame sites, tblames: 5, 1
+./malloc.lcgut.time.4:Blame sites, tblames: 5, 1
+./sort-pushdown.lcgt.time.4:Blame sites, tblames: 1697, 0
+./malloc.psp.time.4:Blame sites, blames: 5, 1
+./sort.lcgt.time.4:Blame sites, tblames: 1630, 0
+./malloc.ps.time.4:Blame sites, blames: 5, 1
+./sort-lists.ps.time.4:Blame sites, blames: 17, 4
+./sort-pushdown.psp.time.4:Blame sites, blames: 49, 0
+./file.lcgt.time.4:Blame sites, tblames: 50, 1
+./sort-pushdown.lcg.time.4:Blame sites, tblames: 1718, 0
+./sort-lists.lcgutp.time.4:Blame sites, tblames: 15, 0
+./sort-pushdown.lcgutp.time.4:Blame sites, tblames: 2, 0
+./sort.psu.time.4:Blame sites, blames: 8, 0
+./file.psp.time.4:Blame sites, blames: 24, 2
+./sort.lcgutp.time.4:Blame sites, tblames: 5, 0
+./sort.psp.time.4:Blame sites, blames: 45, 0
+./sort-pushdown.ps.time.4:Blame sites, blames: 11, 2
+./malloc.psu.time.4:Blame sites, blames: 5, 1
+./sort.ps.time.4:Blame sites, blames: 8, 0
+./sort-lists.psp.time.4:Blame sites, blames: 290, 9
+./sort-lists.psu.time.4:Blame sites, blames: 17, 4
+./file.ps.time.4:Blame sites, blames: 27, 2
+./sort-pushdown.lcgut.time.4:Blame sites, tblames: 1697, 0
+./sort-lists.lcgut.time.4:Result: Exhausted memory
+./sort-lists.lcgt.time.4:Result: Exhausted memory
+./sort-lists.lcg.time.4:Result: Exhausted memory
+./malloc.lcg.mem.4:Peak memory use after a collection: 182172624
+./malloc.lcgutp.mem.4:Peak memory use after a collection: 182421840
+./malloc.lcgt.mem.4:Peak memory use after a collection: 182244640
+./malloc.lcgut.mem.4:Peak memory use after a collection: 182249144
+./sort-pushdown.lcgut.mem.4:Peak memory use after a collection: 358650016
+./malloc.ps.mem.4:Peak memory use after a collection: 181927128
+./file.psp.mem.4:Peak memory use after a collection: 182076008
+./malloc.psu.mem.4:Peak memory use after a collection: 181940544
+./file.lcgutp.mem.4:Peak memory use after a collection: 187031032
+./sort-pushdown.lcg.mem.4:Peak memory use after a collection: 232741144
+./file.psu.mem.4:Peak memory use after a collection: 182530448
+./sort-pushdown.lcgutp.mem.4:Peak memory use after a collection: 181514848
+./sort-pushdown.psp.mem.4:Peak memory use after a collection: 183239744
+./malloc.psp.mem.4:Peak memory use after a collection: 181793736
+./file.lcg.mem.4:Peak memory use after a collection: 185565496
+./file.lcgut.mem.4:Peak memory use after a collection: 188058344
+./file.lcgt.mem.4:Peak memory use after a collection: 188004184
+./sort-lists.psp.mem.4:Peak memory use after a collection: 190656576
+./file.ps.mem.4:Peak memory use after a collection: 182502800
+./sort-lists.ps.mem.4:Peak memory use after a collection: 183533392
+./sort.psp.mem.4:Peak memory use after a collection: 182883632
+./sort-pushdown.ps.mem.4:Peak memory use after a collection: 182402184
+./sort.lcgut.mem.4:Peak memory use after a collection: 313050424
+./sort-lists.psu.mem.4:Peak memory use after a collection: 183530592
+./sort.psu.mem.4:Peak memory use after a collection: 182337816
+./sort.lcgt.mem.4:Peak memory use after a collection: 313049648
+./sort-lists.lcgutp.mem.4:Peak memory use after a collection: 205328848
+./sort-pushdown.lcgt.mem.4:Peak memory use after a collection: 358685264
+./sort.ps.mem.4:Peak memory use after a collection: 182323168
+./sort-pushdown.psu.mem.4:Peak memory use after a collection: 182475512
+./sort.lcg.mem.4:Peak memory use after a collection: 218577936
+./sort.lcgutp.mem.4:Peak memory use after a collection: 181561064
+./malloc.lcg.mem.4:Current memory use: 185100280
+./malloc.lcgutp.mem.4:Current memory use: 184670632
+./malloc.lcgt.mem.4:Current memory use: 185870696
+./malloc.lcgut.mem.4:Current memory use: 185881208
+./sort-pushdown.lcgut.mem.4:Current memory use: 391623056
+./malloc.ps.mem.4:Current memory use: 193118096
+./file.psp.mem.4:Current memory use: 199376896
+./malloc.psu.mem.4:Current memory use: 193117400
+./file.lcgutp.mem.4:Current memory use: 219401296
+./sort-pushdown.lcg.mem.4:Current memory use: 261235200
+./file.psu.mem.4:Current memory use: 197311112
+./sort-pushdown.lcgutp.mem.4:Current memory use: 199296032
+./sort-pushdown.psp.mem.4:Current memory use: 198969400
+./malloc.psp.mem.4:Current memory use: 184675064
+./file.lcg.mem.4:Current memory use: 210655952
+./file.lcgut.mem.4:Current memory use: 188467528
+./file.lcgt.mem.4:Current memory use: 188392480
+./sort-lists.psp.mem.4:Current memory use: 203120864
+./file.ps.mem.4:Current memory use: 197318536
+./sort-lists.ps.mem.4:Current memory use: 188362224
+./sort.psp.mem.4:Current memory use: 185462392
+./sort-pushdown.ps.mem.4:Current memory use: 209880584
+./sort.lcgut.mem.4:Current memory use: 315113024
+./sort-lists.psu.mem.4:Current memory use: 188306232
+./sort.psu.mem.4:Current memory use: 195214984
+./sort.lcgt.mem.4:Current memory use: 315112248
+./sort-lists.lcgutp.mem.4:Current memory use: 233411784
+./sort-pushdown.lcgt.mem.4:Current memory use: 391634496
+./sort.ps.mem.4:Current memory use: 195217000
+./sort-pushdown.psu.mem.4:Current memory use: 209919512
+./sort.lcg.mem.4:Current memory use: 234964312
+./sort.lcgutp.mem.4:Current memory use: 216983080
