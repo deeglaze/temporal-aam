@@ -2,7 +2,7 @@
 
 Software systems are large, consist of many modules, and have invariants that are either outright inexpressible or too costly to express (and prove) in the language's static type system --- if it has one.
 %
-When this is the case, one might hope to rely on software contracts~\cite{dvanhorn:dvanhorn:meyer-eiffel} to give dynamic guarantees about the behavior of one's system.
+When this is the case, one might hope to rely on software contracts~\cite{dvanhorn:meyer-eiffel} to give dynamic guarantees about the behavior of one's system.
 %
 In modern, higher-order languages, the question of ``who violated the contract?'' becomes non-trivial, and we graduate to higher-order contracts ~\citep{dvanhorn:Findler2002Contracts} to blame the correct party responsible for any violation of these invariants.
 %
@@ -118,7 +118,7 @@ The concrete semantics would operate the same way regardless of GC, but this is 
 %%
 We built temporal higher-order contracts into our existing framework for analyzing a subset of Scheme \footnote{Model and benchmarks available online \url{http://github.com/dvanhorn/oaam/tree/thocon}}.
 %
-Our benchmarks are a collection of examples from \dfm's paper and implementation, along with a larger-than-toy example:
+Our benchmarks are a collection of examples from \dfm's paper and implementation:
 \paragraph{{\tt sort1}:}{\dfm's motivating example of a non-reentrant sort function where the given comparison function may not be called after sort returns\footnote{If sort stashes the comparator in a global and we call it afterwards, \dfm's implementation does not raise blame, whereas ours does.}.
 %
 The structural contract for {\tt sort1} is weak: {\tt (listof integer?) -> any/c}.
@@ -131,16 +131,30 @@ The structural contract for {\tt sort1} is weak: {\tt (listof integer?) -> any/c
 %%
 
 %%
-The analysis results and run times for our benchmark programs are in \autoref{fig:evaluation}, categorized by the additional machinery as labeled in the previous section.
+The analysis results and run times for our benchmark programs are in \autoref{fig:evaluation}, categorized by the additional machinery as labeled in the previous section ($m$ means used more than 2GiB limit).
 %
 Analyses without garbage collection used the global store widening to accelerate convergence.
 %%
 
 %%
-The minor variations to the sort example motivated our additional analytical machinery
+The minor variations to the sort example motivated our additional analytical machinery.
 %, \textbf{TO BE SEEN} and proved strong enough to verify the more complicated example of the FTP interaction.
 %
 No technique we employed could fully verify the {\tt malloc} example, since the protocol depends on being able to prove equality between values that are mutated and grown without bound; our abstraction for numbers is simple, so the mutated counter immediately jumps to \textbf{Int}$\top$, where comparisons conservatively both succeed and fail.
+%
+The {\tt file} example could be verified had we used a polyvariant allocation strategy, since it involved opening two files at the same time with the same handle allocation code.
+%%
+
+%%
+Notice that without a pushdown abstraction, abstract garbage collection searched a state space orders of magnitude more than with.
+%
+The $\Gamma$ and $\Gamma_\tau$ implementations do not use a pushdown abstraction, but they still can verify {\tt sort2}, which was meant to confound non-pushdown analyses.
+%
+The reason for this is that in AAM, continuations are allocated on the heap, so GC can reclaim them for better return flow predicition; recursive calls do not get the same precision boost.
+%
+The topic of making abstract GC more performant and feasible is an active area of research, most recently extended to pushdown abstractions \citep{dvanhorn:Earl2012Introspective}.
+%
+Although greater precision can increase the possible state space, clever abstractions combined with typical program structure can actually reduce the explored state space, as is evident by the dearth of visited blame sites in our most precise implementation.
 
 %%
 \section{Related Work}
