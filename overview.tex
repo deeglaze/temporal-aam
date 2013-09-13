@@ -5,26 +5,28 @@ We begin with a simple example that exhibits the expressiveness of temporal high
 The following example comes from the original work on temporal higher-order contracts, and its behavior led us to explore alternative semantics.
 %
 \newcommand{\sortid}{\mathit{sort}}
-\subsection{\dfm's sort example, revised} \label{sec:sort}
+\subsection{\dfm's sort example} \label{sec:sort}
 %
+This example presents the contract for a hypothetical $\sortid$ function which takes two arguments: a comparator and a list (of positive numbers), is non-reentrant, and furthermore cannot make its given comparator available to be called after it's done sorting.
+%
+We express the function component of the contract (with labels given to function components) like so:
+\begin{align*}
+  \sortid : (\mathit{cmp} : \mathit{Pos} \to \mathit{Pos} \to \mathit{Bool})\ (List\ Pos) \to (List\ Pos)
+\end{align*}
+
+We can express the temporal component of the contract in a natural way with the following:
 \renewcommand*{\arraystretch}{1.2}
 \newcommand*{\call}[1]{\scallev{#1}{\_}}
 \newcommand*{\ret}[1]{\sretev{#1}{\_}}
 \begin{align*}
- {\tt tmon}^{{\mathit{server}},{\mathit{client}}}_{\mathit{contract}}(\sortid &: (\mathit{cmp} : \mathit{Pos} \to \mathit{Pos} \to \mathit{Bool})\ (List\ Pos) \to (List\ Pos), \\
- &\stnot{(\stmany{\snonevent{\sortid(\_,\_)}} \sortid(\_,\_)~ \stmany{\snonevent{\retof{\sortid}(\_)}}~ \sortid(\_,\_))} \\
- \cap\  &(\stmany{\snonevent{\sortid(\_,\_)}}~ \sortid(?\mathit{cmp}, \_)~ \stmany{\snonevent{\retof{\sortid}(\_)}}~ \retof{\sortid}(\_)~ \stmany{\snonevent{\mathit{cmp}(\_,\_)}}), \\
- \mathit{sort}&\text{-}\mathit{implementation})
+ \stnot{(\sddd \sortid(\_,\_)~ \stmany{\snonevent{\retof{\sortid}(\_)}}~ \sddd~ \sortid(\_,\_))}
+ \cap \stnot{(\sddd~ \sortid(?\mathit{cmp}, \_)~ \sddd~ \retof{\sortid}(\_)~ \sddd~ \snonevent{\mathit{cmp}(\_,\_)})}
 \end{align*}
 %
 %%
-This example presents the contract for a hypothetical $\sortid$ function which takes two arguments: a comparator and a list (of positive numbers).
+These contracts are attached to a sort implementation with a special expression form, {\tt tmon}, that additionally requires labels for who are the contracted parties.
 %
-The temporal component is given after the structural component, a conjunction of two contracts (starting with $\neg$).
-%
-The first of these contracts states that a second call to $\sortid$ may not occur if there is no intervening return from $\sortid$, \ie, it is non-reentrant.
-%
-The second contract specifies a higher-order property; given a call to $\sortid$, its associated $\mathit{cmp}$ argument cannot be called after $\sortid$ returns.
+The second clause of the temporal component specifies a higher-order property; given a call to $\sortid$, its associated $\mathit{cmp}$ argument cannot be called after $\sortid$ returns.
 %
 Since $\mathit{cmp}$ will be wrapped with its higher-order contract at each call, which creates new values, the bindings for $\mathit{cmp}$ will be distinct across execution.
 %
@@ -109,7 +111,7 @@ Structural contracts include subsets of first-order data that satisfy a particul
 %%
 Temporal contracts include actions ($\mevent$), negated actions ($\snonevent{\mevent}$), action matching scoped over a following contract ($\stbind{\mevent}{\mtcon}$), concatenation ($\stseq{\mtcon}{\mtcon}$) (often written using juxtaposition), negated contracts ($\stnot{\mtcon}$), Kleene closure of events ($\stmany{\mtcon}$), union ($\stOr{\isset{\mtcon}}$), intersection ($\stAnd{\isset{\mtcon}}$), the empty temporal contract ($\epsilon$), and an open temporal contract closed by an environment ($\motcon, \menv$).
 %
-We consider the fail contract $\bot$ as a macro for $\stOr{\setof{}}$.
+We consider the fail contract $\bot$ as a macro for $\stOr{\setof{}}$, and \dfm's universal contract $\sddd$ a macro for $\stAnd{\setof{}}$.
 %
 The difference between $\snonevent{\mevent}$ and $\stnot{\mtcon}$ is that the first must be an action and force time to step forward once, whereas the second may match arbitrarily many actions.
 %%

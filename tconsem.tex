@@ -58,7 +58,7 @@ Contracts that state anything about how a trace may not end would allow just suc
 %
 %Additionally, if one writes a contract more carefully to reject extensions of bad traces, there isn't an obvious operational interpretation that allows early failure.
 %
-For example, the denotation of temporal contracts from \dfm{} allows $\mevent\mevent \in \prefixes(\denote{\stnot{\mevent}})$, and because of prefix closure, $\mevent \in \prefixes(\denote{\stnot{\mevent}})$!
+For example, the denotation of temporal contracts from \dfm{} allows $\mevent\mevent \in \prefixes(\denote{\stnot{\mevent}})$, and because of prefix closure, $\mevent \in \prefixes(\denote{\stnot{\mevent}})$.
 %
 Temporal contract failure should not be contingent on future observations; an effective monitor should blame \emph{as soon as} a contract is violated.
 %%
@@ -75,26 +75,6 @@ The temporal component of the example discussed in \autoref{sec:sort} was origin
 In contrast to our restatement, the flat use of \emph{labels} instead of \emph{bindings} would cause a second call to a supposedly-correct $\sortid$ to fail, since it internally calls the comparator of the same label, but of a different monitor construction.
 %
 Their implementation works around this by additionally adding a monitor-wrapping action, that generates a new label to pair with the function label to uniquely identify it.
-%
-Notice also the use of $\sddd$ instead of $\stmany{\snonevent{\mathit{following\text{-}event}}}$.
-%%
-
-%% TODO: restate
-A third shortcoming is that \dfm's universal contract $\sddd$ was intended to be interpreted lazily, though was not in the formal semantics.
-%
-Without laziness, the original statement of $\sortid$'s temporal contract does not have a definitive blame point: by the second clause, we cannot eventually call $\mathit{cmp}$, but is the first call of $\mathit{cmp}$ the one that was meant, or is it part of the $\sddd$? To be sure, let's keep going.
-%
-Laziness makes the first sight of a call to $\mathit{cmp}$ a definite transition out of the $\sddd$.
-%
-We do not directly address the issue of laziness in this work, but rather restate contracts to work around this interpretation.
-%
-We conjecture that this nuance in the semantics is why a program that blatantly violates this contract by storing the comparison function in a global, and calling it afterwards, is why \dfm's implementation did not blame.
-% laziness poses challenges to the derivative parsing approach we have taken, so we leave the study of laziness to future work.
-%%
-%% FIXME: location
-%\dfm's implementation also includes call/return matching via a different binding at the call site to eventually use in the matching return.
-%
-%We leave call/return matching to future work, as it is not necessary to verify the motivating examples.
 %%
 
 \subsection{Our semantics}
@@ -142,7 +122,7 @@ The reason for this is that control should flow back to the timeline considered 
 It is easy enough to amend the structural contracts to reflect the fact that a binding is considered a function in the temporal contract.
 
 \begin{theorem}[Prefix closure]\label{thm:prefix-closed}
-  $\prefixes(\denotetcone{\mtcon}{\menv}) = \denotetcone{\mtcon}{\menv}$
+  $\prefixes(\denotetcone{\motcon}{\menv}) = \denotetcone{\motcon}{\menv}$
 \end{theorem}
 
 %\FloatBarrier

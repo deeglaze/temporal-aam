@@ -4,31 +4,29 @@ Software systems are large, consist of many modules, and have invariants that ar
 %
 When this is the case, one might hope to rely on software contracts~\cite{dvanhorn:meyer-eiffel} to give dynamic guarantees about the behavior of one's system.
 %
-In modern, higher-order languages, the question of ``who violated the contract?'' becomes non-trivial, and we graduate to higher-order contracts ~\citep{dvanhorn:Findler2002Contracts} to blame the correct party responsible for any violation of these invariants.
+In modern higher-order languages, the question of ``who violated the contract?'' becomes non-trivial, and we need higher-order contracts~\citep{dvanhorn:Findler2002Contracts} to blame the correct party responsible for any violation of these invariants.
 %
-A proposed system of \emph{temporal higher-order contracts}~\citep{ianjohnson:dfm:icfp2011} (henceform DFM) provides a linguistic mechanism to describe temporal properties of behavioral values flowing through the program.
+Disney, Flannagan and McCarthy's proposed a system of \emph{temporal higher-order contracts}~\citep{ianjohnson:dfm:icfp2011} (DFM) to provide a linguistic mechanism for describing temporal properties of behavioral values flowing through the program.
 %
 %when traditionally such properties are checked extra-linguistically by model-checking an abstracted form of the program.
 %
-Example temporal properties are, ``a file can only be closed if it has been opened'' and, in the higher-order setting, ``if function A is given a function B, then that B may not be called once A returns.''
+Example temporal properties are, ``a file can only be closed if it has been opened'' and, in the higher-order setting, ``if function A is given a function B, then B may not be called once A returns.''
 %
 Such invariants are important for interfaces that have set-up and tear-down protocols to follow, or even pure interfaces that have particular compositions of calls needed to construct some object.
 %%
 
 %%
-There are downsides to software contracts, however.
+There are downsides to software contracts: no static guarantees, and to a lesser extent, runtime overhead.
 %
-Since contracts are strictly for runtime monitoring, they do not themselves ensure correctness --- they help the process of constructing correct programs.
+Since contracts are runtime monitors, they do not themselves ensure correctness---though their blame reporting helps the process of constructing correct programs.
 %
-In addition, contracts can introduce considerable overhead to the program.
+These may be acceptable costs to pay early in development, but verification technology provides an additional level of confidence in correctness or pinpoints means for failure; its early use can even accelerate development with its bug-reporting capabilities.
 %
-These may be acceptable costs to pay at the beginning of development, but model-checking provides an additional level of confidence in correctness or pinpoints means for failure.
-%
-A sound model checker can justify safely removing contract checking and have a performance-and-correctness return on the initial investment.
+A sound model-checker can justify safely removing contract checking and have a performance-and-correctness return on the initial investment.
 %%
 
 %%
-Temporal contracts pose an additional challenge over higher-order function contracts to statically verify, as they monitor extended interactions with a module, and not just localized pieces.
+Temporal contracts pose an additional challenge over higher-order function contracts to statically verify, as they monitor the progression of interactions with a module over time, and not just localized interactions at module boundaries.
 %
 We propose a framework that is composable with techniques to verify functional contracts, that has low technical overhead (\eg, no translation to a model-checker's language necessary).
 %
@@ -38,16 +36,30 @@ The technique uses the Abstracting Abstract Machines (AAM) approach \citep{dvanh
 %%
 AAM was originally targeted towards describing flow analyses, but is robust enough to apply to model-checking safety properties of higher-order programs.
 %
-It is well-known that control-flow analysis can be stated in terms of model-checking~\citep{ianjohnson:analysis-is-mc}, but this observation is misleading; one must use a quadratic number of model-checking queries to discover what a monovariant flow analysis can discover in one run.
+We develop new semantics for temporal contracts that has an operational interpretation by means of regular expression derivatives.
 %
-In general, the queries are at least linear in the size of the abstract value space, which is exponential in some polyvariant analyses such as 1-CFA. % TODO: cite Van Horn, Mairson?
+This allows us to add the temporal property checking as part of the language's semantics itself, and we can soundly and finitely abstract it with surprisingly little effort.
 %
-The value space tends to be sparse in practice, but an ahead-of-time query generator cannot discover it without a polyvariant analysis.
-%
-The realm of temporal contract verification is similar: to use a model-checker, we would have to run a data-flow analysis up front in order to collect values that might be used as bindings, enumerate all possible binding/reference insantiations of the temporal contract, and then translate those contracts into LTL queries --- much more work than just running the program abstractly and reporting reachable blame states.
-%
+Model checking a program with respect to its temporal contracts then just amounts to running it, post abstraction, to witness the absence of blame.
+%%
 
 %%
+We chose this method over translating to an existing model-checker for a few reasons, the most important of which is the lack of linguistic support for the form of binding we have in temporal contracts.
+%
+Beyond the language is the cost.
+%
+It is well-known that control-flow analysis can be stated in terms of model-checking~\citep{ianjohnson:analysis-is-mc}, but this observation comes with a cost: one must use a quadratic number of model-checking queries to discover what a monovariant flow analysis can discover in one run.
+%
+The techniques used to not generate too many queries amount to running a flow analysis, so we simply solve the entire problem with a flow analysis; we do not need to feed multiple queries to a model-checker that has some representation of the model we discover in the analysis.
+%
+\iflong{
+In general, the queries are at least linear in the size of the abstract value space, which is exponential in some polyvariant analyses such as 1-CFA. % TODO: cite Van Horn, Mairson?
+%
+For temporal contracts, to emulate binding in a logic that lacks it, we would (roughly) have to enumerate binding and reference pairs over the entire value space.
+%
+We overcome the need to generate queries for a model-checker by embedding the temporal checking in an abstract semantics, and checking on-the-fly.
+%%
+}
 Our contributions in this paper are as follows:
 \begin{itemize}
  \item{an alternative to \dfm's temporal contract semantics amenable to analysis yet faithful to their examples;}
