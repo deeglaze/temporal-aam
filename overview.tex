@@ -19,8 +19,8 @@ We can express the temporal component of the contract in a natural way with the 
 \newcommand*{\call}[1]{\scallev{#1}{\_}}
 \newcommand*{\ret}[1]{\sretev{#1}{\_}}
 \begin{align*}
- \stnot{(\sddd \sortid(\_,\_)~ \stmany{\snonevent{\retof{\sortid}(\_)}}~ \sddd~ \sortid(\_,\_))}
- \cap \stnot{(\sddd~ \sortid(?\mathit{cmp}, \_)~ \sddd~ \retof{\sortid}(\_)~ \sddd~ \snonevent{\mathit{cmp}(\_,\_)})}
+ \stnot{(\sddd \sortid(\_)~ \stmany{\snonevent{\retof{\sortid}(\_)}}~ \sortid(\_))}
+ \cap \stnot{(\sddd~ \sortid(?\mathit{cmp})~ \sddd~ \retof{\sortid}(\_)~ \sddd~ \mathit{cmp}(\_))}
 \end{align*}
 %
 %%
@@ -83,6 +83,7 @@ A temporal monitor $\sTMon{k}{l}{j}{\mscon}{\mtcon}{\mexp}$ produces a timeline 
 \menv \in \Env &= \Var \to \wp(\Value) \\
 \mevent \in \Action &::= \scevev{\mname}{\mvpat} \alt \sany \\
 \mcev \in \FunctionAction &::= {\tt call} \alt {\tt ret} \\
+\mtrace \in \mathit{Trace} &= \Action^* \\
 \mvpat \in \VPat &::= \mval \alt \sbind{\mvar} \alt \mname \alt \scons(\mvpat,\mvpat) \alt \snegpat{\mvpat} \alt \sany \alt \snone \\
 \mvar \in \Var &\quad\text{an infinite set} \\
 \mname \in \Name &::= \mvar \alt \mtoplevelname
