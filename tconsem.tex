@@ -19,7 +19,7 @@ But first, we must discuss why we do not import \dfm's semantics directly.
   \end{align*}
   \begin{align*}
     \denotedfm{\scevdfm{\mtoplevelname}{\mvpat}}{\mmenv} &=
-      \setbuild{\msendrec.\scevdfm{y}{d}}{\mmenv(y) \equiv \sarr{\mtoplevelname}{\_}{\_}, \mvpat \sim d}
+      \setbuild{\msendrec.\scevdfm{y}{d}}{\mmenv(y) \equiv \msendrec'\sarr{\mtoplevelname}{\_}{\_}, \mvpat \sim d}
     \\
     \denotedfm{\snonevent{\mevent}}{\mmenv} &= \Action \setminus \denotedfm{\mevent}{\mmenv}
     \\
