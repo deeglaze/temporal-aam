@@ -17,7 +17,7 @@ sigplan sig: $(CURRENT)sigplan.tex
 lncs: $(CURRENT)llncs.tex
 	rubber ${opts} -v -d $(CURRENT)llncs.tex
 
-bench-overview.txt: 
+bench-overview.tex: 
 	racket bench-gen.rkt
 
 show: $(CURRENT)$(LAYOUT).pdf
