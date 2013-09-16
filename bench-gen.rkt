@@ -34,9 +34,9 @@
 (define (entry name fn conv n)
   (match (fn n)
     [#f (cond [(vector-ref (numbers-timeout? n) 0)
-               "\\text{{\\small $t$}}"]
+               "\\multicolumn{2}{c||}{\\text{{\\small $t$}}}"]
               [(vector-ref (numbers-exhaust? n) 0)
-               "\\text{{\\small $m$}}"]
+               "\\multicolumn{2}{c||}{\\text{{\\small $m$}}}"]
               [else (error 'bench-overview "No numbers, timeout or oom!: ~a" name)])]
     [n (conv n)]))
 
@@ -78,7 +78,7 @@
 (define conversions (list #;(compose (suffixed-number 1)  (λ (x) (/ x 1000)))
                           #;(compose (nfigs 0) byte->mib)
                           #;(suffixed-number 0)
-                     (match-lambda [(list rt bl bl-sites) (format "~a / ~a"
+                     (match-lambda [(list rt bl bl-sites) (format "~a & ~a"
                                                           ((suffixed-number 1) (/ rt 1000))
                                                           (if bl-sites
                                                               (format "$\\frac{~a}{~a}$" bl (round bl-sites))
@@ -89,8 +89,8 @@
 
 (with-output-to-file "bench-overview.tex" #:mode 'text #:exists 'replace
   (λ ()
-     (printf "\\begin{tabular}{@{}l||c|c|c|c|c|c|c@{}}~%")
-     (printf "Program~% & \\- & $\\mu$ & $\\Xi$ & $\\Gamma$ & $\\Gamma_\\tau$ & $\\mu\\Gamma_\\tau$ & $\\mu\\Gamma_\\tau\\Xi$")
+     (printf "\\begin{tabular*}{\\columnwidth}{l||@{\\extracolsep{\\stretch{1}}}*{6}{c|c||}@{}c|c}~%")
+     (printf "Program~% & \\multicolumn{2}{c||}{\\-} & \\multicolumn{2}{c||}{$\\mu$} & \\multicolumn{2}{c||}{$\\Xi$} & \\multicolumn{2}{c||}{$\\Gamma$} & \\multicolumn{2}{c||}{$\\Gamma_\\tau$} & \\multicolumn{2}{c||}{$\\mu\\Gamma_\\tau$} & \\multicolumn{2}{c@{}}{$\\mu\\Gamma_\\tau\\Xi$}")
 #|
      (printf "& Time {\\small (sec)}~%")
      (printf "& Space {\\small (MB)}~%")
@@ -119,4 +119,4 @@
                         (entry `(,name ,algo) fn conversion (hash-ref numbers algo)))))
                    " & ")))
        " \\\\~%"))
-     (printf "~%\\end{tabular}~%")))
+     (printf "~%\\end{tabular*}~%")))

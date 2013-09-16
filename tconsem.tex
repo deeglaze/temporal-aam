@@ -4,6 +4,9 @@ We present and analyze a slightly different formulation than \dfm's temporal con
 But first, we must discuss why we do not import \dfm's semantics directly.
 %
 \subsection{\dfm's semantics}
+
+The semantics presented in \autoref{fig:dfm-semantics} is a recollection of the denotational semantics that \dfm{} gives to temporal contracts.
+
 \newcommand{\denotedfm}[2]{\denote{#1}_{#2}}
 \begin{figure}
 \setlength{\abovedisplayskip}{0pt}
@@ -39,7 +42,6 @@ But first, we must discuss why we do not import \dfm's semantics directly.
   \label{fig:dfm-semantics}
 \end{figure}
 %
-The semantics presented in \autoref{fig:dfm-semantics} is a recollection of the denotational semantics that \dfm{} gives to temporal contracts.
 %
 They use a module semantics based on an $\mathit{EF}$ machine that tracks the bindings shared across module boundaries, $\mmenv$ (originally $E$ but renamed to distinguish from evaluation contexts), and a stack of module boundaries to return to, $F$.
 %
@@ -233,7 +235,7 @@ The extension to support the approximate matching semantics uses the appropriate
 %
 Multiple possible matches (given from $\matches$) lead to multiple possible derivations, and the temporal contract connectives are lifted over these sets of derivatives.
 %
-Thus, derivatation produces a set of possible derivations and a valuation indicating how sure we are to \emph{not} blame.
+Thus, derivation produces a set of possible derivations and a valuation indicating how sure we are to \emph{not} blame.
 %%
 
 \newcommand*{\matchsemfigs}[4]{
@@ -393,10 +395,12 @@ The first theorem depends on the following lemma, which follows from a simple in
 \end{byCases}
 %z
 
+\iflong{
 An interesting corollary relating paths to repeated derivation:
 \begin{corollary}
   $\mtrace \in \denotetcon{\mtcon} \iff \nullable(\derive{\mtrace}{\mtcon}) = \epsilon$
 \end{corollary}
+}
 % %
 % Depends on
 % \begin{lemma}[Flat emptiness]

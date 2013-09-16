@@ -1,4 +1,5 @@
-\section{Introduction}
+
+\section{Introduction}\label{sec:intro}
 
 Software systems are large, consist of many modules, and have invariants that are either outright inexpressible or too costly to express (and prove) in the language's static type system --- if it has one.
 %
@@ -6,7 +7,7 @@ When this is the case, one might hope to rely on software contracts~\cite{dvanho
 %
 In modern higher-order languages, the question of ``who violated the contract?'' becomes non-trivial, and we need higher-order contracts~\citep{dvanhorn:Findler2002Contracts} to blame the correct party responsible for any violation of these invariants.
 %
-Disney, Flannagan and McCarthy's proposed a system of \emph{temporal higher-order contracts}~\citep{ianjohnson:dfm:icfp2011} (DFM) to provide a linguistic mechanism for describing temporal properties of behavioral values flowing through the program.
+Disney, Flannagan and McCarthy's proposed a system of \emph{temporal higher-order contracts}~\citep{ianjohnson:DBLP:conf/icfp/DisneyFM11} (DFM) to provide a linguistic mechanism for describing temporal properties of behavioral values flowing through the program.
 %
 %when traditionally such properties are checked extra-linguistically by model-checking an abstracted form of the program.
 %
@@ -69,7 +70,38 @@ Our contributions in this paper are as follows:
 %%
 
 %%
-\section{Overview of temporal higher-order contracts}
+The outline of the paper by section:
+
+%%
+\begin{itemize}
+\item{\autoref{sec:overview} provides an intuition for how temporal
+  contracts work, and presents their syntax.}
+%
+\item{\autoref{sec:temporal-semantics} reviews the semantics proposed in
+  \dfm, discusses problem points, and defines a new semantics along
+  with a proven-correct notion of derivative for regular expressions
+  with back-references in the scope of our non-standard semantics of
+  negation.}
+%
+\item{\autoref{sec:technical} describes an operational semantics of the
+  language forms needed to express temporal contracts, using the
+  aforementioned derivative function to give an operational
+  interpretation of ``stepping'' temporal contracts.}
+%
+\item{\autoref{sec:abstract-semantics} overviews the process of
+  abstracting the previously defined semantics to a finite
+  approximation.
+%
+  It further describes how to use existing analysis techniques to enhance the basic abstraction to improve the precision of the analysis in ways that specifically target temporal contracts.}
+%
+\item{\autoref{sec:evaluation} is an initial evaluation of our technique on an assortment of benchmarks.}
+%
+\item{\autoref{sec:related} puts our work into the greater context of verification, model-checking and abstract interpretation.}
+%
+\item{Finally, \autoref{sec:conclusion} concludes with a discussion of directions for future work.}
+%
+\end{itemize}
+\section{Overview of temporal higher-order contracts}\label{sec:overview}
 %%
 
 %\FloatBarrier
@@ -85,13 +117,13 @@ Our contributions in this paper are as follows:
 \input{langsem}
 %%
 
-\section{Abstract semantics}
+\section{Abstract semantics}\label{sec:abstract-semantics}
 
 We use the AAM approach to soundly approximate our concrete semantics.
 %
 This first requires a CESK-like machine to transform, but there are known ways to systematically transform Felleisen-style reduction semantics into corresponding CESK machines ~\citep{dvanhorn:Danvy-Nielsen:RS-04-26}.
 %
-The important aspect of the abstraction process is not this transformation, but the fact that the space of values becomes \emph{finite}, meaning the space of temporal contract derivatives is finite (proven via simple coinduction).
+The important aspect of the abstraction process is not this transformation, but the fact that the space of values becomes \emph{finite}, meaning the space of temporal contract derivatives is finite (proven via simple co-induction).
 %
 In our semantics with just closures, conses, booleans and integers, we consider:
 \begin{itemize}
@@ -119,19 +151,19 @@ The concrete semantics would operate the same way regardless of GC, but this is 
 \end{itemize}
 %%
 
-\section{Evaluation}
+\section{Evaluation}\label{sec:evaluation}
 %%
 
 \begin{figure}
   \input{bench-overview}
-  \caption{Benchmark results. Numbers are run-time (sec) / $\frac{\text{spurious blames}}{\text{possible blames}}$}
+  \caption{Benchmark results. Numbers are run-time (sec) and $\frac{\text{spurious blames}}{\text{possible blames}}$}
   \label{fig:evaluation}
 \end{figure}
 %%
-We built temporal higher-order contracts into our existing framework for analyzing a subset of Scheme \footnote{Model and benchmarks available online \url{http://github.com/dvanhorn/oaam/tree/thocon}}.
+We built temporal higher-order contracts into our existing framework for analyzing a subset of Scheme~\citep{ianjohnson:oaam:icfp2013} \footnote{Model and benchmarks available online \url{http://github.com/dvanhorn/oaam/tree/thocon}}.
 %
 Our benchmarks are a collection of examples from \dfm's paper and implementation:
-\paragraph{{\tt sort1}:}{\dfm's motivating example of a non-reentrant sort function where the given comparison function may not be called after sort returns\footnote{If sort stashes the comparator in a global and we call it afterwards, \dfm's implementation does not raise blame, whereas ours does.}.
+\paragraph{{\tt sort1}:}{\dfm's motivating example of a non-re-entrant sort function where the given comparison function may not be called after sort returns\footnote{If sort stashes the comparator in a global and we call it afterwards, \dfm's implementation does not raise blame, whereas ours does.}.
 %
 The structural contract for {\tt sort1} is weak: {\tt (listof integer?) -> any/c}.
 }
@@ -162,14 +194,14 @@ Notice that without a pushdown abstraction, abstract garbage collection searched
 %
 The $\Gamma$ and $\Gamma_\tau$ implementations do not use a pushdown abstraction, but they still can verify {\tt sort2}, which was meant to confound non-pushdown analyses.
 %
-The reason for this is that in AAM, continuations are allocated on the heap, so GC can reclaim them for better return flow predicition; recursive calls do not get the same precision boost.
+The reason for this is that in AAM, continuations are allocated on the heap, so GC can reclaim them for better return flow prediction; recursive calls do not get the same precision boost.
 %
 The topic of making abstract GC more performant and feasible is an active area of research, most recently extended to pushdown abstractions \citep{dvanhorn:Earl2012Introspective}.
 %
 Although greater precision can increase the possible state space, clever abstractions combined with typical program structure can actually reduce the explored state space, as is evident by the dearth of visited blame sites in our most precise implementation.
 
 %%
-\section{Related Work}
+\section{Related Work}\label{sec:related}
 %%
 
 \input{related}
@@ -210,7 +242,7 @@ To more adequately handle this idiom without sophisticated handling of side-effe
 For example, a contract in a different language is considered primitive, and only continues when the contract is accepting (much like sequence contracts work now).
 }
 %
-\item{whole program analysis is intractible at scale:
+\item{whole program analysis is intractable at scale:
 %
 we can verify on a per-module basis if we add temporal contracts to a semantics of partial programs, such as in \citet{dvanhorn:TobinHochstadt2012Higherorder}.
 %

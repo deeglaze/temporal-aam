@@ -49,14 +49,14 @@ Model-checking an untyped HORS is undecidable, and such model checkers make vari
 %
 Our technique is lighter weight and more transparently correct since it follows from a systematic transformation of a standard semantics.
 %
-Additionally, the AAM approach makes extensions to more complex language features straightforward, whereas in HORS one would need to CPS, double CPS, or perform a functional encoding of a new form of data; all of which impose additional proof obligations and points-of-failure for the analysis implementor.
+Additionally, the AAM approach makes extensions to more complex language features straightforward, whereas in HORS one would need to CPS, double CPS, or perform a functional encoding of a new form of data; all of which impose additional proof obligations and points-of-failure for the analysis implementer.
 %
 Finally, HORS do not synthesize runtime monitors or have a notion of blame, unlike our system.
 %%
 
 %%
 \paragraph{Behavioral contract verification:}
-In the world of static sotware contract verification, there is more closely related work.
+In the world of static software contract verification, there is more closely related work.
 %
 There have been many successful efforts in the realm of first-order contract verification~\citep{ianjohnson:fahndrich:contracts:2011,ianjohnson:vcc:2009}, but the techniques employed are inherently first-order: the only values are booleans.
 %
