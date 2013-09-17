@@ -2,14 +2,14 @@ Temporal contracts provide a declarative language for monitoring the temporal or
 %
 We begin with a simple example that exhibits the expressiveness of temporal higher-order contracts to frame the discussion.
 %
-The following example comes from the original work on temporal higher-order contracts, and its behavior led us to explore alternative semantics.
+The following example comes from the original work on temporal higher-order contracts, and its behavior led us to explore an alternative semantics.
 %
 \newcommand{\sortid}{\mathit{sort}}
-\subsection{\dfm's sort example} \label{sec:sort}
+\subsection{\dfm's sort example, revised} \label{sec:sort}
 %
 This example presents the contract for a hypothetical $\sortid$ function which takes two arguments: a comparator and a list (of positive numbers), is non-re-entrant, and furthermore cannot make its given comparator available to be called after it's done sorting.
 %
-We express the function component of the contract (with labels given to function components) like so:
+We express the structural component of the contract (with labels given to function components) like so:
 \begin{align*}
   \sortid : (\mathit{cmp} : \mathit{Pos} \to \mathit{Pos} \to \mathit{Bool})\ (List\ Pos) \to (List\ Pos)
 \end{align*}
@@ -155,7 +155,7 @@ For brevity, we will use $\mname(\mvpat)$ and $\retof{\mname}(\mvpat)$ to mean $
 %%
 Structural contracts include subsets of first-order data that satisfy a particular predicate ($\sflat{\mexp}$), functions with associated structural contracts on their domain and range in addition to a label to reference within the temporal contract ($\sarr{\mtoplevelname}{\mscon_D}{\mscon_R}$), and {\tt cons} pairs whose components are contracted ($\sconsc{\mscon_A}{\mscon_D}$).
 %%
-Temporal contracts include actions ($\mevent$), negated actions ($\snonevent{\mevent}$), action matching scoped over a following contract ($\stbind{\mevent}{\mtcon}$), concatenation ($\stseq{\mtcon}{\mtcon}$) (often written using juxtaposition), negated contracts ($\stnot{\mtcon}$), Kleene closure of events ($\stmany{\mtcon}$), union ($\stOr{\isset{\mtcon}}$), intersection ($\stAnd{\isset{\mtcon}}$), the empty temporal contract ($\epsilon$), and an open temporal contract closed by an environment ($\motcon, \menv$).
+Temporal contracts include actions ($\mevent$), negated actions ($\snonevent{\mevent}$), action matching scoped over a following contract ($\stbind{\mevent}{\mtcon}$), concatenation ($\stseq{\mtcon}{\mtcon}$) (often written using juxtaposition), negated contracts ($\stnot{\mtcon}$), Kleene closure ($\stmany{\mtcon}$), union ($\stOr{\isset{\mtcon}}$), intersection ($\stAnd{\isset{\mtcon}}$), the empty temporal contract ($\epsilon$), and an open temporal contract closed by an environment ($\motcon, \menv$).
 %
 We consider the fail contract $\bot$ as a macro for $\stOr{\setof{}}$, and \dfm's universal contract $\sddd$ a macro for $\stAnd{\setof{}}$.
 %
