@@ -19,8 +19,8 @@ We can express the temporal component of the contract in a natural way with the 
 \newcommand*{\call}[1]{\scallev{#1}{\_}}
 \newcommand*{\ret}[1]{\sretev{#1}{\_}}
 \begin{align*}
-  &\stnot{(\sddd {\tt call}(\sortid, \_)~ \stmany{\snonevent{{\tt ret}(\sortid, \_)}}~ {\tt call}(\sortid,\_))}
-  \\\cap & \stnot{(\sddd~ \stbind{{\tt call}(\sortid, ?\mathit{cmp})}{\sddd~ {\tt ret}(\sortid, \_)~ \sddd~ {\tt call}(\mathit{cmp}, \_)})}
+  &\stnot{(\sddd {\tt call}(\sortid, \_,\_)~ \stmany{\snonevent{{\tt ret}(\sortid, \_)}}~ {\tt call}(\sortid,\_,\_))}
+  \\\cap & \stnot{(\sddd~ \stbind{{\tt call}(\sortid, ?\mathit{cmp}, \_)}{\sddd~ {\tt ret}(\sortid, \_)~ \sddd~ {\tt call}(\mathit{cmp}, \_, \_)})}
 \end{align*}
 %
 The first clause expresses non-re-entrance, phrased as a negation of a trace reentering the function: after a call to $\sortid$ and some actions that aren't returns from $\sortid$, there is another call to $\sortid$.
@@ -41,6 +41,43 @@ The intention of the regular-expression notation is to say, ``as long as the tra
 %
 For example, $A$ satisfies the contract $ABC$, but $ABD$ doesn't.
 %%
+
+Since the semantics is prefix closed, we can take the state of a regular expression parser as an indicator for whether the contract system should blame.
+%
+We chose regular expression derivatives for this purpose due to their simplicity, though we extended them to allow for back-referencing values captured in binding forms.
+%
+Consider the following faulty trace for an interaction with $\sortid$ that violates the higher-order component of the temporal contract:
+\newcommand*{\wrapv}{\mathit{wrap}}
+\begin{align*}
+  {\tt call}(\sortid, \le, {\tt `}(2\ 1))~{\tt call}(\wrapv, 2, 1) ~{\tt ret}(\sortid, {\tt `}(1\ 2))) ~{\tt call}(\wrapv, 0, 1) \\
+  \text{where } \wrapv  = \lambda x y. ({\tt if}\ ({\tt and}\ ({\tt pos?}\ x)\ ({\tt pos?}\ y))\ (\le\ x\ y)\ \sblame{\mathit{client}}{\mathit{contract}})
+\end{align*}
+
+The contract system applies the regular expression derivative for each action in the trace as it arrives, and blames as soon as derivation fails.
+%
+The derivatives, cumulatively (previous derivation has one less prime), are
+\begin{align*}
+  \derive{{\tt call}(\sortid, \le, {\tt `}(2\ 1))}{\mtcon} &= \stnot{\stOr{\setof{\mtcon_0, \stmany{\snonevent{{\tt ret}(\sortid, \_)}} ~{\tt call}(\sortid, \_, \_)}}},
+    \\ &\cap \stnot{\stOr{\setof{\mtcon_1, ({\sddd~ {\tt ret}(\sortid, \_)~ \sddd~ {\tt call}(\mathit{cmp}, \_, \_)}, \menv)}}} \\
+%
+  \derive{{\tt call}(\le, \wrapv, 2, 1)}{\mtcon'} &= \mtcon' \\
+%
+  \derive{{\tt ret}(\sortid, {\tt `}(1\ 2))}{\mtcon''} &= \stnot{\mtcon_0} \cap \stnot{\stOr{\setof{\mtcon_1, (\sddd~ {\tt call}(\mathit{cmp}, \_, \_), \menv)}}} \\
+%
+  \derive{{\tt call}(\wrapv, 0, 1)}{\mtcon'''} &= \stnot{\mtcon_0} \cap \stnot{\stOr{\setof{\mtcon_1, \epsilon}}} = \stnot{\mtcon_0}\cap \bot = \bot \\
+%
+  \text{where } \mtcon_0 & = \sddd {\tt call}(\sortid, \_,\_)~ \stmany{\snonevent{{\tt ret}(\sortid, \_)}}~ {\tt call}(\sortid,\_,\_) \\
+  \mtcon_1 &= \sddd~ \stbind{{\tt call}(\sortid, ?\mathit{cmp}, \_)}{\sddd~ {\tt ret}(\sortid, \_)~ \sddd~ {\tt call}(\mathit{cmp}, \_, \_)} \\
+  \menv &= [\mathit{cmp} \mapsto \wrapv]
+\end{align*}
+
+The final state has a negated nullable contract, which we regard as a failing state.
+%
+This is because a regular expression derives to $\epsilon$ through a string $w$ iff $w$ is accepted by the regular expression.
+%
+We interpret non-empty regular expressions as contracts that are following an allowed path, and have not yet violated it.
+%
+This interpretation implies prefix closure of our partial trace semantics in \autoref{sec:temporal-semantics}.
 
 \subsection{Syntax of contracts}
 
