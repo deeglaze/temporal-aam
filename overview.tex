@@ -35,7 +35,6 @@ We use angle brackets around actions that we want to bind values from, using the
 %
 Since $\mathit{cmp}$ will be wrapped with its higher-order contract at each call, which creates new values, the bindings for $\mathit{cmp}$ will be distinct across execution.
 %%
-These contracts are attached to a sort implementation with a special expression form, {\tt tmon}, that additionally requires labels for who are the contracted parties.
 %
 The intention of the regular-expression notation is to say, ``as long as the trace is a prefix of these strings of actions, the temporal contract is satisfied.''
 %
@@ -55,19 +54,27 @@ Consider the following faulty trace for an interaction with $\sortid$ that viola
 
 The contract system applies the regular expression derivative for each action in the trace as it arrives, and blames as soon as derivation fails.
 %
-The derivatives, cumulatively (previous derivation has one less prime), are
+Recall that a regular expression derivative is with respect to some character $c$ such that $w \in \derive{c}{R}$ iff $cw \in R$.
+%
+In our system, we have structured characters, \emph{actions}, that carry values that we can reference later via binding.
+%
+The derivatives for this faulty trace, cumulatively (previous derivation has one less prime), are
 \begin{align*}
   \derive{{\tt call}(\sortid, \le, {\tt `}(2\ 1))}{\mtcon} &= \stnot{\stOr{\setof{\mtcon_0, \stmany{\snonevent{{\tt ret}(\sortid, \_)}} ~{\tt call}(\sortid, \_, \_)}}},
     \\ &\cap \stnot{\stOr{\setof{\mtcon_1, ({\sddd~ {\tt ret}(\sortid, \_)~ \sddd~ {\tt call}(\mathit{cmp}, \_, \_)}, \menv)}}} \\
 %
   \derive{{\tt call}(\le, \wrapv, 2, 1)}{\mtcon'} &= \mtcon' \\
 %
-  \derive{{\tt ret}(\sortid, {\tt `}(1\ 2))}{\mtcon''} &= \stnot{\mtcon_0} \cap \stnot{\stOr{\setof{\mtcon_1, (\sddd~ {\tt call}(\mathit{cmp}, \_, \_), \menv)}}} \\
+  \derive{{\tt ret}(\sortid, {\tt `}(1\ 2))}{\mtcon''} &= \stnot{\mtcon_0} \cap \stnot{\stOr{\setof{\mtcon_1, \mtcon_2}}} \\
 %
-  \derive{{\tt call}(\wrapv, 0, 1)}{\mtcon'''} &= \stnot{\mtcon_0} \cap \stnot{\stOr{\setof{\mtcon_1, \epsilon}}} = \stnot{\mtcon_0}\cap \bot = \bot \\
+  \derive{{\tt call}(\wrapv, 0, 1)}{\mtcon'''} &= \stnot{\mtcon_0} \cap \stnot{\stOr{\setof{\mtcon_1, \mtcon_2, \epsilon}}} = \stnot{\mtcon_0}\cap \bot = \bot \\
 %
   \text{where } \mtcon_0 & = \sddd {\tt call}(\sortid, \_,\_)~ \stmany{\snonevent{{\tt ret}(\sortid, \_)}}~ {\tt call}(\sortid,\_,\_) \\
+%
   \mtcon_1 &= \sddd~ \stbind{{\tt call}(\sortid, ?\mathit{cmp}, \_)}{\sddd~ {\tt ret}(\sortid, \_)~ \sddd~ {\tt call}(\mathit{cmp}, \_, \_)} \\
+%
+  \mtcon_2 &= \sddd~ {\tt call}(\mathit{cmp}, \_, \_), \menv \\
+%
   \menv &= [\mathit{cmp} \mapsto \wrapv]
 \end{align*}
 
