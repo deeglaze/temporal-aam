@@ -77,6 +77,7 @@ Since our semantics catches more ``bad'' behavior than their monitoring system, 
 \end{theorem}
 
 %\FloatBarrier
+\newcommand*{\nomatch}{{\tt \#f}}
 \newcommand*{\tconsemfigs}[4]{
  \iftwocolumn{\begin{figure}#1 #2\end{figure}
               \begin{figure}#3 #4\end{figure}}
@@ -124,9 +125,9 @@ Since our semantics catches more ``bad'' behavior than their monitoring system, 
      \\
       \denotetconfulle{\mevent}{\menv} &= \setbuild{\mdata}{\mdata,\menv' \in \denoteevent{\mevent}{\menv}}
       \\[2pt]
-      \denoteevent{\mevent}{\menv} &= \setbuild{\mdata,\menv'}{\menv'_\must = \matches(\mevent, \mdata, \menv)}
+      \denoteevent{\mevent}{\menv} &= \setbuild{\mdata,\menv'}{\setof{\menv'_\must} = \matches(\mevent, \mdata, \menv)}
       \\
-      \semneg{\Pi} &= \setbuild{\mtrace}{\forall \mtrace' \in
+      \semneg{\Pi} &= \setof{\epsilon}\cup\setbuild{\mtrace}{\forall \mtrace' \in
         \Pi\setminus\setof{\epsilon}. \mtrace' \nleq \mtrace}
     \end{align*}}{\caption{Denotational Semantics of Temporal Contracts ($B$ means both $P$ and $F$)}\label{fig:tcontract-denotation}}
   {\begin{align*}
@@ -134,14 +135,14 @@ Since our semantics catches more ``bad'' behavior than their monitoring system, 
       \\
       \derivee{\mdata}{\mevent}{\menv} &= \left\{
         \begin{array}{ll}
-          \epsilon & \text{if } \menv'_\must = \matches(\mevent, \mdata, \menv) \\
-          \bot & \text{otherwise}
+          \epsilon & \text{if } \setof{\menv_\must} = \matches(\mevent, \mdata, \menv) \\
+          \bot & \setof{\nomatch} = \matches(\mevent, \mdata, \menv)
         \end{array}\right.
       \\
       \derivee{\mdata}{\stbind{\mevent}{\motcon}}{\menv} &=
       \left\{\begin{array}{ll}
-          \motcon,\menv' & \text{if } \menv'_\must = \matches(\mevent, \mdata, \menv) \\
-          \bot & \text{otherwise}
+          \motcon,\menv' & \text{if } \setof{\menv'_\must} = \matches(\mevent, \mdata, \menv) \\
+          \bot & \setof{\nomatch} = \matches(\mevent, \mdata, \menv)
         \end{array}\right.
       \\
       \derivee{\mdata}{\stseq{\motcon_0}{\motcon_1}}{\menv} &=
@@ -212,58 +213,47 @@ We go into more detail about how to handle uncertainty in \autoref{sec:abstract-
 \setlength{\belowdisplayshortskip}{8pt}
   \begin{align*}
     \matches &: \Pattern \times \Qualified \times \Env \to \wp(\MatchResult) \\
-    \Delta &: \wp(\MatchResult) \to \MatchResult \\
-    \delta &: \wp(\Valuation) \to \Valuation
   \end{align*}
     \begin{align*}
       \mvaluation \in \Valuation &::= \may \alt \must \alt \bot \\
       \mpat \in \Pattern &::= \VPat \text{ rules plus } \alt \mconstructor(\many{\mpat}) \\
-      S \subset \MatchResult &::= \menvs_\mvaluation \\
-      \menvs_\bot &= \emptyset_\bot = \emptyset_\mvaluation \\
+      \mathit{mr} \in \MatchResult &::= \menv_\mvaluation \alt \nomatch \\
+      S \subset \MatchResult \\
+      \text{Let } \menv_\bot &= \nomatch \\
       \mdata \in \Qualified &= \isset{\mdata} \alt \mval \alt \mconstructor(\many{\mdata}) \\
       \mconstructor \in \Constructors &= \setof{{\tt call}, {\tt ret}, {\tt cons}}
-      \\[2pt]
-      \must \wedge \must &= \must \\
-      \bot \wedge \_ &= \_ \wedge \bot = \bot \\
-      \may \wedge \_ &= \_ \wedge \may = \may
-      \\[2pt]
-      \neg \must &= \bot \\
-      \neg \may &= \may \\
-      \neg \bot &= \must
     \\[2pt]
-    \menvs \bowtie \menvs' &= \setbuild{\combinef{\menv}{\menv'}}{\menv \in \menvs, \menv' \in \menvs'} \\
-    \combinef{\menv}{\menv'} &= \lambda x. x \in \dom(\menv') \to \menv'(x), \menv(x)
+    S \bowtie S' &= \setbuild{\combinef{\mathit{mr}}{\mathit{mr}'}}{\mathit{mr} \in S, \mathit{mr}' \in S'} \\
+    \combinef{\menv}{\menv'} &= \lambda x. x \in \dom(\menv') \to \menv'(x), \menv(x) \\
+    \combinef{\menv}{\nomatch} &= \combinef{\nomatch}{\menv} = \nomatch
     \end{align*}}
   {\caption{Spaces and functions for matching}\label{fig:matchspace}}
   {\begin{align*}
-%    \matches &: \Pattern \times \Qualified \times \Env \to \MatchResult \\
-    \matches(\sany, \_, \menv) &= \menv_\must \\
-    \matches(\snone, \_, \menv) &= \emptyset_\bot \\
-    \matches(\mtoplevelname, \snlam{\mtoplevelname}{\mvar}{\mexp}, \menv) &= \menv_\must \\
-    \matches(\snegpat{\mvpat}, \mdata, \menv) &= \menv_{\neg \mvaluation} \\
-    \text{where }& \matches(\mvpat, \mdata, \menv) = \menv'_\mvaluation \\
-    \matches(\sbind{\mvar}, \mdata, \menv) &= \menv[\mvar \mapsto \mdata]_\must \\
-    \matches(\mvar, \mdata, \menv) &= \menv_{\menv(\mvar) \simeq \mdata} \\
-    \matches(\mconstructor(\many{\mpat}), \mconstructor(\many{\mdata}), \menv) &= (\Bowtie \menvs \ldots)_{\bigwedge \mvaluation \ldots} \\
-    \text{where }& \menvs_\mvaluation \ldots = \matches(\mvpat, \mdata, \menv) \ldots \\
-    \matches(\mpat, \isset{\mdata}, \menv) &= \Delta\setbuild{\matches(\mpat, \mdata, \menv)}{\mdata \in \isset{\mdata}} \\
-    \matches(\mdata, \mdata', \menv) &= \menv_{\mdata \simeq \mdata'} \\
-    \matches(\mpat, \mdata, \menv) &= \emptyset_\bot \quad
+    \matches(\sany, \_, \menv) &= \setof{\menv_\must} \\
+    \matches(\snone, \_, \menv) &= \setof{\nomatch} \\
+    \matches(\mtoplevelname, \snlam{\mtoplevelname}{\mvar}{\mexp}, \menv) &= \setof{\menv_\must} \\
+    \matches(\snegpat{\mvpat}, \mdata, \menv) &= (S = \setof{\nomatch}) \to \setof{\menv_\must}, \setof{\menv_\may} \\
+    \text{where }& S = \matches(\mvpat, \mdata, \menv) \\
+    \matches(\sbind{\mvar}, \mdata, \menv) &= \setof{\menv[\mvar \mapsto \mdata]_\must} \\
+    \matches(\mvar, \mdata, \menv) &= \setof{\menv_{\menv(\mvar) \simeq \mdata}} \\
+    \matches(\mconstructor(\many{\mpat}), \mconstructor(\many{\mdata}), \menv) &= (\Bowtie S \ldots) \\
+    \text{where }& S \ldots = \matches(\mvpat, \mdata, \menv) \ldots \\
+    \matches(\mpat, \isset{\mdata}, \menv) &= \bigcup \matches(\mpat,\mdata,\menv)\ldots \\
+    \matches(\mdata, \mdata', \menv) &= \setof{\menv_{\mdata \simeq \mdata'}} \\
+    \matches(\mpat, \mdata, \menv) &= \setof{\nomatch} \quad
     \text{otherwise}
-    \\[2pt]
-    \Delta S &= (\bigcup\limits_{\menvs_{\_} \in S}\menvs)_{\delta \setbuild{\mvaluation}{{\_}_\mvaluation \in S}} \\
-    \delta \emptyset &= \bot \\
-    \delta \setof{\mvaluation} &= \mvaluation \\
-    \delta \isset{t} &= \may \quad \text{otherwise}
   \end{align*}}{\caption{Semantics of matching}\label{fig:matchsem}}
 
-When matching against a set of possible values, we might have a $\must$ match and a $\bot$ match, in which case the entire match should be considered $\may$ matching (this is the significance of the $\Delta$ metafunction).
+Matching against sets of values makes it possible that we have several possible matches.
+%
+Thus $\matches$ returns a set of environments possible from matching a given pattern against some data, and if failure is possible (\nomatch).
+%
+The interesting case is for constructed data, where we must combine results for each tree element.
+%
+We simply left-associate $\bowtie$ over results to get a cross-product of the different match combinations.
 %
 The $\triangleleft$ operator extends the left environment with the bindings of the right, though the order doesn't matter considering that binding patterns may not bind the same variable twice.
 %
-Matching against sets of values makes it possible that we have several possible matches.
-%
-Thus $\matches$ returns a set of environments possible from matching a given pattern against some data.
 %%
 
 %%

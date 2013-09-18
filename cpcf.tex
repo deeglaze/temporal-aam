@@ -125,12 +125,41 @@ This first requires a CESK-like machine to transform, but there are known ways t
 %
 The important aspect of the abstraction process is not this transformation, but the fact that the space of values becomes \emph{finite}, meaning the space of temporal contract derivatives is finite (proven via simple co-induction).
 %
+The additional important step is how to handle the uncertainy allowed in the definition of $\matches$ in \autoref{sec:temporal-semantics}: $\partial$'s codomain becomes $\wp(\TContract \times \Valuation)$, where we let $\motcon_\bot = \bot_\bot$.
+%
+The important cases are defined in \autoref{fig:abstract-tcon}.
+%
+Here $\Valuation$ stands for how sure we are to \emph{not} blame.
+\begin{figure}
+  \begin{align*}
+    \derivee{\mdata}{\mevent}{\menv} &= \left\{
+      \begin{array}{ll}
+        \setof{\bot_\must} & \text{if } \setof{\nomatch} = \matches(\mevent, \mdata, \menv) \\
+        \setof{\epsilon_\may} & \text{if } \nomatch \in \matches(\mevent, \mdata, \menv) \\
+        \setof{\epsilon_\must} & \text{otherwise}
+      \end{array}
+    \right. \\
+    \derivee{\mdata}{\stbind{\mevent}{\motcon}}{\menv} &=
+    \setbuild{(\motcon,\menv)_\mvaluation}{\menv_\mvaluation \in \matches(\menv,\mdata,\menv)} \\
+    \derivee{\mdata}{\stOr{\isset{\motcon}}}{\menv} &= \bigoplus \derivee{\mdata}{\motcon}{\menv}\ldots \\
+    \derivee{\mdata}{\stAnd{\isset{\motcon}}}{\menv} &= \bigotimes \derivee{\mdata}{\motcon}{\menv}\ldots \\
+    \derivee{\mdata}{\stnot{\motcon}}{\menv} &= \setbuild{(\nullable(\mtcon)\to \bot,\stnot{\mtcon})_\mvaluation}{\mtcon_\mvaluation \in \derivee{\mdata}{\motcon}{\menv}}
+    \\[2pt]
+    \mtcons \oplus \emptyset &= \emptyset \oplus \mtcons = \mtcons \\
+    \mtcons \oplus \mtcons' &= \setbuild{\stOr{\setof{\mtcon,\mtcon'}}_{\mvaluation \vee \mvaluation'}}{\mtcon_\mvaluation \in \mtcons, \mtcon'_{\mvaluation'} \in \mtcons'} \\
+    \mtcons \otimes \mtcons' &= \setbuild{\stAnd{\setof{\mtcon,\mtcon'}}_{\mvaluation \wedge \mvaluation'}}{\mtcon_\mvaluation \in \mtcons, \mtcon'_{\mvaluation'} \in \mtcons'} \\
+  \end{align*}
+  \caption{Uncertainty in derivatives}
+  \label{fig:abstract-tcon}
+\end{figure}
+
+%
 In our semantics with just closures, conses, booleans and integers, we consider:
 \begin{itemize}
- \item syntactically equal closures and conses to be ``\emph{maybe}-equal'';
- \item equal booleans and integers to be ``\emph{must}-equal'';
- \item integer comparisons with the abstract $\mathbf{Int}$ element to be ``\emph{maybe}-equal'' (assuming a simple flat abstraction of the integers);
- \item and all other possibilities to be ``\emph{never}-equal''.
+ \item syntactically equal closures and conses to be $\may$ equal;
+ \item equal booleans and integers to be $\must$ equal;
+ \item integer comparisons with the abstract $\mathbf{Int}$ element to be $\may$ equal (assuming a simple flat abstraction of the integers);
+ \item and all other possibilities to be never equal, $\bot$.
 \end{itemize}
 %
 Any time a temporal contract is in a \emph{may} state, we blame conservatively.

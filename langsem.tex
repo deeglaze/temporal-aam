@@ -112,8 +112,6 @@ $\begin{array}{@{}l @{\ }c@{\ } l@{} r}
 \sblame{k}{j} \qquad\text{given } \mval \nequiv \slam{\mvar}{\mexp}
 \name{wrap-fail}
 
-\\
-
 \iflong{
 \\ % Flat monitor
 \sSMon{k}{\mmlab}{j}{\mtimeline}{ \sown*{\sflat{\mexp}}{\mmlab^{\prime\prime}} }{ \sOwn{\mval}{\mmlab^{\prime\prime}} }
@@ -147,9 +145,9 @@ $\begin{array}{@{}l @{\ }c@{\ } l@{} r}
 &\machstep&
 \sown{\mval}{k}
 \name{action} \\
-&&\where \mtcons_\mvaluation = \Delta\setbuild{\derive{\scevev{\mval_f}{\mval}}{\mtcon}}{\mtcon\in\mTMons(\mtimeline)} \\
+&&\where \mtcons_\mvaluation = \Delta(\bigcup\setbuild{\derive{\scevev{\mval_f}{\mval}}{\mtcon}}{\mtcon\in\mTMons(\mtimeline)}) \\
 &&\cwhere \mTMons' = \mTMons[\mtimeline \mapsto \gamma_1?(\mtimeline) \to \mtcons, \mTMons(\mtimeline) \sqcup \mtcons] \\
-&&\text{given } \mvaluation \neq \bot \\
+&&\text{given } \mvaluation \neq \bot
 
 \\ % Call/Return fail
 \ditto
@@ -209,7 +207,22 @@ An action is permissible if the temporal contracts on the timeline do not derive
 %%
 Since multiple temporal contracts can be on a timeline, and a timeline might be aliased in the abstract, we have two points to focus on in the $\namefmt{action}$ rule.
 %
-We reuse $\Delta$ from the definition of matching in order to combine the possible outcomes of derivation due to weak equality; any difference in valuation means we must conservatively blame.
+We use the following $\Delta$ function in order to combine the possible outcomes of derivation due to weak equality; any failure means we must conservatively blame:
+\begin{center}
+  \begin{tabular}{lr}
+    $\begin{array}{rl}
+      \Delta(\setof{\bot}) &= \emptyset_\bot \\
+      \Delta(\setof{\bot, \mtcon_\mvaluation\ldots}) &= \setof{\mtcon \ldots}_\may \\
+      \Delta(\setof{\mtcon_\mvaluation\ldots}) &= \setof{\mtcon \ldots}_{\delta(\mvaluation\ldots)}      
+    \end{array}$
+    &
+    $\begin{array}{rl}
+      \delta(\emptyset) &= \bot \\
+      \delta(\setof{\mvaluation}) &= \mvaluation \\
+      \delta(\setof{\mvaluation\ldots}) &= \may
+    \end{array}$
+  \end{tabular}
+\end{center}
 %
 When a timeline corresponds to one concrete timeline (given by $\gamma_1?$, always true in the concrete), we can destructively update the timeline state.
 %
