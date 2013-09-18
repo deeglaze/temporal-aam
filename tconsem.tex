@@ -9,7 +9,7 @@ But first, we must discuss why we do not import \dfm's semantics directly.
 %
 The details of the full definition are unimportant, and look similar to our denotation of full traces ($\denotetconfull{\_}$, next subsection), but with two crucial differences.
 %
-The first is the denotation of negation:
+The first is their denotation of negation:
 \newcommand{\denotedfm}[2]{\denote{#1}_{#2}}
 \begin{equation*}
   \denotedfm{\stnot{\motcon}}{E} = \mathit{Trace} \setminus \denotedfm{\motcon}{E}
@@ -40,7 +40,7 @@ The second difference is in the semantics for referring to functions; we give a 
 %
 The temporal component of the example discussed in \autoref{sec:sort} was originally the following:
 \begin{align*}
- &\stnot{(\sddd~ {\tt call}(\sortid,\_,\_)~ \stmany{\snonevent{{\tt ret}(\sortid,\_)}}~ {\tt call}(\sortid,\_,\_))} 
+ &\stnot{(\sddd~ {\tt call}(\sortid,\_,\_)~ \stmany{\snonevent{{\tt ret}(\sortid,\_)}}~ {\tt call}(\sortid,\_,\_))}
  \\ \cap& \stnot{(\sddd~ {\tt ret}(\sortid,\_,\_) \sddd~ {\tt call}(\mathit{cmp},\_,\_))}
 \end{align*}
 
@@ -146,7 +146,7 @@ Since our semantics catches more ``bad'' behavior than their monitoring system, 
         \end{array}\right.
       \\
       \derivee{\mdata}{\stseq{\motcon_0}{\motcon_1}}{\menv} &=
-      \stOr{\setof{\derivee{\mdata}{\motcon_0}{\menv},\
+      \stOr{\setof{\stseq{\derivee{\mdata}{\motcon_0}{\menv}}{(\motcon_1,\menv)},\
           \stseq{\nullable(\motcon_0)}{\derivee{\mdata}{\motcon_1}{\menv}}}}
       \\
       \derivee{\mdata}{\stOr{\isset{\motcon}}}{\menv} &=
@@ -156,7 +156,7 @@ Since our semantics catches more ``bad'' behavior than their monitoring system, 
       \stAnd{\derivee{\mdata}{\motcon}{\menv}\ldots}
       \\
       \derivee{\mdata}{\stmany{\motcon{}}}{\menv} &=
-      \stseq{\derivee{\mdata}{\motcon}{\menv}}{\stmany{\motcon{}}}
+      \stseq{\derivee{\mdata}{\motcon}{\menv}}{(\stmany{\motcon{}},\menv)}
       \\
       \derivee{\mdata}{\stnot{\motcon}}{\menv} &=
       \nullable(\derivee{\mdata}{\motcon}{\menv}) \to \bot,
@@ -205,7 +205,7 @@ We go into more detail about how to handle uncertainty in \autoref{sec:abstract-
              {\begin{figure}
               \begin{minipage}[b]{.50\linewidth}#1 #2\hrule height 0pt\end{minipage}
               \begin{minipage}[b]{.45\linewidth}#3 #4\hrule height 0pt\end{minipage}
-             \end{figure}}} 
+             \end{figure}}}
 \matchsemfigs{
 \setlength{\abovedisplayskip}{0pt}
 \setlength{\belowdisplayskip}{4pt}
@@ -224,8 +224,12 @@ We go into more detail about how to handle uncertainty in \autoref{sec:abstract-
       \mconstructor \in \Constructors &= \setof{{\tt call}, {\tt ret}, {\tt cons}}
     \\[2pt]
     S \bowtie S' &= \setbuild{\combinef{\mathit{mr}}{\mathit{mr}'}}{\mathit{mr} \in S, \mathit{mr}' \in S'} \\
-    \combinef{\menv}{\menv'} &= \lambda x. x \in \dom(\menv') \to \menv'(x), \menv(x) \\
-    \combinef{\menv}{\nomatch} &= \combinef{\nomatch}{\menv} = \nomatch
+    \combinef{\menv_\mvaluation}{\menv'_{\mvaluation'}} &= (\lambda x. ({\tt if}\ x \in \dom(\menv')\\
+                                                  &\phantom{= (\lambda x. {\tt if}}
+                                                   \menv'(x) \\
+                                                  &\phantom{= (\lambda x. {\tt if}}
+                                                   \menv(x)))_{\mvaluation \wedge \mvaluation'} \\
+    \wedge,\vee & \text{ glb, lub of } \bot < \may < \must
     \end{align*}}
   {\caption{Spaces and functions for matching}\label{fig:matchspace}}
   {\begin{align*}
