@@ -232,10 +232,12 @@ We go into more detail about how to handle uncertainty in \autoref{sec:abstract-
     \matches(\sany, \_, \menv) &= \setof{\menv_\must} \\
     \matches(\snone, \_, \menv) &= \setof{\nomatch} \\
     \matches(\mtoplevelname, \snlam{\mtoplevelname}{\mvar}{\mexp}, \menv) &= \setof{\menv_\must} \\
-    \matches(\snegpat{\mvpat}, \mdata, \menv) &= (S = \setof{\nomatch}) \to \setof{\menv_\must}, \setof{\menv_\may} \\
-    \text{where }& S = \matches(\mvpat, \mdata, \menv) \\
+    \matches(\snegpat{\mvpat}, \mdata, \menv) &= \mathit{case}\ \matches(\mvpat, \mdata, \menv)\\
+      &\alt \setof{\nomatch} \Rightarrow \setof{\menv_\must} \\
+      &\alt \setof{\menv'_\must\ldots} \Rightarrow \setof{\nomatch} \\
+      &\alt \_ \Rightarrow \setof{\menv_\may} \\
     \matches(\sbind{\mvar}, \mdata, \menv) &= \setof{\menv[\mvar \mapsto \mdata]_\must} \\
-    \matches(\mvar, \mdata, \menv) &= \setof{\menv_{\menv(\mvar) \simeq \mdata}} \\
+    \matches(\mvar, \mdata, \menv) &= \matches(\menv(\mvar), \mdata, \menv) \\
     \matches(\mconstructor(\many{\mpat}), \mconstructor(\many{\mdata}), \menv) &= (\Bowtie S \ldots) \\
     \text{where }& S \ldots = \matches(\mvpat, \mdata, \menv) \ldots \\
     \matches(\mpat, \isset{\mdata}, \menv) &= \bigcup \matches(\mpat,\mdata,\menv)\ldots \\

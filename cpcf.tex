@@ -125,30 +125,30 @@ This first requires a CESK-like machine to transform, but there are known ways t
 %
 The important aspect of the abstraction process is not this transformation, but the fact that the space of values becomes \emph{finite}, meaning the space of temporal contract derivatives is finite (proven via simple co-induction).
 %
-The additional important step is how to handle the uncertainy allowed in the definition of $\matches$ in \autoref{sec:temporal-semantics}: $\partial$'s codomain becomes $\wp(\TContract \times \Valuation)$, where we let $\motcon_\bot = \bot_\bot$.
+The additional important step is how to handle the uncertainy allowed in the definition of $\matches$ in \autoref{sec:temporal-semantics}: $\partial$'s codomain becomes $\wp(\TContract \times \Valuation)$, where we let $\motcon_\bot = \bot_\must$.
 %
 The important cases are defined in \autoref{fig:abstract-tcon}.
 %
 Here $\Valuation$ stands for how sure we are to \emph{not} blame.
 \begin{figure}
-  \begin{align*}
-    \derivee{\mdata}{\mevent}{\menv} &= \left\{
-      \begin{array}{ll}
-        \setof{\bot_\must} & \text{if } \setof{\nomatch} = \matches(\mevent, \mdata, \menv) \\
-        \setof{\epsilon_\may} & \text{if } \nomatch \in \matches(\mevent, \mdata, \menv) \\
-        \setof{\epsilon_\must} & \text{otherwise}
-      \end{array}
-    \right. \\
+  \begin{tabular}{lr}
+    $\begin{array}{rl}
+    \derivee{\mdata}{\mevent}{\menv} &= 
+      \setbuild{\epsilon_\mvaluation}{\menv'_\mvaluation \in \matches(\mevent, \mdata, \menv)} \\
     \derivee{\mdata}{\stbind{\mevent}{\motcon}}{\menv} &=
-    \setbuild{(\motcon,\menv)_\mvaluation}{\menv_\mvaluation \in \matches(\menv,\mdata,\menv)} \\
+      \setbuild{(\motcon,\menv)_\mvaluation}{\menv_\mvaluation \in \matches(\menv,\mdata,\menv)} \\
     \derivee{\mdata}{\stOr{\isset{\motcon}}}{\menv} &= \bigoplus \derivee{\mdata}{\motcon}{\menv}\ldots \\
     \derivee{\mdata}{\stAnd{\isset{\motcon}}}{\menv} &= \bigotimes \derivee{\mdata}{\motcon}{\menv}\ldots \\
     \derivee{\mdata}{\stnot{\motcon}}{\menv} &= \setbuild{(\nullable(\mtcon)\to \bot,\stnot{\mtcon})_\mvaluation}{\mtcon_\mvaluation \in \derivee{\mdata}{\motcon}{\menv}}
-    \\[2pt]
+  \end{array}$
+  &
+  $\begin{array}{rl}
     \mtcons \oplus \emptyset &= \emptyset \oplus \mtcons = \mtcons \\
     \mtcons \oplus \mtcons' &= \setbuild{\stOr{\setof{\mtcon,\mtcon'}}_{\mvaluation \vee \mvaluation'}}{\mtcon_\mvaluation \in \mtcons, \mtcon'_{\mvaluation'} \in \mtcons'} \\
     \mtcons \otimes \mtcons' &= \setbuild{\stAnd{\setof{\mtcon,\mtcon'}}_{\mvaluation \wedge \mvaluation'}}{\mtcon_\mvaluation \in \mtcons, \mtcon'_{\mvaluation'} \in \mtcons'} \\
-  \end{align*}
+    \wedge,\vee &\text{ glb, lub for } \bot < \may < \must \\
+  \end{array}$
+  \end{tabular}
   \caption{Uncertainty in derivatives}
   \label{fig:abstract-tcon}
 \end{figure}

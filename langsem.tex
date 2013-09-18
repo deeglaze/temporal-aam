@@ -9,6 +9,8 @@ The language itself is standard ISWIM, just extended with contract-monitoring fo
 \subsection{Additional syntactic forms}
 %\FloatBarrier
 
+We extend the language with additional forms to communicate actions with the temporal monitors, which can be naturally extended to allow $n$-ary functions such as in our initial example.
+%
 \begin{figure}
 \begin{align*}
 \mexp \in \Expr &::=
@@ -16,7 +18,7 @@ The language itself is standard ISWIM, just extended with contract-monitoring fo
 % These are already in overview
 % \alt \sSMon{k}{l}{k}{\mtimeline}{\mscon}{\mexp}
 % \alt \sTMon{k}{l}{j}{\mscon}{\mtcon}{\mexp}
- \alt \stblame{k}{j} 
+ \alt \stblame{k}{j}
  \alt \scev{k}{j}{\mtimeline}{\mval_f}{\mexp}
  \alt \text{other forms}
 \end{align*}
@@ -195,9 +197,7 @@ Cons-list contracts (in \namefmt{smon-cons}) are also simple given our evaluatio
 %
 }
 %
-Since temporal contracts monitor the calls and returns of functions, we use new syntactic forms to communicate the call and return actions (with the corresponding wrapped values) to the temporal monitor.
-%
-When an action is permissible by the temporal monitor, we reduce to the wrapped value.
+The $\namefmt{action}$ rule states that when an action is permissible by the temporal monitor, we reduce to the wrapped value.
 %
 An action is permissible if the temporal contracts on the timeline do not derive to the empty contract.
 %
@@ -211,13 +211,12 @@ We use the following $\Delta$ function in order to combine the possible outcomes
 \begin{center}
   \begin{tabular}{lr}
     $\begin{array}{rl}
-      \Delta(\setof{\bot}) &= \emptyset_\bot \\
-      \Delta(\setof{\bot, \mtcon_\mvaluation\ldots}) &= \setof{\mtcon \ldots}_\may \\
-      \Delta(\setof{\mtcon_\mvaluation\ldots}) &= \setof{\mtcon \ldots}_{\delta(\mvaluation\ldots)}      
+      \Delta(\setof{\bot_\must}) &= \emptyset_\bot \\
+      \Delta(\setof{\mtcon_\mvaluation\ldots}) &= \setof{\mtcon' \ldots}_{\delta(\mvaluation\ldots)} \\
+      \text{where } \isset{\mtcon'} &= \isset{\mtcon} \setminus \setof{\bot_\must, \bot_\may}
     \end{array}$
     &
     $\begin{array}{rl}
-      \delta(\emptyset) &= \bot \\
       \delta(\setof{\mvaluation}) &= \mvaluation \\
       \delta(\setof{\mvaluation\ldots}) &= \may
     \end{array}$
