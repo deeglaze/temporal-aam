@@ -1,5 +1,5 @@
 
-We present and analyze a slightly different formulation than \dfm's temporal contracts that allows for more precise specification of value-use.
+We present and analyze a slightly different formulation than \dfm's temporal contracts that allows for more precise specification of how functions and values in general are used.
 %
 But first, we must discuss why we do not import \dfm's semantics directly.
 %
@@ -67,10 +67,10 @@ Our semantics (\autoref{fig:tcontract-denotation}) alternates between full trace
 %
 Our interpretation of negation disallows any future observation to redeem a trace: a negated temporal contract will reject all non-empty full traces of the given contract, as well as any extension of such traces\footnote{This semantics of negation does not satisfy double-negation elimination (DNE).}.
 %
+By \autoref{thm:prefix-closed}, no rejected trace can be extended to an accepted one.
+%
 We claim that this semantics is what \dfm{} intended their system to mean, as it matches up with the expectations of their prose, the test cases in their implementation\footnote{The functional test cases, in particular, since our model does not handle Racket's object system.}, and additionally raises blame on programs that \dfm{} were surprised their implementation accepted --- in particular, a program that produces the faulty trace discussed in \autoref{sec:sort}.
 %
-Since our semantics catches more ``bad'' behavior than their monitoring system, we have not simply formalized their implementation.
-%%
 
 \begin{theorem}[Prefix closure]\label{thm:prefix-closed}
   $\prefixes(\denotetcone{\motcon}{\menv}) = \denotetcone{\motcon}{\menv}$

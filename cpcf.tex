@@ -21,7 +21,7 @@ There are downsides to software contracts: no static guarantees, and to a lesser
 %
 Since contracts are runtime monitors, they do not themselves ensure correctness---though their blame reporting helps the process of constructing correct programs.
 %
-These may be acceptable costs to pay early in development, but verification technology provides an additional level of confidence in correctness or pinpoints means for failure; its early use can even accelerate development with its bug-reporting capabilities.
+Verification technology provides an additional level of confidence in correctness or pinpoints means for failure; its early use can even accelerate development with its bug-reporting capabilities.
 %
 A sound model-checker can justify safely removing contract checking and have a performance-and-correctness return on the initial investment in contract design and runtime overhead.
 %%
@@ -29,7 +29,7 @@ A sound model-checker can justify safely removing contract checking and have a p
 %%
 Temporal contracts pose an additional challenge over higher-order function contracts to statically verify, as they monitor the progression of interactions with a module over time, and not just localized interactions at module boundaries.
 %
-We propose a framework that is composable with techniques to verify functional contracts, that has low technical overhead (\eg, no translation to a model-checker's language necessary).
+We propose a framework that is composable with techniques to verify functional contracts, and has low technical overhead (\eg, no translation to a model-checker's language necessary).
 %
 The technique uses the Abstracting Abstract Machines (AAM) approach \citep{dvanhorn:VanHorn2010Abstracting} to check for reachability of a temporal contract blame.
 %%
@@ -39,7 +39,7 @@ AAM was originally targeted towards describing flow analyses, but is robust enou
 %
 We develop a new semantics for temporal contracts that has an operational interpretation by means of regular expression derivatives~\citep{ianjohnson:Brzozowski1964}.
 %
-This allows us to add the temporal property checking as part of the language's semantics itself, and we can soundly and finitely abstract it with surprisingly little effort.
+This allows us to add the temporal property checking as part of the language's semantics itself, and we can soundly and finitely abstract it with little effort.
 %
 Model checking a program with respect to its temporal contracts then just amounts to running it, post abstraction, to witness the absence of blame.
 %%
@@ -47,11 +47,11 @@ Model checking a program with respect to its temporal contracts then just amount
 %%
 We chose this method over translating to an existing model-checker for a few reasons, the most important of which is the lack of linguistic support for the form of binding we have in temporal contracts.
 %
-Beyond the language is the cost.
+Beyond the language is the technical and run-time overhead required to use existing model-checkers.
 %
 It is well-known that control-flow analysis can be stated in terms of model-checking~\citep{ianjohnson:analysis-is-mc}, but this observation comes with a cost: one must use a quadratic number of model-checking queries to discover what a monovariant flow analysis can discover in one run.
 %
-The techniques used to not generate too many queries amount to running a flow analysis, so we simply solve the entire problem with a flow analysis; we do not need to feed multiple queries to a model-checker that has some representation of the model we discover in the analysis.
+The query-reducing techniques used amount to running a flow analysis, so we simply solve the entire problem with a flow analysis; we do not need to feed multiple queries to a model-checker that has some representation of the model we discover in the analysis.
 %
 \iflong{
 In general, the queries are at least linear in the size of the abstract value space, which is exponential in some polyvariant analyses such as 1-CFA. % TODO: cite Van Horn, Mairson?
@@ -88,7 +88,7 @@ The outline of the paper by section:
   aforementioned derivative function to give an operational
   interpretation of ``stepping'' temporal contracts.}
 %
-\item{\autoref{sec:abstract-semantics} overviews the process of
+\item{\autoref{sec:abstract-semantics} introduces the process of
   abstracting the previously defined semantics to a finite
   approximation.
 %
@@ -121,11 +121,11 @@ The outline of the paper by section:
 
 We use the AAM approach to soundly approximate our concrete semantics.
 %
-This first requires a CESK-like machine to transform, but there are known ways to systematically transform Felleisen-style reduction semantics into corresponding CESK machines ~\citep{dvanhorn:Danvy-Nielsen:RS-04-26}.
+This first requires a CESK-like machine to transform, but there are known ways to systematically transform Felleisen-style reduction semantics into corresponding CESK machines~\citep{dvanhorn:Danvy-Nielsen:RS-04-26}.
 %
-The important aspect of the abstraction process is not this transformation, but the fact that the space of values becomes \emph{finite}, meaning the space of temporal contract derivatives is finite (proven via simple co-induction).
+The important aspect of the abstraction process is not this transformation, but the fact that the space of values becomes \emph{finite}, meaning the space of temporal contract derivatives is finite (proven via co-induction).
 %
-The additional important step is how to handle the uncertainy allowed in the definition of $\matches$ in \autoref{sec:temporal-semantics}: $\partial$'s codomain becomes $\wp(\TContract \times \Valuation)$, where we let $\motcon_\bot = \bot_\must$.
+The additional important step is how to handle the uncertainy allowed in the definition of $\matches$ in \autoref{sec:temporal-semantics}: $\partial$'s codomain becomes $\wp(\TContract \times \Valuation)$, where we let $\motcon_\bot = \bot_\bot$.
 %
 The important cases are defined in \autoref{fig:abstract-tcon}.
 %
@@ -135,18 +135,34 @@ Here $\Valuation$ stands for how sure we are to \emph{not} blame.
     $\begin{array}{rl}
     \derivee{\mdata}{\mevent}{\menv} &= 
       \setbuild{\epsilon_\mvaluation}{\menv'_\mvaluation \in \matches(\mevent, \mdata, \menv)} \\
+%
     \derivee{\mdata}{\stbind{\mevent}{\motcon}}{\menv} &=
       \setbuild{(\motcon,\menv)_\mvaluation}{\menv_\mvaluation \in \matches(\menv,\mdata,\menv)} \\
+%
     \derivee{\mdata}{\stOr{\isset{\motcon}}}{\menv} &= \bigoplus \derivee{\mdata}{\motcon}{\menv}\ldots \\
+%
     \derivee{\mdata}{\stAnd{\isset{\motcon}}}{\menv} &= \bigotimes \derivee{\mdata}{\motcon}{\menv}\ldots \\
-    \derivee{\mdata}{\stnot{\motcon}}{\menv} &= \setbuild{(\nullable(\mtcon)\to \bot,\stnot{\mtcon})_\mvaluation}{\mtcon_\mvaluation \in \derivee{\mdata}{\motcon}{\menv}}
+%
+    \mtcons \otimes \mtcons' &= \setbuild{\stAnd{\setof{\mtcon,\mtcon'}}_{\mvaluation \wedge \mvaluation'}}{\mtcon_\mvaluation \in \mtcons, \mtcon'_{\mvaluation'} \in \mtcons'}
   \end{array}$
   &
   $\begin{array}{rl}
+    \derivee{\mdata}{\stnot{\motcon}}{\menv} &=
+     \left\{
+       \begin{array}{ll}
+         \begin{array}{l}
+           \mathit{case}\ \nullable(\mtcon) \\
+           \alt \epsilon \Rightarrow \stnot{\mtcon}_{\neg \mvaluation} \\
+           \alt \bot \Rightarrow \stnot{\mtcon}_\must
+         \end{array}
+         &: \mtcon_\mvaluation \in \derivee{\mdata}{\motcon}{\menv}
+       \end{array}
+       \right\}
+\\
     \mtcons \oplus \emptyset &= \emptyset \oplus \mtcons = \mtcons \\
+%
     \mtcons \oplus \mtcons' &= \setbuild{\stOr{\setof{\mtcon,\mtcon'}}_{\mvaluation \vee \mvaluation'}}{\mtcon_\mvaluation \in \mtcons, \mtcon'_{\mvaluation'} \in \mtcons'} \\
-    \mtcons \otimes \mtcons' &= \setbuild{\stAnd{\setof{\mtcon,\mtcon'}}_{\mvaluation \wedge \mvaluation'}}{\mtcon_\mvaluation \in \mtcons, \mtcon'_{\mvaluation'} \in \mtcons'} \\
-    \wedge,\vee &\text{ glb, lub for } \bot < \may < \must \\
+%
   \end{array}$
   \end{tabular}
   \caption{Uncertainty in derivatives}
@@ -162,7 +178,7 @@ In our semantics with just closures, conses, booleans and integers, we consider:
  \item and all other possibilities to be never equal, $\bot$.
 \end{itemize}
 %
-Any time a temporal contract is in a \emph{may} state, we blame conservatively.
+Any time a temporal contract is in a \may{} state, we blame conservatively.
 %
 Since timelines can be abstractly allocated more than once, each time we send an action to the monitor, we have to both step and not step the contract, which can kill precision and performance.
 %
@@ -196,8 +212,8 @@ Our benchmarks are a collection of examples from \dfm's paper and implementation
 %
 The structural contract for {\tt sort1} is weak: {\tt (listof integer?) -> any/c}.
 }
-\paragraph{{\tt sort2}:}{like {\tt sort1}, but with a stronger structural contract that will confuse a regular analysis: {\tt (listof integer?) -> (listof integer?)}.}
-\paragraph{{\tt sort3}:}{like {\tt sort2}, but call sort more than once (mapped over a list of lists), in order to confuse non-$\Gamma_\tau$ analyses.}
+\paragraph{{\tt sort2}:}{like {\tt sort1}, but with a stronger structural contract that will confuse a regular analysis due to merged return flows to the flat contract: {\tt (listof integer?) -> (listof integer?)}.}
+\paragraph{{\tt sort3}:}{like {\tt sort2}, but call sort more than once (mapped over a list of lists), in order to confuse non-$\Gamma_\tau$ analyses. If a dead, wrapped $\mathit{cmp}$ is not collected, then additional calls to $\sortid$ will conflate the wrappings and conservatively blame.}
 \paragraph{{\tt malloc}:}{A pair of two functions, malloc and free, where malloc returns an ever-growing counter and free does nothing. They are contracted so that free may not be called with addresses that were previously freed and not subsequently returned by malloc.}
 \paragraph{{\tt file}:}{A function, {\tt open}, which given a file path, produces a list of read, write and close functions. They are contracted such that none of these functions may be called after close. Using this interface, we copy the contents of files in one list and write them to the files in the other.}
 %\paragraph{{\tt FTP}:}{An FTP server built on TCP. \textbf{TODO: Alex}}
@@ -245,9 +261,9 @@ Our preliminary evaluation provides evidence that this can be an effective appro
 %
 The way forward is clear: build a quality temporal monitoring library and contract a large project to find weaknesses in the language of temporal contracts, and finally evaluate the verification algorithm on this large example.
 %
-Potential weaknesses we can identify:
+We can identify the following dimensions that can strengthen our work:
 \begin{itemize}
-\item{the blame story needs better understanding, with deotonic logic:
+\item{targeted blame assignment, with deontic logic \citep{ianjohnson:DBLP:conf/dagstuhl/MeyerWD98}:
 %
 currently, the party that generates the action that causes a contract to fail gets blamed, and there is no way to express that some action must happen before the end of the monitor's lifetime.
 %
@@ -278,6 +294,8 @@ we can verify on a per-module basis if we add temporal contracts to a semantics 
 The primary difficulty there is a sound definition of {\tt havoc} in the presence of temporal contracts, which simulates all possible interactions with a module.
 %
 Additional concerns lie in adequately maintaining enough information about unknown values to prune search space, without also exploding the search space with all the distinguished unknown values, but there is existing work on this that we can leverage~\citep{ianjohnson:DBLP:journals/cacm/DilligDA10}.
+%
+Within the confines of small programs, the implementation for derivatives is a simple translation of \autoref{fig:tcon-deriv} and \autoref{fig:matchsem} with some algebraic reductions, and is an easy target for more optimization.
 }
 \end{itemize}
 %
