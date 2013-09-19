@@ -236,7 +236,7 @@ Our benchmarks are a collection of examples from \dfm's paper and implementation
 \end{figure}
 %%
 \noindent
-{\tt sort1}:{ \dfm's motivating example of a non-re-entrant sort function where the given comparison function may not be called after sort returns\footnote{If sort stashes the comparator in a global and we call it afterwards, \dfm's implementation does not raise blame, whereas ours does.}.
+{\tt sort1}:{ \dfm's motivating example of a non-reentrant sort function where the given comparison function may not be called after sort returns\footnote{If sort stashes the comparator in a global and we call it afterwards, \dfm's implementation does not raise blame, whereas ours does.}.
 %
 The structural contract for {\tt sort1} is weak: {\tt (listof integer?) -> any/c}.
 }
@@ -301,7 +301,7 @@ currently, the blamed party is the one which generates the action that causes a 
 %
 The action-emitting party might be innocent, just working at the behest of a different party that is obliged not to violate the contract.
 %
-Instead of attaching a temporal contract to a single structural contract with the {\tt tmon} form, we instead allow structural contracts to \emph{emit} temporal contracts as obligations of a given party, and additionally blame for unfinished obligations at monitor collection time, end of execution, or after a specified amount of time;
+Instead of attaching a temporal contract to a single structural contract with the {\tt tmon} form, we would allow structural contracts to \emph{emit} temporal contracts as obligations of a given party, and additionally blame for unfinished obligations at monitor collection time, end of execution, or after a specified amount of time;
 }
 %
 \item{calls and returns don't match in the temporal contracts themselves:
