@@ -10,7 +10,7 @@ Monitoring sequences of actions at runtime is a mature and active area of resear
 %
 Temporal higher-order contracts are themselves a runtime monitoring system.
 %
-The notion of an action is reminiscent of aspect-oriented programming's notion of a \emph{join-point}, and thus we see several systems built on AspectJ \citep{ianjohnson:aspectj} that offer a domain-specific language for running \emph{advice} when the action trace matches a specified pattern, \eg, Tracematches \citep{ianjohnson:Allan05addingtrace} and J-LO ~\citep{ianjohnson:jlo}.
+The notion of an action is reminiscent of aspect-oriented programming's notion of a \emph{join-point}, and thus we see several systems built on AspectJ \citep{ianjohnson:aspectj} that offer a domain-specific language for running \emph{advice} when the action trace matches a specified pattern, \eg, Tracematches \citep{ianjohnson:Allan05addingtrace} and J-LO~\citep{ianjohnson:jlo}.
 %
 Tracematches use a language similar to temporal contracts but do not support negation; they also only provide a way to execute given \emph{advice}, and not monitor the satisfaction of a specification.
 %
@@ -33,7 +33,7 @@ A complete separation of model generation and model-checking also degrades preci
 %%
 
 %%
-A technique that specifically targets higher-order languages, higher-order recursion schemes (HORS)~\citep{ianjohnson:Knapik:2002:HPT:646794.704852}, is rooted in simply-typed, call-by-name lambda terms, but has model-checking solutions that have been extended to call-by-value ~\citep{ianjohnson:DBLP:journals/jacm/Kobayashi13} and untyped ~\citep{dvanhorn:Tsukada2010Untyped} languages, through heavy type-theoretic machinery.
+A technique that specifically targets higher-order languages, higher-order recursion schemes (HORS)~\citep{ianjohnson:Knapik:2002:HPT:646794.704852}, is rooted in simply-typed, call-by-name lambda terms, but has model-checking solutions that have been extended to call-by-value~\citep{ianjohnson:DBLP:journals/jacm/Kobayashi13} and untyped~\citep{dvanhorn:Tsukada2010Untyped} languages, through heavy type-theoretic machinery.
 %
 Model-checking an untyped HORS is undecidable, and such model checkers make various approximations biased to soundly model-check programs in traditional type systems rather than traditional untyped languages.
 %
