@@ -1,7 +1,7 @@
 
 \section{Introduction}\label{sec:intro}
 
-Software systems are large, consist of many modules, and have invariants that are either outright inexpressible or too costly to express (and prove) in the language's static type system --- if it has one.
+Software systems are large, consist of many modules, and have invariants that are either outright inexpressible or too costly to express (and prove) in the language's static type system---if it has one.
 %
 When this is the case, one might hope to rely on software contracts~\cite{dvanhorn:meyer-eiffel} to give dynamic guarantees about the behavior of one's system.
 %
@@ -208,14 +208,18 @@ The concrete semantics would operate the same way regardless of GC, but this is 
 We built temporal higher-order contracts into our existing framework for analyzing a subset of Scheme~\citep{ianjohnson:oaam:icfp2013} \footnote{Model and benchmarks available online \url{http://github.com/dvanhorn/oaam/tree/thocon}}.
 %
 Our benchmarks are a collection of examples from \dfm's paper and implementation:
-\paragraph{{\tt sort1}:}{\dfm's motivating example of a non-re-entrant sort function where the given comparison function may not be called after sort returns\footnote{If sort stashes the comparator in a global and we call it afterwards, \dfm's implementation does not raise blame, whereas ours does.}.
+{\tt sort1}:{ \dfm's motivating example of a non-re-entrant sort function where the given comparison function may not be called after sort returns\footnote{If sort stashes the comparator in a global and we call it afterwards, \dfm's implementation does not raise blame, whereas ours does.}.
 %
 The structural contract for {\tt sort1} is weak: {\tt (listof integer?) -> any/c}.
 }
-\paragraph{{\tt sort2}:}{like {\tt sort1}, but with a stronger structural contract that will confuse a regular analysis due to merged return flows to the flat contract: {\tt (listof integer?) -> (listof integer?)}.}
-\paragraph{{\tt sort3}:}{like {\tt sort2}, but call sort more than once (mapped over a list of lists), in order to confuse non-$\Gamma_\tau$ analyses. If a dead, wrapped $\mathit{cmp}$ is not collected, then additional calls to $\sortid$ will conflate the wrappings and conservatively blame.}
-\paragraph{{\tt malloc}:}{A pair of two functions, malloc and free, where malloc returns an ever-growing counter and free does nothing. They are contracted so that free may not be called with addresses that were previously freed and not subsequently returned by malloc.}
-\paragraph{{\tt file}:}{A function, {\tt open}, which given a file path, produces a list of read, write and close functions. They are contracted such that none of these functions may be called after close. Using this interface, we copy the contents of files in one list and write them to the files in the other.}
+\\
+{\tt sort2}: like {\tt sort1}, but with a stronger structural contract that will confuse a regular analysis due to merged return flows to the flat contract: {\tt (listof integer?) -> (listof integer?)}.
+\\
+{\tt sort3}: like {\tt sort2}, but call sort more than once (mapped over a list of lists), in order to confuse non-$\Gamma_\tau$ analyses. If a dead, wrapped $\mathit{cmp}$ is not collected, then additional calls to $\sortid$ will conflate the wrappings and conservatively blame.
+\\
+{\tt malloc}: A pair of two functions, malloc and free, where malloc returns an ever-growing counter and free does nothing. They are contracted so that free may not be called with addresses that were previously freed and not subsequently returned by malloc.
+\\
+{\tt file}: A function, {\tt open}, which given a file path, produces a list of read, write and close functions. They are contracted such that none of these functions may be called after close. Using this interface, we copy the contents of files in one list and write them to the files in the other.
 %\paragraph{{\tt FTP}:}{An FTP server built on TCP. \textbf{TODO: Alex}}
 %%
 
@@ -261,11 +265,11 @@ Our preliminary evaluation provides evidence that this can be an effective appro
 %
 The way forward is clear: build a quality temporal monitoring library and contract a large project to find weaknesses in the language of temporal contracts, and finally evaluate the verification algorithm on this large example.
 %
-We can identify the following dimensions that can strengthen our work:
+We can identify the following dimensions that can strengthen our work in both the concrete and abstract:
 \begin{itemize}
 \item{targeted blame assignment, with deontic logic \citep{ianjohnson:DBLP:conf/dagstuhl/MeyerWD98}:
 %
-currently, the party that generates the action that causes a contract to fail gets blamed, and there is no way to express that some action must happen before the end of the monitor's lifetime.
+currently, the party that generates the action that causes a contract to fail gets blamed, and there is no way to express that some action \emph{must} happen before the end of the monitor's lifetime.
 %
 The action-emitting party might be innocent, just working at the behest of a different party that is obliged not to violate the contract.
 %
@@ -274,17 +278,18 @@ Instead of attaching a temporal contract to a single structural contract with th
 %
 \item{calls and returns don't match in the temporal contracts themselves:
 %
-the actions are currently interpreted without a notion of matching, which could turn out to be too flat and limiting for proper specifications --- the implementation from \dfm{} allows labeling calls so that return actions can refer to the matching call.
+the actions are currently interpreted without a notion of matching, which could turn out to be too flat and limiting for proper specifications---the implementation from \dfm{} allows labeling calls so that return actions can refer to the matching call.
 %
 It is unclear whether an analysis can precisely match calls and returns in both the contracts and control-flow, due to the several stacks that apparently entails, but at least a ``good enough'' approximation should exist;
 }
 %
+\iflong{
 \item{some specifications are better suited to DLTL or state machines:
 %
 some examples in \dfm's test suite included using side effects in the temporal monitor's matching to encode state transitions.
-To more adequately handle this idiom without sophisticated handling of side-effects, we may wish to mix and match ways in which we express properties.
 %
-For example, a contract in a different language is considered primitive, and only continues when the contract is accepting (much like sequence contracts work now).
+To more adequately handle this idiom without sophisticated handling of side-effects, we may wish to mix and match ways in which we express properties.
+}
 }
 %
 \item{whole program analysis is intractable at scale:

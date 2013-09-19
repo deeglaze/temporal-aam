@@ -10,28 +10,20 @@ Furthermore, work that focuses on the linguistic mechanism does not also focus o
 \paragraph{Runtime monitoring:}
 Monitoring sequences of actions at runtime is a mature and active area of research.
 %
-This area has similarities to temporal contracts due to the use of runtime monitoring and of languages for describing execution traces, but nothing in the area has the concept of blame or has a static story.
+Temporal higher-order contracts are themselves a runtime monitoring system.
 %
 The notion of an action is reminiscent of aspect-oriented programming's notion of a \emph{join-point}, and thus we see several systems built on AspectJ \citep{ianjohnson:aspectj} that offer a domain-specific language for running \emph{advice} when the action trace matches a specified pattern, \eg, Tracematches \citep{ianjohnson:Allan05addingtrace} and J-LO ~\citep{ianjohnson:jlo}.
 %
-Tracematches use a language similar to temporal contracts but do not support negation; they also have a different purpose: execute advice at more specific times based on the program history, and not to offer a high-level specification system with blame that contracts provide.
+Tracematches use a language similar to temporal contracts but do not support negation; they also only provide a way to execute given \emph{advice}, and not monitor the satisfaction of a specification.
 %
-J-LO on the other hand offers a monitoring system based on LTL propositions with binding constructs that tracks the satisfaction of the LTL proposition with the assumption that future portions of the proposition hold.
-%
-If the \emph{now} portion of the proposition fails to hold, the monitor raises a failure (it does not blame).
-%
-The language for temporal contracts is an extension of regular expressions with back references, as many desirable properties are difficult to express in LTL with back-references (DLTL ~\cite{ianjohnson:jlo})\footnote{A sentiment expressed by DLTL's inventor~\citep{boddenadmission}}.
-%
-Temporal contracts and DLTL can talk about value flow and use over time via binding in the specification --- this is not something that LTL can locally express, and DLTL does not currently have any model checking tool-support.
+J-LO on the other hand is a monitoring system based on LTL propositions with binding constructs (named DLTL) that tracks the satisfaction of the DLTL proposition with the assumption that future portions of the proposition hold.
 %
 J-LO's goal is closer to temporal contracts, but its language is not; conversely, tracematches match the language and not the goal.
 %
-In both cases, the only static analysis is on the specification itself in order to improve runtime performance, and not on the monitored program's adherence to the specification.
-%
-Both systems are also tied to Java's class structure, so they cannot express properties of higher-order behavior or refinements on values.
+Both systems are also tied to Java's class structure, so they cannot natively express properties of higher-order functions or refinements on values.
 
 \paragraph{Higher-order model-checking:}
-Java and C++ both have several high-quality model-checking tools \citep{ianjohnson:bandera, ianjohnson:java-pathfinder, ianjohnson:LLBMC}, some of which are bounded model-checkers; meaning they cannot fully verify temporal properties --- only present possible counter-examples.
+Java and C++ both have several high-quality model-checking tools \citep{ianjohnson:bandera, ianjohnson:java-pathfinder, ianjohnson:LLBMC}, some of which are bounded model-checkers; meaning they cannot fully verify temporal properties---only present possible counter-examples.
 %
 Bandera~\citep{ianjohnson:bandera} is a collection of tools that uses static analysis techniques to extract a finite model from a Java program to feed to select back-end model-checkers.
 %
@@ -56,7 +48,7 @@ Finally, HORS do not synthesize runtime monitors or have a notion of blame, unli
 
 %%
 \paragraph{Behavioral contract verification:}
-In the world of static software contract verification, there is more closely related work.
+There is more closely related work in this area.
 %
 There have been many successful efforts in the realm of first-order contract verification~\citep{ianjohnson:fahndrich:contracts:2011,ianjohnson:vcc:2009}, but the techniques employed are inherently first-order: the only values are booleans.
 %
