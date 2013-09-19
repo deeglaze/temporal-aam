@@ -1,12 +1,43 @@
-Behavioral contracts are a runtime monitoring mechanism that give full access to the language to specify pre- and post-conditions, allowing expression of strong invariants that traditional type systems can not enforce.
+Behavioral contracts supplement interface information with logical
+assertions, often written in the same programming language as the
+component itself.  
 %
-%Contract violations during testing or even after deployment help fix both the implementation and specification of software without having to provide a proof of correctness up-front.
-%%
-%%
-\emph{Temporal} higher-order contracts further provide a language for specifying and dynamically monitoring adherence to stateful protocols.
+Temporal contracts further enrich interfaces with a language for
+specifying adherence to stateful protocols.
 %
-We contribute the first static verification of temporal higher-order contracts.
+Together, these assertions can provide strong invariants that are
+monitored at run-time, giving a precise explanation of blame when
+failures occur.
 %
-We do so by introducing a notion of derivative for regular expressions with back references.
+Contracts therefore offer significant software engineering benefits,
+but not without costs and shortcomings.
 %
-A sound, straight-forward abstraction then produces a correct model-checker.
+Contract monitoring can be expensive, particularly in the case of
+higher-order values, which must be wrapped as they flow across
+component boundaries, and temporal monitoring significantly increases
+the run-time burden.
+%
+Worse, contract violations are signalled only at run-time, thereby
+delaying the discovery of faulty components.
+%
+%% Consequently, software engineers often forgo using rich contracts,
+%% undermining the design-by-contract approach to software construction.
+
+This paper takes a step toward remedying the situation by providing a
+sound verification technique that either statically validates software
+against its behavioral and temporal contracts, or assigns compile-time
+blame with the same level of explanation as run-time failures.
+%
+It constitutes the first static verification technique for temporal
+higher-order contracts.
+%
+The crux of our technique is achieved by introducing a notion of
+derivative for regular expressions with back references.
+%
+We give a formal account of a higher-order language with behavioral
+and temporal contracts and show how to soundly abstract programs into
+finite models, using derivatives to obtain a correct model-checker.
+%
+Finally, we evaluate a protype system and show our
+approach can automatically verify examples drawn from the literature
+on higher-order temporal contracts.
