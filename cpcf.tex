@@ -3,104 +3,129 @@
 
 Software systems are large, consist of many modules, and have invariants that are either outright inexpressible or too costly to express (and prove) in the language's static type system---if it has one.
 %
-When this is the case, one might hope to rely on software contracts~\cite{dvanhorn:meyer-eiffel} to give dynamic guarantees about the behavior of one's system.
+When this is the case, one might hope to rely on software contracts, a
+concept first introduced in Eiffel by Bertrand
+Meyer~\cite{dvanhorn:meyer-eiffel}, to give dynamic guarantees about
+the behavior of a system.
 %
-In modern higher-order languages, the question of ``who violated the contract?'' becomes non-trivial, and we need higher-order contracts~\citep{dvanhorn:Findler2002Contracts} to blame the correct party responsible for any violation of these invariants.
+In modern higher-order languages, the question of ``who violated the contract?'' becomes non-trivial
+as pre- and post-conditions on behavioral values must be delayed.
 %
-Disney, Flannagan and McCarthy proposed a system of \emph{temporal higher-order contracts}~\citep{ianjohnson:DBLP:conf/icfp/DisneyFM11} (DFM) to provide a linguistic mechanism for describing temporal properties of behavioral values flowing through the program.
+\citet{dvanhorn:Findler2002Contracts} gave the
+first semantic account of blame in a higher-order language with
+contracts, spawning a large body of research on behavioral contracts.
+%
+More recently, \citeauthor*{ianjohnson:DBLP:conf/icfp/DisneyFM11}
+(DFM) proposed a system of \emph{temporal higher-order
+  contracts}~\citep{ianjohnson:DBLP:conf/icfp/DisneyFM11} to provide a
+linguistic mechanism for describing temporal properties of behavioral
+values flowing through a program.
 %
 %when traditionally such properties are checked extra-linguistically by model-checking an abstracted form of the program.
 %
-Example temporal properties are, ``a file can only be closed if it has been opened'' and, in the higher-order setting, ``if function A is given a function B, then B may not be called once A returns.''
+Example temporal properties are, ``a file can only be closed if it has been opened'' and, in the higher-order setting, ``if function $A$ is given a function $B$, then $B$ may not be called once $A$ returns.''
 %
 Such invariants are important for interfaces that have set-up and tear-down protocols to follow, or even pure interfaces that have particular compositions of calls needed to construct some object.
 %%
 
 %%
-There are downsides to software contracts: no static guarantees, and to a lesser extent, runtime overhead.
+Despite the significant engineering benefits of contracts, there are
+downsides; contracts offer no static guarantees and can impose
+prohibitive runtime overhead, particularly in the temporal case.
 %
 Since contracts are runtime monitors, they do not themselves ensure correctness---though their blame reporting helps the process of constructing correct programs.
 %
 Verification technology provides an additional level of confidence in correctness or pinpoints means for failure; its early use can even accelerate development with its bug-reporting capabilities.
 %
-A sound model-checker can justify safely removing contract checking and have a performance-and-correctness return on the initial investment in contract design and runtime overhead.
+A sound model-checker can justify safely removing contract checking and have a performance-and-correctness return on the initial investment in contract design.
 %%
 
 %%
-Temporal contracts pose an additional challenge over higher-order function contracts to statically verify, as they monitor the progression of interactions with a module over time, and not just localized interactions at module boundaries.
+Statically verifying temporal contracts pose additional challenges
+over that of behavioral contracts, as they monitor the progression of
+interactions with a module over time, and not just localized
+interactions at module boundaries.
 %
-We propose a framework that is composable with techniques to verify functional contracts, and has low technical overhead (\eg, no translation to a model-checker's language necessary).
+We propose a framework that is composable with known techniques to
+verify behavioral contracts, and has low technical overhead (\eg, no
+translation to a model-checker's language necessary).
 %
-The technique uses the Abstracting Abstract Machines (AAM) approach \citep{dvanhorn:VanHorn2010Abstracting} to check for reachability of a temporal contract blame.
+The technique uses the so-called ``Abstracting Abstract Machines''
+(AAM) approach~\citep{dvanhorn:VanHorn2010Abstracting} to check for
+reachability of a temporal contract blame.
 %%
-
-%%
-AAM was originally targeted towards describing flow analyses, but is robust enough to apply to model-checking safety properties of higher-order programs.
+AAM was originally targeted towards describing flow analyses, but as
+we show, it is robust enough to apply to model-checking safety
+properties of higher-order programs.
 %
 We develop a new semantics for temporal contracts that has an operational interpretation by means of regular expression derivatives~\citep{ianjohnson:Brzozowski1964}.
 %
-This allows us to add the temporal property checking as part of the language's semantics itself, and we can soundly and finitely abstract it with little effort.
+This allows us to add the temporal property checking as part of the
+language's semantics itself, and we can soundly and finitely abstract
+it using a straightforward recipe.
 %
-Model checking a program with respect to its temporal contracts then just amounts to running it, post abstraction, to witness the absence of blame.
+Model checking a program with respect to its temporal contracts then
+just amounts to running it---post abstraction---to either witness
+blame or confirm its absence.
 %%
 
 %%
-We chose this method over translating to an existing model-checker for a few reasons, the most important of which is the lack of linguistic support for the form of binding we have in temporal contracts.
-%
-Beyond the language is the technical and run-time overhead required to use existing model-checkers.
-%
-It is well-known that control-flow analysis can be stated in terms of model-checking~\citep{ianjohnson:analysis-is-mc}, but this observation comes with a cost: one must use a quadratic number of model-checking queries to discover what a monovariant flow analysis can discover in one run.
-%
-The query-reducing techniques used amount to running a flow analysis, so we simply solve the entire problem with a flow analysis; we do not need to feed multiple queries to a model-checker that has some representation of the model we discover in the analysis.
-%
-\iflong{
-In general, the queries are at least linear in the size of the abstract value space, which is exponential in some polyvariant analyses such as 1-CFA. % TODO: cite Van Horn, Mairson?
-%
-For temporal contracts, to emulate binding in a logic that lacks it, we would (roughly) have to enumerate binding and reference pairs over the entire value space.
-%
-We overcome the need to generate queries for a model-checker by embedding the temporal checking in an abstract semantics, and checking on-the-fly.
-%%
-}
-Our contributions in this paper are as follows:
+%% We chose this method over translating to an existing model-checker for a few reasons, the most important of which is the lack of linguistic support for the form of binding we have in temporal contracts.
+%% %
+%% Beyond the language is the technical and run-time overhead required to use existing model-checkers.
+%% %
+%% It is well-known that control-flow analysis can be stated in terms of model-checking~\citep{ianjohnson:analysis-is-mc}, but this observation comes with a cost: one must use a quadratic number of model-checking queries to discover what a monovariant flow analysis can discover in one run.
+%% %
+%% The query-reducing techniques used amount to running a flow analysis, so we simply solve the entire problem with a flow analysis; we do not need to feed multiple queries to a model-checker that has some representation of the model we discover in the analysis.
+%% %
+%% \iflong{
+%% In general, the queries are at least linear in the size of the abstract value space, which is exponential in some polyvariant analyses such as 1-CFA. % TODO: cite Van Horn, Mairson?
+%% %
+%% For temporal contracts, to emulate binding in a logic that lacks it, we would (roughly) have to enumerate binding and reference pairs over the entire value space.
+%% %
+%% We overcome the need to generate queries for a model-checker by embedding the temporal checking in an abstract semantics, and checking on-the-fly.
+%% %%
+%% }
+
+This paper contributes:
 \begin{itemize}
- \item{an alternative to \dfm's temporal contract semantics amenable to analysis yet faithful to their examples;}
- \item{a notion of derivative for regular expressions with back-references;}
+ \item{an alternative to the \dfm\
+    temporal contract semantics that is amenable to analysis
+   yet faithful to their examples and implementation;}
+ \item{a notion of derivative for regular expressions with back-references; and}
  \item{a sound abstraction to computably verify temporal contract satisfaction.}
 \end{itemize}
 %%
-
 %%
-The outline of the paper by section:
-
+The plan for the remaining sections of the paper is as follows.
 %%
-\begin{itemize}
-\item{\autoref{sec:overview} provides an intuition for how temporal
-  contracts work, and presents their syntax.}
+Section~\ref{sec:overview} provides an intuition for how temporal
+  contracts work, and presents their syntax.
 %
-\item{\autoref{sec:temporal-semantics} reviews the semantics proposed in
+Section~\ref{sec:temporal-semantics} reviews the semantics proposed by
   \dfm, discusses problem points, and defines a new semantics along
   with a proven-correct notion of derivative for regular expressions
   with back-references in the scope of our non-standard semantics of
-  negation.}
+  negation.
 %
-\item{\autoref{sec:technical} describes an operational semantics of the
+Section~\ref{sec:technical} describes an operational semantics of the
   language forms needed to express temporal contracts, using the
   aforementioned derivative function to give an operational
-  interpretation of ``stepping'' temporal contracts.}
+  interpretation of ``stepping'' temporal contracts.
 %
-\item{\autoref{sec:abstract-semantics} introduces the process of
-  abstracting the previously defined semantics to a finite
+Section~\ref{sec:abstract-semantics} introduces the process of
+  abstracting the previously defined semantics to a sound, finite
   approximation.
 %
-  It further describes how to use existing analysis techniques to enhance the basic abstraction to improve the precision of the analysis in ways that specifically target temporal contracts.}
+  It further describes how to use existing analysis techniques to enhance the basic abstraction to improve the precision of the analysis in ways that specifically target temporal contracts.
 %
-\item{\autoref{sec:evaluation} is an initial evaluation of our technique on an assortment of benchmarks.}
+Section~\ref{sec:evaluation} is an initial evaluation of our technique on an assortment of benchmarks, many drawn from the literature on higher-order temporal contracts.
 %
-\item{\autoref{sec:related} puts our work into the greater context of verification, model-checking and abstract interpretation.}
+Section~\ref{sec:related} puts our work into the greater context of verification, model-checking and abstract interpretation.
 %
-\item{Finally, \autoref{sec:conclusion} concludes with a discussion of directions for future work.}
+Finally, \autoref{sec:conclusion} concludes with a discussion of directions for future work.
 %
-\end{itemize}
+
 \section{Overview of temporal higher-order contracts}\label{sec:overview}
 %%
 
