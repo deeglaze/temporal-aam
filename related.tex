@@ -44,6 +44,15 @@ Additionally, the AAM approach makes extensions to more complex language feature
 Finally, HORS do not synthesize runtime monitors or have a notion of blame, unlike our system.
 %%
 
+\citet{dvanhorn:Skalka-Smith-VanHorn:JFP08} present a type and effect system in which program events and temporal predicates are modelled as effects.
+The type systems is then combined with temporal model checking
+techniques in order to produce automatic verification of temporal
+logic assertions in a higher-order program.  The approach, like others
+described above, results in a binary decision on programs: they are
+either verified or rejected.  Our approach enables a gradient of
+verification; any contract that cannot be verified can always be
+monitored at run-time.
+
 %%
 \paragraph{Behavioral contract verification:}
 There is more closely related work in this area.
