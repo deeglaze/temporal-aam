@@ -1,8 +1,7 @@
 Now that we have a clear view of the behavior of temporal contracts, we nail down a formal semantics that we use to prove the correctness of our monitoring system.
 %
 We present a reduction semantics~\citep{ianjohnson:Felleisen:2009:SEP:1795772}, which can be systematically transformed into an abstract machine in the form presented in~\citet{dvanhorn:VanHorn2010Abstracting}.
-%%
-
+%
 The language itself is standard ISWIM, just extended with contract-monitoring forms, whose syntax and semantics we will focus on.
 %
 %%
@@ -11,7 +10,6 @@ The language itself is standard ISWIM, just extended with contract-monitoring fo
 
 We extend the language with additional forms to communicate actions with the temporal monitors, which can be naturally extended to allow $n$-ary functions such as in our initial example.
 %
-\begin{figure}
 \begin{align*}
 \mexp \in \Expr &::=
       \snlam{\mtoplevelname}{\mvar}{\mexp}
@@ -22,10 +20,6 @@ We extend the language with additional forms to communicate actions with the tem
  \alt \scev{k}{j}{\mtimeline}{\mval_f}{\mexp}
  \alt \text{other forms}
 \end{align*}
-\caption{Syntax additions}
-\label{fig:syntax}
-\end{figure}
-
 %
 \iflong{At this point we would like to note that our usage of labels differs slightly from existing literature \cite{ianjohnson:dthf:complete}: we have a notion of the ``top level label'', denoted by $\toplevel$; this is similar to \citeauthor{ianjohnson:dthf:complete}'s use of $l_0$.}
 %%
@@ -211,9 +205,7 @@ We use the following $\Delta$ function in order to combine the possible outcomes
 \begin{center}
   \begin{tabular}{lr}
     $\begin{array}{rl}
-      \Delta(\setof{\bot_\must}) &= \emptyset_\bot \\
-      \Delta(\setof{\mtcon_\mvaluation\ldots}) &= \setof{\mtcon' \ldots}_{\delta(\mvaluation\ldots)} \\
-      \text{where } \isset{\mtcon'} &= \isset{\mtcon} \setminus \setof{\bot_\must, \bot_\may}
+      \Delta(\setof{\mtcon_\mvaluation\ldots}) &= (\isset{\mtcon} \setminus \setof{\bot_\bot})_{\delta(\mvaluation\ldots)}
     \end{array}$
     &
     $\begin{array}{rl}

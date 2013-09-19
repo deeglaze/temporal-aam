@@ -199,15 +199,18 @@ The concrete semantics would operate the same way regardless of GC, but this is 
 \section{Evaluation}\label{sec:evaluation}
 %%
 
+We built temporal higher-order contracts into our existing framework for analyzing a subset of Scheme~\citep{ianjohnson:oaam:icfp2013} \footnote{Model and benchmarks available online \url{http://github.com/dvanhorn/oaam/tree/thocon}}.
+%
+Our benchmarks are a collection of examples from \dfm's paper and implementation:
+\\
+\FloatBarrier
 \begin{figure}
   \input{bench-overview}
   \caption{Benchmark results. Numbers are run-time (sec) and $\frac{\text{spurious blames}}{\text{possible blames}}$}
   \label{fig:evaluation}
 \end{figure}
 %%
-We built temporal higher-order contracts into our existing framework for analyzing a subset of Scheme~\citep{ianjohnson:oaam:icfp2013} \footnote{Model and benchmarks available online \url{http://github.com/dvanhorn/oaam/tree/thocon}}.
-%
-Our benchmarks are a collection of examples from \dfm's paper and implementation:
+\noindent
 {\tt sort1}:{ \dfm's motivating example of a non-re-entrant sort function where the given comparison function may not be called after sort returns\footnote{If sort stashes the comparator in a global and we call it afterwards, \dfm's implementation does not raise blame, whereas ours does.}.
 %
 The structural contract for {\tt sort1} is weak: {\tt (listof integer?) -> any/c}.
@@ -269,7 +272,7 @@ We can identify the following dimensions that can strengthen our work in both th
 \begin{itemize}
 \item{targeted blame assignment, with deontic logic \citep{ianjohnson:DBLP:conf/dagstuhl/MeyerWD98}:
 %
-currently, the party that generates the action that causes a contract to fail gets blamed, and there is no way to express that some action \emph{must} happen before the end of the monitor's lifetime.
+currently, the blamed party is the one which generates the action that causes a contract to fail, and there is no way to express that some action \emph{must} happen before the end of the monitor's lifetime.
 %
 The action-emitting party might be innocent, just working at the behest of a different party that is obliged not to violate the contract.
 %
