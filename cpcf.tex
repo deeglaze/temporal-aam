@@ -50,7 +50,7 @@ We propose a framework that is composable with known techniques to
 verify behavioral contracts, and has low technical overhead (\eg, no
 translation to a model-checker's language necessary).
 %
-The technique uses the so-called ``Abstracting Abstract Machines''
+The technique uses the so-called ``abstracting abstract machines''
 (AAM) approach~\citep{dvanhorn:VanHorn2010Abstracting} to check for
 reachability of a temporal contract blame.
 %%
@@ -224,7 +224,7 @@ The concrete semantics would operate the same way regardless of GC, but this is 
 \section{Evaluation}\label{sec:evaluation}
 %%
 
-We built temporal higher-order contracts into our existing framework for analyzing a subset of Scheme~\citep{ianjohnson:oaam:icfp2013} \footnote{Model and benchmarks available online \url{http://github.com/dvanhorn/oaam/tree/thocon}}.
+We built temporal higher-order contracts into our existing framework for analyzing a subset of Scheme~\citep{ianjohnson:oaam:icfp2013}\footnote{Model and benchmarks at \url{http://github.com/dvanhorn/oaam/tree/thocon}}.
 %
 Our benchmarks are a collection of examples from \dfm's paper and implementation:
 \\
@@ -267,7 +267,7 @@ The {\tt file} example could be verified had we used a polyvariant allocation st
 %%
 
 %%
-Notice that without a pushdown abstraction, abstract garbage collection searched a state space orders of magnitude more than with.
+Notice that without a pushdown abstraction, abstract GC searched a state space orders of magnitude more than with.
 %
 The $\Gamma$ and $\Gamma_\tau$ implementations do not use a pushdown abstraction, but they still can verify {\tt sort2}, which was meant to confound non-pushdown analyses.
 %
@@ -275,7 +275,7 @@ The reason for this is that in AAM, continuations are allocated on the heap, so 
 %
 The topic of making abstract GC more performant and feasible is an active area of research, most recently extended to pushdown abstractions \citep{dvanhorn:Earl2012Introspective}.
 %
-Although greater precision can increase the possible state space, clever abstractions combined with typical program structure can actually reduce the explored state space, as is evident by the dearth of visited blame sites in our most precise implementation.
+Although greater precision can increase the possible state space, clever abstractions combined with typical program structure can actually reduce the explored space, as is evident by the dearth of visited blame sites in our most precise implementation.
 
 %%
 \section{Related Work}\label{sec:related}
@@ -290,26 +290,29 @@ Although greater precision can increase the possible state space, clever abstrac
 We demonstrated that a linguistic construction for monitoring temporal properties of higher-order programs (temporal higher-order contracts) can be transparently abstracted to provide a sound verification algorithm, almost for free, given the AAM approach.
 %
 Our preliminary evaluation provides evidence that this can be an effective approach to verifying programs with finite protocols, given the right combination of existing analysis machinery.
+
+
+%% The way forward is clear: build a quality temporal monitoring library
+%% and contract a large project to find weaknesses in the language of
+%% temporal contracts, and finally evaluate the verification algorithm on
+%% this large example.
 %
-The way forward is clear: build a quality temporal monitoring library and contract a large project to find weaknesses in the language of temporal contracts, and finally evaluate the verification algorithm on this large example.
+We can identify the following dimensions that can strengthen our work in both the concrete and abstract.
+
+\emph{Targeted blame assignment, with deontic logic \citep{ianjohnson:DBLP:conf/dagstuhl/MeyerWD98}.}
 %
-We can identify the following dimensions that can strengthen our work in both the concrete and abstract:
-\begin{itemize}
-\item{targeted blame assignment, with deontic logic \citep{ianjohnson:DBLP:conf/dagstuhl/MeyerWD98}:
-%
-currently, the blamed party is the one which generates the action that causes a contract to fail, and there is no way to express that some action \emph{must} happen before the end of the monitor's lifetime.
+Currently, the blamed party is the one which generates the action that causes a contract to fail, and there is no way to express that some action \emph{must} happen before the end of the monitor's lifetime.
 %
 The action-emitting party might be innocent, just working at the behest of a different party that is obliged not to violate the contract.
 %
 Instead of attaching a temporal contract to a single structural contract with the {\tt tmon} form, we would allow structural contracts to \emph{emit} temporal contracts as obligations of a given party, and additionally blame for unfinished obligations at monitor collection time, end of execution, or after a specified amount of time;
-}
+
 %
-\item{calls and returns don't match in the temporal contracts themselves:
+\emph{Calls and returns don't match in the temporal contracts themselves.}
 %
-the actions are currently interpreted without a notion of matching, which could turn out to be too flat and limiting for proper specifications---the implementation from \dfm{} allows labeling calls so that return actions can refer to the matching call.
+The actions are currently interpreted without a notion of matching, which could turn out to be too flat and limiting for proper specifications---the implementation from \dfm{} allows labeling calls so that return actions can refer to the matching call.
 %
 It is unclear whether an analysis can precisely match calls and returns in both the contracts and control-flow, due to the several stacks that apparently entails, but at least a ``good enough'' approximation should exist;
-}
 %
 \iflong{
 \item{some specifications are better suited to DLTL or state machines:
@@ -317,19 +320,17 @@ It is unclear whether an analysis can precisely match calls and returns in both 
 some examples in \dfm's test suite included using side effects in the temporal monitor's matching to encode state transitions.
 %
 To more adequately handle this idiom without sophisticated handling of side-effects, we may wish to mix and match ways in which we express properties.
-}
-}
+}}
+
 %
-\item{whole program analysis is intractable at scale:
+\emph{Whole program analysis is intractable at scale.}
 %
-we can verify on a per-module basis if we add temporal contracts to a semantics of partial programs, such as in \citet{dvanhorn:TobinHochstadt2012Higherorder}.
+We can verify on a per-module basis if we add temporal contracts to a semantics of partial programs, such as done for behavioral contracts in \citet{dvanhorn:TobinHochstadt2012Higherorder}.
 %
 The primary difficulty there is a sound definition of {\tt havoc} in the presence of temporal contracts, which simulates all possible interactions with a module.
 %
 Additional concerns lie in adequately maintaining enough information about unknown values to prune search space, without also exploding the search space with all the distinguished unknown values, but there is existing work on this that we can leverage~\citep{ianjohnson:DBLP:journals/cacm/DilligDA10}.
 %
 Within the confines of small programs, the implementation for derivatives is a simple translation of \autoref{fig:tcon-deriv} and \autoref{fig:matchsem} with some algebraic reductions, and is an easy target for more optimization.
-}
-\end{itemize}
 %
 %
